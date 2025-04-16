@@ -7,7 +7,12 @@
 .buildlog/
 .history
 
+# IDE-specific (Android Studio / IntelliJ)
+.idea/
+*.iml
 
+# Optional Flutter metadata
+.metadata
 
 # Flutter repo-specific
 /bin/cache/
