@@ -59,6 +59,11 @@ class _CustomNavbarState extends State<CustomNavbar> {
               activeIcon: Icon(Icons.settings),
               label: 'Settings',
             ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_none_outlined),
+              activeIcon: Icon(Icons.notifications),
+              label: 'Notifications',
+            ),
           ],
         ),
       ),

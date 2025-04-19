@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:inner_child_app/presentation/screens/settings_page.dart';
-import 'package:inner_child_app/presentation/screens/therapy_tools_page.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/goals_page.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/homepage.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/notification.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/settings_page.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/therapy_tools_page.dart';
 import 'package:inner_child_app/presentation/widgets/navbar.dart';
 
-import 'goals_page.dart';
-import 'homepage.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const TherapyToolsPage(),
     const GoalsPage(),
     const SettingsPage(),
+    const NotificationPage(),
   ];
 
   void _onItemTapped(int index) {
