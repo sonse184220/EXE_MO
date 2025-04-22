@@ -12,6 +12,10 @@ class _NotificationState extends State<NotificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        child: LayoutBuilder(
+        builder: (context, constraints) {
+      return ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
         child: Container(
           width: double.infinity,
           height: double.infinity,
@@ -148,7 +152,7 @@ class _NotificationState extends State<NotificationPage> {
                       iconColor: Colors.orange,
                       title: 'New Feature Alert!',
                       description:
-                      'We\'re pleased to introduce the latest enhancements in our app experience.',
+                          'We\'re pleased to introduce the latest enhancements in our app experience.',
                       time: '14h',
                       buttons: [
                         NotificationButton(
@@ -164,7 +168,7 @@ class _NotificationState extends State<NotificationPage> {
                       iconColor: Colors.orange,
                       title: 'New Feature Alert!',
                       description:
-                      'We\'re pleased to introduce the latest enhancements in our app experience.',
+                          'We\'re pleased to introduce the latest enhancements in our app experience.',
                       time: '14h',
                       buttons: [
                         NotificationButton(
@@ -180,7 +184,7 @@ class _NotificationState extends State<NotificationPage> {
                       iconColor: Colors.orange,
                       title: 'New Feature Alert!',
                       description:
-                      'We\'re pleased to introduce the latest enhancements in our app experience.',
+                          'We\'re pleased to introduce the latest enhancements in our app experience.',
                       time: '14h',
                       buttons: [
                         NotificationButton(
@@ -196,7 +200,7 @@ class _NotificationState extends State<NotificationPage> {
               ),
             ],
           ),
-        ),
+        ),);})
       ),
     );
   }

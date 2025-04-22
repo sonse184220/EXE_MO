@@ -9,296 +9,345 @@ class HomeAudioPage extends StatefulWidget {
 }
 
 class _HomeAudioPageState extends State<HomeAudioPage> {
+  late final List<Widget> featureList;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    featureList = [
+      _buildSessionCard(
+        title: 'Affirmations to close your day',
+        duration: '15 min',
+        tags: ['Evening', 'Relax'],
+        play: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AudioPlayingPage()),
+          );
+        },
+      ),
+      _buildSessionCard(
+        title: 'Meditation for deep sleep',
+        duration: '10 min',
+        tags: ['Sleep', 'Evening'],
+        play: null,
+      ),
+      _buildSessionCard(
+        title: 'A daily mindfulness practice',
+        duration: '10 min',
+        tags: ['Daily', 'Relax'],
+        play: null,
+      ),
+      _buildSessionCard(
+        title: 'A daily mindfulness practice',
+        duration: '10 min',
+        tags: ['Daily', 'Relax'],
+        play: null,
+      ),
+      _buildSessionCard(
+        title: 'A daily mindfulness practice',
+        duration: '10 min',
+        tags: ['Daily', 'Relax'],
+        play: null,
+      ),
+      _buildSessionCard(
+        title: 'A daily mindfulness practice',
+        duration: '10 min',
+        tags: ['Daily', 'Relax'],
+        play: null,
+      ),
+      _buildSessionCard(
+        title: 'A daily mindfulness practice',
+        duration: '10 min',
+        tags: ['Daily', 'Relax'],
+        play: null,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          color: Color(0xFF4B3621),
-          child: Stack(
-            children: [
-              // Image takes only part of the container
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: (screenHeight * 1 / 2) * 0.6,
-                // 60% of container height
-                child: Image.asset(
-                  'assets/images/daily_mindfulness_background.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                height: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  // color: Color(0xFF4B3621),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Container(
+                color: Color(0xFF4B3621),
+                child: Stack(
                   children: [
-                    // Top section
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Back button and user profile
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.arrow_back_ios_new,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundImage: AssetImage('assets/profile.jpg'),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-
-                        // Welcome text
-                        Text(
-                          'Hi, Nhi!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w500,
+                    // Image takes only part of the container
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: (screenHeight * 1 / 2) * 0.6,
+                      // 60% of container height
+                      child: Image.asset(
+                        'assets/images/daily_mindfulness_background.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        // color: Color(0xFF4B3621),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 5),
                           ),
-                        ),
-
-                        // Search bar
-                        SizedBox(height: 16),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Top section
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.search,
-                                color: Colors.white.withOpacity(0.7),
-                                size: 20,
+                              // Back button and user profile
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_back_ios_new,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  CircleAvatar(
+                                    radius: 16,
+                                    backgroundImage: AssetImage(
+                                      'assets/profile.jpg',
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(height: 16),
+
+                              // Welcome text
                               Text(
-                                'Search',
+                                'Hi, Nhi!',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w500,
                                 ),
+                              ),
+
+                              // Search bar
+                              SizedBox(height: 16),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.search,
+                                      color: Colors.white.withOpacity(0.7),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Search',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Featured meditations
+                              SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Evening Meditation',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Text(
+                                            'to Relax',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                '5 min',
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withOpacity(0.8),
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.play_arrow,
+                                                  color: Colors.orange,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Container(
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.deepPurple.withOpacity(
+                                          0.8,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Get Back',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Text(
+                                            'to Sleep',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                '8 min',
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withOpacity(0.8),
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.play_arrow,
+                                                  color: Colors.deepPurple,
+                                                  size: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              // Featured for you section
+                              SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Featured for you',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    'See all',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ),
 
-                        // Featured meditations
-                        SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Evening Meditation',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      'to Relax',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '5 min',
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.8,
-                                            ),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.play_arrow,
-                                            color: Colors.orange,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                          const SizedBox(height: 20),
+                          // Bottom lists
+                          Expanded(
+                            child: ListView.separated(
+                              // padding: const EdgeInsets.symmetric(vertical: 16),
+                              shrinkWrap: true,
+                              itemCount: featureList.length,
+                              itemBuilder: (context, index) {
+                                final item = featureList[index];
+                                return item;
+                              },
+                              separatorBuilder:
+                                  (context, index) => SizedBox(height: 16),
                             ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.deepPurple.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Get Back',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      'to Sleep',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '8 min',
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.8,
-                                            ),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.play_arrow,
-                                            color: Colors.deepPurple,
-                                            size: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Featured for you section
-                        SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Featured for you',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              'See all',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    // Bottom lists
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          _buildSessionCard(
-                            title: 'Affirmations to close your day',
-                            duration: '15 min',
-                            tags: ['Evening', 'Relax'],
-                            play: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AudioPlayingPage(),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _buildSessionCard(
-                            title: 'Meditation for deep sleep',
-                            duration: '10 min',
-                            tags: ['Sleep', 'Evening'],
-                            play: null,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildSessionCard(
-                            title: 'A daily mindfulness practice',
-                            duration: '10 min',
-                            tags: ['Daily', 'Relax'],
-                            play: null,
                           ),
                         ],
                       ),
@@ -306,8 +355,8 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                   ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

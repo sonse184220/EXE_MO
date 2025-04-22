@@ -12,9 +12,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        child: LayoutBuilder(
+        builder: (context, constraints) {
+      return
+        // SingleChildScrollView(
+        // child:
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
         child: Container(
           width: double.infinity,
-          height: double.infinity,
+          // height: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -307,7 +314,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-        ),
+        ),);})
         // ),
       ),
     );
