@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';
 import 'package:inner_child_app/presentation/pages/subscription_pages/subscription_page.dart';
@@ -9,7 +10,7 @@ class LoginWrapperMaterial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: SubscriptionPage(), debugShowCheckedModeBanner: false);
+    return MaterialApp(home: MoodJournalWriting(), debugShowCheckedModeBanner: false);
   }
 }
 
