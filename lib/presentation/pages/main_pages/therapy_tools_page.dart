@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/meditation/meditation_page.dart';
 
 class TherapyToolsPage extends StatefulWidget {
@@ -112,7 +113,14 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                               {
                                 'title': 'Community',
                                 'imageAsset': 'assets/images/community.png',
-                                'navigate': null,
+                                'navigate': () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CommunityGroupsPage(),
+                                    ),
+                                  );
+                                },
                               },
                               {
                                 'title': 'Frequency Sounds',
