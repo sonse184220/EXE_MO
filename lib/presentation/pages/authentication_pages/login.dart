@@ -9,7 +9,7 @@ class LoginWrapperMaterial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: SubscriptionPage(), debugShowCheckedModeBanner: false);
+    return MaterialApp(home: Login(), debugShowCheckedModeBanner: false);
   }
 }
 

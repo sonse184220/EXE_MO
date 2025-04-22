@@ -9,43 +9,70 @@ class MeditationPage extends StatefulWidget {
 }
 
 class _MeditationPageState extends State<MeditationPage> {
+  late final List<Widget> audioList;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    audioList = [
+      _buildSessionOption('Quick session - 5 minutes', false, Icons.play_arrow),
+
+      _buildSessionOption(
+        'Default relaxation - 10 minutes',
+        false,
+        Icons.play_arrow,
+      ),
+
+      _buildSessionOption('Long session - 15 minutes', true, Icons.play_arrow),
+
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+      _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Header text
-              const Text(
-                'Meditation',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Container(
+                width: double.infinity,
+                // height: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ),
-
-              // Main content
-              Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    // Header text
+                    const Text(
+                      'Meditation',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+
                     // Meditation image with sunset scene
                     Container(
                       width: double.infinity,
@@ -53,7 +80,9 @@ class _MeditationPageState extends State<MeditationPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         image: const DecorationImage(
-                          image: AssetImage('assets//images/meditation_page_image.png'),
+                          image: AssetImage(
+                            'assets/images/meditation_page_image.png',
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -81,130 +110,132 @@ class _MeditationPageState extends State<MeditationPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // Toggle between Visual and Audio only
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    // Main content
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                          const SizedBox(height: 20),
+
+                          // Toggle between Visual and Audio only
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'Visual',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Visual',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      'Audio only',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+
+                          const SizedBox(height: 30),
+
+                          // Meditation session options
                           Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Audio only',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: audioList.length,
+                              itemBuilder: (context, index) {
+                                final item = audioList[index];
+                                return item;
+                              },
+                              separatorBuilder:
+                                  (context, index) => SizedBox(height: 15),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 30),
-
-                    // Meditation session options
-                    _buildSessionOption(
-                      'Quick session - 5 minutes',
-                      false,
-                      Icons.play_arrow,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    _buildSessionOption(
-                      'Default relaxation - 10 minutes',
-                      false,
-                      Icons.play_arrow,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    _buildSessionOption(
-                      'Long session - 15 minutes',
-                      true,
-                      Icons.play_arrow,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    _buildSessionOption(
-                      'Sleep music - 45 minutes',
-                      false,
-                      Icons.play_arrow,
+                    // Get started button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Get started',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DailyMindfulnessPage(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-
-              // Get started button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Get started',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => DailyMindfulnessPage()),
-                      );
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.indigo,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
