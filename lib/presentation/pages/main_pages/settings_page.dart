@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
+import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/user_information/profile_edit_page.dart';
+import 'package:inner_child_app/presentation/pages/subscription_pages/subscription_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -18,36 +22,63 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.person,
         color: Colors.grey,
         title: 'Profile',
+        tap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileEditPage()),
+          );
+        },
       ),
       _buildSettingItem(
         icon: Icons.star,
         color: Colors.amber,
         title: 'Family Moment Premium',
+        tap: null,
       ),
       _buildSettingItem(
         icon: Icons.photo_album,
         color: Colors.red.shade300,
         title: 'Album Settings',
+        tap: null,
       ),
       _buildSettingItem(
         icon: Icons.settings,
         color: Colors.red.shade300,
         title: 'App Settings',
+        tap: null,
       ),
       _buildSettingItem(
         icon: Icons.help_outline,
         color: Colors.grey,
         title: 'Support',
+        tap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HelpScreenPage()),
+          );
+        },
       ),
       _buildSettingItem(
         icon: Icons.attach_money,
         color: Colors.green,
         title: 'Subscription',
+        tap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SubscriptionPage()),
+          );
+        },
       ),
       _buildSettingItem(
         icon: Icons.exit_to_app,
         color: Colors.red,
         title: 'Logout',
+        tap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginWrapperMaterial()),
+          );
+        },
       ),
     ];
   }
@@ -91,18 +122,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     SizedBox(height: 40),
                     Expanded(
-                      child:
-                    ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: settingsItems.length,
-                      itemBuilder: (context, index) {
-                        final item = settingsItems[index];
-                        return item;
-                      },
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: settingsItems.length,
+                        itemBuilder: (context, index) {
+                          final item = settingsItems[index];
+                          return item;
+                        },
 
-                      separatorBuilder:
-                          (context, index) => SizedBox(height: 10),
-                    ),
+                        separatorBuilder:
+                            (context, index) => SizedBox(height: 10),
+                      ),
                     ),
                   ],
                 ),
@@ -118,41 +148,45 @@ class _SettingsPageState extends State<SettingsPage> {
     required IconData icon,
     required Color color,
     required String title,
+    required VoidCallback? tap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFEEEEEE), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 24),
+    return
+      // GestureDetector(
+      // onTap: tap,
+      // child:
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Color(0xFFEEEEEE), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          trailing:
+              title.isNotEmpty
+                  ? const Icon(Icons.chevron_right, color: Colors.grey)
+                  : null,
+          onTap: tap,
         ),
-        trailing:
-            title.isNotEmpty
-                ? const Icon(Icons.chevron_right, color: Colors.grey)
-                : null,
-        onTap: () {
-          // Add navigation or action here
-        },
-      ),
-    );
+      );
+    // );
   }
 }

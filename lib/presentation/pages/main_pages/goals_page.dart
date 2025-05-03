@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_home_page.dart';
 
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
@@ -90,12 +91,79 @@ class _GoalsPageState extends State<GoalsPage> {
                     ),
 
                     const SizedBox(height: 30),
-                    Text(
-                      'Today\'s Task',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => GoalHomePage(
+                                  // userName: "Nhi",
+                                  // habits: [
+                                  //   HabitItem(
+                                  //     title: "Meditating",
+                                  //     isCompleted: true,
+                                  //     color: Colors.green,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Read Philosophy",
+                                  //     isCompleted: true,
+                                  //     color: Colors.green,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Journaling",
+                                  //     isCompleted: false,
+                                  //     color: Colors.green,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Exercise",
+                                  //     isCompleted: false,
+                                  //     color: Colors.blue,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  //   HabitItem(
+                                  //     title: "Drink Water",
+                                  //     isCompleted: true,
+                                  //     color: Colors.purple,
+                                  //   ),
+                                  // ],
+                                  // completedHabits: 3,
+                                  // tasksLeft: 2,
+                                ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Today\'s Task',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
