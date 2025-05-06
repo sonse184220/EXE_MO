@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/core/utils/google_authentication.dart';
 import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
@@ -206,8 +207,9 @@ class LoginPage extends State<Login> {
                             const SizedBox(height: 20),
 
                             GestureDetector(
-                              onTap: () {
-                                // Handle Google sign in
+                              onTap: () async {
+                                var user = await signInWithGoogle();
+                                print(user);
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
