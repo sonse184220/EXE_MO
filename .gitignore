@@ -1,3 +1,6 @@
+android/key.properties
+android/release-key.jks
+
 # Miscellaneous
 *.class
 *.lock
