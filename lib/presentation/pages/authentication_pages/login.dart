@@ -1,30 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/google_authentication.dart';
-import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
-import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
-import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';
-import 'package:inner_child_app/presentation/pages/subscription_pages/subscription_page.dart';
 
-class LoginWrapperMaterial extends StatelessWidget {
-  const LoginWrapperMaterial({super.key});
+import '../../../core/utils/dependency_injection/injection.dart';
+import '../../../domain/entities/auth/user_login_model.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(home: Login(), debugShowCheckedModeBanner: false);
-  }
-}
-
-class Login extends StatefulWidget {
+class Login extends ConsumerStatefulWidget {
   const Login({super.key});
 
   @override
   LoginPage createState() => LoginPage();
 }
 
-class LoginPage extends State<Login> {
+class LoginPage extends ConsumerState<Login> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
+
+  late final _authUseCase;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the authUseCase once
+    _authUseCase = ref.read(authUseCaseProvider);
+  }
+
+  Future<void> _handleLoginWithGoogle() async {
+    try {
+      var userCredential = await signInWithGoogle();
+      final idToken = await userCredential.user?.getIdToken();
+      print(idToken);
+      final result = await _authUseCase.loginWithGoogle(idToken);
+      if (result.isSuccess) {
+        NotifyAnotherFlushBar.showFlushbar(
+          result.data ?? 'Login google success.',
+          isError: false,
+        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const MainScreen()),
+        // );
+      } else {
+        NotifyAnotherFlushBar.showFlushbar(
+          result.error ?? 'Login google failed. Please check your credentials',
+          isError: true,
+        );
+      }
+    } catch (e) {
+      print(e.toString());
+      NotifyAnotherFlushBar.showFlushbar(
+        e.toString() ?? 'Login google failed. Please check your credentials',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    if (email.isEmpty || password.isEmpty) {
+      NotifyAnotherFlushBar.showFlushbar(
+        'Please fill in both fields',
+        isError: true,
+      );
+      return;
+    }
+
+    if (!emailRegex.hasMatch(_emailController.text)) {
+      NotifyAnotherFlushBar.showFlushbar(
+        'Email is not valid.',
+        isError: true,
+      );
+      return;
+    }
+
+    final loginModel = UserLoginModel(email: email, password: password);
+
+    final result = await _authUseCase.loginWithCredentials(loginModel);
+
+    if (result.isSuccess) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileChoosingPage()),
+      );
+    } else {
+      NotifyAnotherFlushBar.showFlushbar(
+        result.error ?? 'Login failed. Please check your credentials',
+        isError: true,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authUseCase = ref.read(authUseCaseProvider);
+
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -97,7 +182,7 @@ class LoginPage extends State<Login> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             TextFormField(
-                              // controller: _emailController,
+                              controller: _emailController,
                               decoration: InputDecoration(
                                 hintText: 'Enter your email',
                                 contentPadding: const EdgeInsets.symmetric(
@@ -114,8 +199,8 @@ class LoginPage extends State<Login> {
                             ),
                             const SizedBox(height: 20),
                             TextFormField(
-                              // controller: _passwordController,
-                              // obscureText: _obscurePassword,
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 hintText: 'Enter your password',
                                 contentPadding: const EdgeInsets.symmetric(
@@ -129,15 +214,15 @@ class LoginPage extends State<Login> {
                                 filled: true,
                                 fillColor: Colors.grey[200],
                                 suffixIcon: IconButton(
-                                  icon: Icon(Icons.visibility_off),
-                                  // icon: Icon(
-                                  //     _obscurePassword
-                                  //     ? Icons.visibility_off
-                                  //     : Icons.visibility),
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
                                   onPressed: () {
-                                    // setState(() {
-                                    //   _obscurePassword = !_obscurePassword;
-                                    // });
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
                                   },
                                 ),
                               ),
@@ -173,14 +258,16 @@ class LoginPage extends State<Login> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainScreen(),
-                                  ),
-                                );
-                              },
+                              onPressed:
+                              _handleLogin,
+                              //     () {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (context) => const ProfileChoosingPage(),
+                              //     ),
+                              //   );
+                              // },
                               child: const Text(
                                 'SIGN IN',
                                 style: TextStyle(
@@ -207,10 +294,11 @@ class LoginPage extends State<Login> {
                             const SizedBox(height: 20),
 
                             GestureDetector(
-                              onTap: () async {
-                                var user = await signInWithGoogle();
-                                print(user);
-                              },
+                              onTap: _handleLoginWithGoogle,
+                              //     () async {
+                              //   var user = await signInWithGoogle();
+                              //
+                              // },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,

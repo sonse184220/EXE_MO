@@ -41,48 +41,51 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCCIm1oPDZqhiBanaaOu0ZA6vs57U7QU0U',
-    appId: '1:255464204042:web:77b594fa2c70e80efbbcf3',
-    messagingSenderId: '255464204042',
-    projectId: 'exe-innerchild',
-    authDomain: 'exe-innerchild.firebaseapp.com',
-    storageBucket: 'exe-innerchild.firebasestorage.app',
-    measurementId: 'G-HMW2KHQ2CC',
+    apiKey: 'AIzaSyCvIwTKS8E-dVLbVvWDe0VsPDy0I6RE79c',
+    appId: '1:172921488677:web:bb34e1798aaaf9bc3c86cc',
+    messagingSenderId: '172921488677',
+    projectId: 'innerchildexeapp',
+    authDomain: 'innerchildexeapp.firebaseapp.com',
+    storageBucket: 'innerchildexeapp.firebasestorage.app',
+    measurementId: 'G-K8F6Q27BTY',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAQfTyN7-8gLvcafZ1mN0a0CszorKvoa4o',
-    appId: '1:255464204042:android:79c2a7b7f67e1127fbbcf3',
-    messagingSenderId: '255464204042',
-    projectId: 'exe-innerchild',
-    storageBucket: 'exe-innerchild.firebasestorage.app',
+    apiKey: 'AIzaSyCuFMO_NqRxJUjblo0ZHNrEsqZVAM0FiGc',
+    appId: '1:172921488677:android:3b97a68e4d4aefad3c86cc',
+    messagingSenderId: '172921488677',
+    projectId: 'innerchildexeapp',
+    storageBucket: 'innerchildexeapp.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAjursC7xDG3lSIwe8tgbWMbq6XmsPwbok',
-    appId: '1:255464204042:ios:b81beeb3f31d7217fbbcf3',
-    messagingSenderId: '255464204042',
-    projectId: 'exe-innerchild',
-    storageBucket: 'exe-innerchild.firebasestorage.app',
+    apiKey: 'AIzaSyDVGxITirYyKaCVLcRHKRmlilica65Qvu0',
+    appId: '1:172921488677:ios:99166bf6c3c908aa3c86cc',
+    messagingSenderId: '172921488677',
+    projectId: 'innerchildexeapp',
+    storageBucket: 'innerchildexeapp.firebasestorage.app',
+    iosClientId: '172921488677-69do07da350tdmhq2m7jh1g131hekuj9.apps.googleusercontent.com',
     iosBundleId: 'com.example.innerChildApp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAjursC7xDG3lSIwe8tgbWMbq6XmsPwbok',
-    appId: '1:255464204042:ios:b81beeb3f31d7217fbbcf3',
-    messagingSenderId: '255464204042',
-    projectId: 'exe-innerchild',
-    storageBucket: 'exe-innerchild.firebasestorage.app',
+    apiKey: 'AIzaSyDVGxITirYyKaCVLcRHKRmlilica65Qvu0',
+    appId: '1:172921488677:ios:99166bf6c3c908aa3c86cc',
+    messagingSenderId: '172921488677',
+    projectId: 'innerchildexeapp',
+    storageBucket: 'innerchildexeapp.firebasestorage.app',
+    iosClientId: '172921488677-69do07da350tdmhq2m7jh1g131hekuj9.apps.googleusercontent.com',
     iosBundleId: 'com.example.innerChildApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCCIm1oPDZqhiBanaaOu0ZA6vs57U7QU0U',
-    appId: '1:255464204042:web:d875c95ae4f1a65ffbbcf3',
-    messagingSenderId: '255464204042',
-    projectId: 'exe-innerchild',
-    authDomain: 'exe-innerchild.firebaseapp.com',
-    storageBucket: 'exe-innerchild.firebasestorage.app',
-    measurementId: 'G-4NK0H9XH54',
+    apiKey: 'AIzaSyCvIwTKS8E-dVLbVvWDe0VsPDy0I6RE79c',
+    appId: '1:172921488677:web:e031bbf02f5b45a13c86cc',
+    messagingSenderId: '172921488677',
+    projectId: 'innerchildexeapp',
+    authDomain: 'innerchildexeapp.firebaseapp.com',
+    storageBucket: 'innerchildexeapp.firebasestorage.app',
+    measurementId: 'G-Q7G8EN0WYN',
   );
+
 }

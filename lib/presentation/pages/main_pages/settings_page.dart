@@ -76,7 +76,7 @@ class _SettingsPageState extends State<SettingsPage> {
         tap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => LoginWrapperMaterial()),
+            MaterialPageRoute(builder: (context) => Login()),
           );
         },
       ),
