@@ -10,7 +10,7 @@ class AuthApiService {
 
   AuthApiService(this._client);
 
-  Future<Response> register(UserRegisterModel user) {
+  Future<Response> register(UserRegisterModel user) async {
     final formData = FormData.fromMap({
       'Email': user.emailAddress,
       'Password': user.password,
@@ -21,33 +21,33 @@ class AuthApiService {
       'PhoneNumber': user.phoneNumber,
     });
 
-    return _client.post('innerchild/auth/register', data: formData);
+    return await _client.post('innerchild/auth/register', data: formData);
   }
 
-  Future<Response> loginWithCredentials(UserLoginModel user){
+  Future<Response> loginWithCredentials(UserLoginModel user) async {
     var userCredentialsJson = user.toJson();
-    return _client.post('innerchild/auth/check-login', data: userCredentialsJson);
+    return await _client.post('innerchild/auth/check-login', data: userCredentialsJson);
   }
 
-  Future<Response> loginWithGoogle(String firebaseToken){
+  Future<Response> loginWithGoogle(String firebaseToken) async{
     var tokenObject =
       {
         "firebaseToken": firebaseToken
       };
 
-    return _client.post('innerchild/auth/check-login-firebase', data: tokenObject);
+    return await _client.post('innerchild/auth/check-login-firebase', data: tokenObject);
   }
 
-  Future<Response> loginWithProfile(String profileToken){
+  Future<Response> loginWithProfile(String profileToken) async {
     var tokenObject =
     {
       "token": profileToken
     };
 
-    return _client.post('innerchild/auth/login', data: tokenObject);
+    return await _client.post('innerchild/auth/login', data: tokenObject);
   }
 
-  Future<Response> editProfile(String userId, ProfileEditModel profile) {
+  Future<Response> editProfile(String userId, ProfileEditModel profile) async {
     final formData = FormData.fromMap({
       'FullName': profile.fullName,
       'DateOfBirth': profile.dateOfBirth?.toIso8601String(), // or format as needed
@@ -56,6 +56,6 @@ class AuthApiService {
       'ProfilePicture': profile.profileImage
     });
     
-    return _client.put('/innerchild/auth/update-profile/$userId', data: formData);
+    return await _client.put('/innerchild/auth/update-profile/$userId', data: formData);
   }
 }

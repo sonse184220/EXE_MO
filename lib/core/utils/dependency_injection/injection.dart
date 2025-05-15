@@ -3,18 +3,22 @@ import 'package:inner_child_app/core/utils/auth_utils/auth_notifier.dart';
 import 'package:inner_child_app/core/utils/dio_instance.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
 import 'package:inner_child_app/data/datasources/remote/article_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/audio_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/notification_api_service.dart';
+import 'package:inner_child_app/data/repositories/audio_repository.dart';
 import 'package:inner_child_app/data/repositories/article_repository.dart';
 import 'package:inner_child_app/data/repositories/auth_repository.dart';
 import 'package:inner_child_app/data/repositories/community_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 import 'package:inner_child_app/domain/repositories/i_article_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_audio_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_notification_repository.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
+import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
@@ -55,6 +59,10 @@ final communityApiServiceProvider = Provider(
       (ref) => CommunityApiService(ref.read(dioClientProvider)),
 );
 
+final audioApiServiceProvider = Provider(
+      (ref) => AudioApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -73,6 +81,10 @@ final notificationRepositoryProvider = Provider<INotificationRepository>(
 
 final communityRepositoryProvider = Provider<ICommunityRepository>(
       (ref) => CommunityRepository(ref.read(communityApiServiceProvider)),
+);
+
+final audioRepositoryProvider = Provider<IAudioRepository>(
+      (ref) => AudioRepository(ref.read(audioApiServiceProvider)),
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -95,6 +107,9 @@ final communityUseCaseProvider = Provider(
       (ref) => CommunityUsecase(ref.read(communityRepositoryProvider)),
 );
 
+final audioUseCaseProvider = Provider(
+      (ref) => AudioUseCase(ref.read(audioRepositoryProvider)),
+);
 
 // ─────────────────────────────────────────────────────────────
 // 📍 State Notifiers

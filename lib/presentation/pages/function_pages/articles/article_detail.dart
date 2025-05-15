@@ -197,7 +197,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
                                     ),
                                     SizedBox(height: 20),
                                     Text(
-                                      _article!.articleName,
+                                      _article?.articleName ?? 'Unknown',
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
@@ -237,7 +237,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
                                     // ),
                                     SizedBox(height: 10),
                                     Text(
-                                      _article!.articleDescription,
+                                      _article?.articleDescription ?? 'Unknown',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                     Row(

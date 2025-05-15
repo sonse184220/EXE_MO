@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/article/article_model.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/articles/article_detail.dart';
@@ -38,10 +39,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       setState(() {
         _isLoading = false;
       });
-      print(e);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -109,12 +108,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     child: Text(
                                       'Search healing properties or article here',
                                       style: TextStyle(
-                                        color: Color.fromRGBO(
-                                          153,
-                                          153,
-                                          153,
-                                          1,
-                                        ),
+                                        color: Color.fromRGBO(153, 153, 153, 1),
                                         fontSize: 14,
                                         fontFamily: 'League Spartan',
                                       ),
@@ -154,7 +148,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20,),
+                      SizedBox(height: 20),
                       //Mood Tracker Card Section
                       Container(
                         width: double.infinity,
@@ -175,8 +169,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withAlpha((0.4 * 255).toInt()), // 102
-                                Colors.black.withAlpha((0.2 * 255).toInt()), // 51
+                                Colors.black.withAlpha((0.4 * 255).toInt()),
+                                // 102
+                                Colors.black.withAlpha((0.2 * 255).toInt()),
+                                // 51
                               ],
                             ),
                           ),
@@ -323,28 +319,40 @@ class _HomePageState extends ConsumerState<HomePage> {
                           _isLoading
                               ? CircularProgressIndicator()
                               : SizedBox(
-                            height: 210,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _articles.length,
-                              itemBuilder: (context, index) {
-                                final article = _articles[index];
-                                return _buildArticleCard(
-                                  image: article.articleUrl,
-                                  title: article.articleName,
-                                  category: article.articleDescription,
-                                  tap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ArticleDetail(articleId: article.articleId,),
-                                      ),
+                                height: 210,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _articles.length,
+                                  itemBuilder: (context, index) {
+                                    final article = _articles[index];
+                                    return _buildArticleCard(
+                                      image: article.articleUrl ?? '',
+                                      title: article.articleName ?? 'Unknown',
+                                      category:
+                                          article.articleDescription ??
+                                          'Unknown',
+                                      tap: () {
+                                        if (article.articleId != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => ArticleDetail(
+                                                articleId: article.articleId!,
+                                              ),
+                                            ),
+                                          );
+                                        }else{
+                                          NotifyAnotherFlushBar.showFlushbar(
+                                            'Can not view article details.',
+                                          );
+                                        }
+
+                                      },
                                     );
                                   },
-                                );
-                              },
-                            ),
-                          ),
+                                ),
+                              ),
 
                           // Articles Cards
                           // SizedBox(
@@ -489,7 +497,7 @@ Widget _buildArticleCard({
 }) {
   const String fallbackImage =
       'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ=';
-// 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/495px-No-Image-Placeholder.svg.png?20200912122019';
+  // 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/495px-No-Image-Placeholder.svg.png?20200912122019';
   return GestureDetector(
     onTap: tap,
     child: Container(

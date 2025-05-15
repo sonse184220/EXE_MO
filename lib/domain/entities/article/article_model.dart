@@ -1,25 +1,25 @@
 class ArticleModel {
-  final String articleId;
-  final String articleName;
-  final String articleUrl;
-  final String articleDescription;
-  final String articleContent;
+  final String? articleId;
+  final String? articleName;
+  final String? articleUrl;
+  final String? articleDescription;
+  final String? articleContent;
 
   ArticleModel({
-    required this.articleId,
-    required this.articleName,
-    required this.articleUrl,
-    required this.articleDescription,
-    required this.articleContent,
+    this.articleId,
+    this.articleName,
+    this.articleUrl,
+    this.articleDescription,
+    this.articleContent,
   });
 
   factory ArticleModel.fromJson(Map<String, dynamic> json) {
     return ArticleModel(
-      articleId: json['articleId'] as String,
-      articleName: json['articleName'] as String,
-      articleUrl: json['articleUrl'] as String,
-      articleDescription: json['articleDescription'] as String,
-      articleContent: json['articleContent'] as String,
+      articleId: json['articleId'] as String?,
+      articleName: json['articleName'] as String?,
+      articleUrl: json['articleUrl'] as String?,
+      articleDescription: json['articleDescription'] as String?,
+      articleContent: json['articleContent'] as String?,
     );
   }
 

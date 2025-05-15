@@ -7,6 +7,6 @@ class CommunityApiService {
   CommunityApiService(this._client);
 
   Future<Response> getAllCommunityGroups() async {
-    return await _client.get('innerchild/article/all');
+    return await _client.get('innerchild/community/all-communities');
   }
 }
