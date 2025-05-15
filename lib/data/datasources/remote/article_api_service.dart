@@ -6,7 +6,11 @@ class ArticleApiService {
 
   ArticleApiService(this._client);
 
-  Future<Response> getAllArticle() async {
-    return await _client.get('article');
+  Future<Response> getAllArticles() async {
+    return await _client.get('innerchild/article/all');
+  }
+
+  Future<Response> getArticleById(String id) async {
+    return await _client.get('innerchild/article/detail/$id');
   }
 }

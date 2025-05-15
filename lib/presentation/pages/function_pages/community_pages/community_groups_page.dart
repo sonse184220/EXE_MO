@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_detail_page.dart';
 
-class CommunityGroupsPage extends StatefulWidget {
+class CommunityGroupsPage extends ConsumerStatefulWidget {
   const CommunityGroupsPage({super.key});
 
   @override
-  State<CommunityGroupsPage> createState() => _CommunityGroupsPageState();
+  ConsumerState<CommunityGroupsPage> createState() => _CommunityGroupsPageState();
 }
 
-class _CommunityGroupsPageState extends State<CommunityGroupsPage> {
+class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
+  late final CommunityUsecase _communityUsecase;
   late final List<Widget> communityGroups;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _communityUsecase = ref.read(communityUseCaseProvider);
     communityGroups = [// Community group list
       GroupListItem(
         name: 'Santa Fe Community',

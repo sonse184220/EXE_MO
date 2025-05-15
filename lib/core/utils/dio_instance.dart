@@ -11,8 +11,8 @@ class DioClient {
   DioClient(SecureStorageUtils storage)
     : dio = Dio(
         BaseOptions(
-          // baseUrl: 'https://innerchild.somee.com/',
-          baseUrl: 'http://127.0.0.1:5271/',
+          baseUrl: 'http://178.128.218.214:5000/',
+          // baseUrl: 'http://127.0.0.1:5271/',
           // baseUrl: 'https://10.0.2.2:7011/',
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
