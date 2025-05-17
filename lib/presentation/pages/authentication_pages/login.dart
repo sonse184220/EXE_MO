@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:inner_child_app/core/utils/google_authentication.dart';
+import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/presentation/pages/authentication_pages/forgot_password_1.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';
 
@@ -231,7 +232,7 @@ class LoginPage extends ConsumerState<Login> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPassword1()));},
                                 child: const Text(
                                   'FORGET PASSWORD?',
                                   style: TextStyle(

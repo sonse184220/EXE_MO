@@ -26,23 +26,23 @@ class AuthApiService {
 
   Future<Response> loginWithCredentials(UserLoginModel user) async {
     var userCredentialsJson = user.toJson();
-    return await _client.post('innerchild/auth/check-login', data: userCredentialsJson);
+    return await _client.post(
+      'innerchild/auth/check-login',
+      data: userCredentialsJson,
+    );
   }
 
-  Future<Response> loginWithGoogle(String firebaseToken) async{
-    var tokenObject =
-      {
-        "firebaseToken": firebaseToken
-      };
+  Future<Response> loginWithGoogle(String firebaseToken) async {
+    var tokenObject = {"firebaseToken": firebaseToken};
 
-    return await _client.post('innerchild/auth/check-login-firebase', data: tokenObject);
+    return await _client.post(
+      'innerchild/auth/check-login-firebase',
+      data: tokenObject,
+    );
   }
 
   Future<Response> loginWithProfile(String profileToken) async {
-    var tokenObject =
-    {
-      "token": profileToken
-    };
+    var tokenObject = {"token": profileToken};
 
     return await _client.post('innerchild/auth/login', data: tokenObject);
   }
@@ -50,12 +50,40 @@ class AuthApiService {
   Future<Response> editProfile(String userId, ProfileEditModel profile) async {
     final formData = FormData.fromMap({
       'FullName': profile.fullName,
-      'DateOfBirth': profile.dateOfBirth?.toIso8601String(), // or format as needed
+      'DateOfBirth': profile.dateOfBirth?.toIso8601String(),
+      // or format as needed
       'Gender': profile.gender,
       'PhoneNumber': profile.phoneNumber,
-      'ProfilePicture': profile.profileImage
+      'ProfilePicture': profile.profileImage,
     });
-    
-    return await _client.put('/innerchild/auth/update-profile/$userId', data: formData);
+
+    return await _client.put(
+      'innerchild/auth/update-profile/$userId',
+      data: formData,
+    );
+  }
+
+  Future<Response> forgotPassword(String email) async {
+    final emailObject = {"email": email};
+    return await _client.post(
+      'innerchild/auth/forgot-password',
+      data: emailObject,
+    );
+  }
+
+  Future<Response> resetPassword(
+    String token,
+    String password,
+    String confirmPassword,
+  ) async {
+    final resetPasswordObject = {
+      "token": token,
+      "newPassword": password,
+      "confirmNewPassword": confirmPassword
+    };
+    return await _client.post(
+      'innerchild/auth/reset-password',
+      data: resetPasswordObject,
+    );
   }
 }

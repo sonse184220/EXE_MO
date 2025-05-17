@@ -34,4 +34,15 @@ class AuthUsecase {
   Future<Result<String>> editProfile(ProfileEditModel profile) {
     return repository.editProfile(profile);
   }
+
+  Future<Result<String>> forgotPassword(String email) {
+    return repository.forgotPassword(email);
+  }
+
+  Future<Result<String>> resetPassword(
+    String password,
+    String confirmPassword,
+  ) {
+    return repository.resetPassword(password, confirmPassword);
+  }
 }

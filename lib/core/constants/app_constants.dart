@@ -3,4 +3,5 @@ class AppConstants {
   static const refreshToken = 'refreshToken';
   static const profiles = 'profiles';
   static const tokenModel = 'tokenModel';
+  static const forgotPasswordToken = 'forgotPasswordToken';
 }

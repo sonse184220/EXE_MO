@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
+import 'package:inner_child_app/core/utils/auth_utils/auth_util_methods.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
@@ -11,6 +12,7 @@ import 'package:inner_child_app/domain/entities/auth/user_register_model.dart';
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
 
 import '../../core/utils/result_model.dart';
+import '../../domain/entities/auth/forgot_password_token_model.dart';
 import '../datasources/remote/authentication_api_service.dart';
 
 class AuthRepository implements IAuthRepository {
@@ -174,6 +176,70 @@ class AuthRepository implements IAuthRepository {
       );
     } catch (e) {
       return Result.failure('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> forgotPassword(String email) async {
+    try{
+      final response = await apiService.forgotPassword(email);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final payload = AuthUtilMethods.decodeJwtPayload(data);
+        final int expiryUnix = payload['exp'];
+        final expirationTime = DateTime.fromMillisecondsSinceEpoch(expiryUnix * 1000);
+
+        final tokenModel = ForgotPasswordTokenModel(
+          token: data,
+          expiry: expirationTime,
+        );
+
+        final tokenJson = jsonEncode(tokenModel.toJson());
+        await _secureStorageUtils.write(AppConstants.forgotPasswordToken, tokenJson);
+        return Result.success('Success: Please move to your password reset page for next step');
+      }else {
+        throw Exception('An error occured: ${response.statusCode}');
+      }
+    }catch (e) {
+      return Result.failure('An error occured: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> resetPassword(String password, String confirmPassword) async {
+    try {
+      // Read stored forgot password token model JSON
+      final tokenJson = await _secureStorageUtils.read(AppConstants.forgotPasswordToken);
+      if (tokenJson == null || tokenJson.isEmpty) {
+        return Result.failure('No valid reset password request found. Please request a new password reset.');
+      }
+
+      // Decode token model
+      final tokenModel = ForgotPasswordTokenModel.fromJson(jsonDecode(tokenJson));
+
+      // Check token validity
+      if (DateTime.now().isAfter(tokenModel.expiry)) {
+        return Result.failure('Reset password request expired. Please request a new password reset.');
+      }
+
+      // Call reset password API with token and new passwords
+      final response = await apiService.resetPassword(
+        tokenModel.token,
+        password,
+        confirmPassword,
+      );
+
+      if (response.statusCode == 200) {
+        // Optionally, clear stored token after success
+        await _secureStorageUtils.delete(AppConstants.forgotPasswordToken);
+        return Result.success('Password reset email has been sent successfully. Please check your email to confirm.');
+      } else {
+        return Result.failure('Failed to send email reset password. Please try again.');
+      }
+    } catch (e) {
+      return Result.failure('An error occurred: $e');
     }
   }
 }
