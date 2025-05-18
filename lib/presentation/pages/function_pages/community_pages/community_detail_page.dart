@@ -1,19 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
+import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 
-class CommunityDetailPage extends StatefulWidget {
-  const CommunityDetailPage({super.key});
+class CommunityDetailPage extends ConsumerStatefulWidget {
+  final String communityGroupId;
+
+  const CommunityDetailPage({super.key, required this.communityGroupId});
 
   @override
-  State<CommunityDetailPage> createState() => _CommunityDetailPageState();
+  ConsumerState<CommunityDetailPage> createState() =>
+      _CommunityDetailPageState();
 }
 
-class _CommunityDetailPageState extends State<CommunityDetailPage> {
+class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage> {
+  late final CommunityUsecase _communityUsecase;
+  CommunityGroupModel? communityGroup;
+  bool isLoading = true;
+
   late final List<Widget> communityPosts;
+
+  Future<void> fetchCommunityGroupById() async {
+    // Replace with your real API call
+    final result = await _communityUsecase.getCommunityGroupById(widget.communityGroupId); // Your method
+
+    setState(() {
+      communityGroup = result.data;
+      isLoading = false;
+    });
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    _communityUsecase = ref.read(communityUseCaseProvider);
+
     communityPosts = [
       CommunityPost(
         authorName: 'Laura',
@@ -56,124 +80,147 @@ class _CommunityDetailPageState extends State<CommunityDetailPage> {
         subcategory: 'Healing ritual',
       ),
     ];
+
+    fetchCommunityGroupById();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Community header image
-                    Stack(
-                      children: [
-                        Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(
-                                'assets/images/meditation_page_image.png',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 20,
-                          left: 20,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.7),
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Community title and info
-                    Expanded(
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final posts = communityGroup?.communityPostsDetail ?? [];
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Santa Fe Community',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            // Community header image
+                            Stack(
+                              children: [
+                                Container(
+                                  height: 200,
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                        'assets/images/meditation_page_image.png',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 20,
+                                  left: 20,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withAlpha(
+                                        (0.7 * 255).toInt(),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(
+                                      Icons.arrow_back,
+                                      color: Colors.grey,
+                                    ),)
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 5),
-                            const Text(
-                              '204 participants',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                            ),
 
-                            const SizedBox(height: 20),
-
-                            // Pinned posts section
-                            const Text(
-                              'Pinned posts',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-
-                            const SizedBox(height: 15),
-
+                            // Community title and info
                             Expanded(
-                              child: ListView.separated(
-                                shrinkWrap: true,
-                                itemCount: communityPosts.length,
-                                itemBuilder: (context, index) {
-                                  return communityPosts[index];
-                                },
-                                separatorBuilder:
-                                    (context, index) => const Divider(),
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      communityGroup?.communityName ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    // Pinned posts section
+                                    const Text(
+                                      'Pinned posts',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 15),
+
+                                    Expanded(
+                                      child: ListView.separated(
+                                        itemCount: posts.length,
+                                        itemBuilder: (context, index) {
+                                          // return communityPosts[index];
+
+                                          final post = posts[index];
+                                          return CommunityPost(
+                                            authorName: post.communityPostTitle ?? 'Unknown',
+                                            communityName:
+                                            communityGroup?.communityName ?? '',
+                                            postTitle: post.communityPostTitle ?? '',
+                                            postImage:
+                                            'assets/images/meditation_page_image.png', // fallback asset
+                                            category: post.communityPostStatus ?? 'General',
+                                            subcategory: post.communityPostCreatedAt
+                                                ?.toIso8601String() ??
+                                                '',
+                                          );
+                                        },
+                                        separatorBuilder:
+                                            (context, index) => const Divider(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }

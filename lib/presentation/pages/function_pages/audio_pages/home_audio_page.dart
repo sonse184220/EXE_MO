@@ -1,69 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/entities/audio/audio_model.dart';
+import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/audio_playing_page.dart';
 
-class HomeAudioPage extends StatefulWidget {
+class HomeAudioPage extends ConsumerStatefulWidget {
   const HomeAudioPage({super.key});
 
   @override
-  State<HomeAudioPage> createState() => _HomeAudioPageState();
+  ConsumerState<HomeAudioPage> createState() => _HomeAudioPageState();
 }
 
-class _HomeAudioPageState extends State<HomeAudioPage> {
+class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
+  late final AudioUseCase _audioUseCase;
+
+  List<AudioModel> audioList = [];
+  bool isLoading = true;
+
   late final List<Widget> featureList;
+
+  // You may extract duration from metadata in the future; for now it's a placeholder
+  String _formatDuration(String? url) {
+    return '10 min';
+  }
+
+  Future<void> _loadAudioList() async {
+    try {
+      final result =
+          await _audioUseCase
+              .getAllAudios(); // assuming this returns List<AudioModel>
+      setState(() {
+        audioList = result.data!;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching audios: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    featureList = [
-      _buildSessionCard(
-        title: 'Affirmations to close your day',
-        duration: '15 min',
-        tags: ['Evening', 'Relax'],
-        play: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AudioPlayingPage()),
-          );
-        },
-      ),
-      _buildSessionCard(
-        title: 'Meditation for deep sleep',
-        duration: '10 min',
-        tags: ['Sleep', 'Evening'],
-        play: null,
-      ),
-      _buildSessionCard(
-        title: 'A daily mindfulness practice',
-        duration: '10 min',
-        tags: ['Daily', 'Relax'],
-        play: null,
-      ),
-      _buildSessionCard(
-        title: 'A daily mindfulness practice',
-        duration: '10 min',
-        tags: ['Daily', 'Relax'],
-        play: null,
-      ),
-      _buildSessionCard(
-        title: 'A daily mindfulness practice',
-        duration: '10 min',
-        tags: ['Daily', 'Relax'],
-        play: null,
-      ),
-      _buildSessionCard(
-        title: 'A daily mindfulness practice',
-        duration: '10 min',
-        tags: ['Daily', 'Relax'],
-        play: null,
-      ),
-      _buildSessionCard(
-        title: 'A daily mindfulness practice',
-        duration: '10 min',
-        tags: ['Daily', 'Relax'],
-        play: null,
-      ),
-    ];
+
+    _audioUseCase = ref.read(audioUseCaseProvider);
+
+    _loadAudioList();
+
+    // featureList = [
+    //   _buildSessionCard(
+    //     title: 'Affirmations to close your day',
+    //     duration: '15 min',
+    //     tags: ['Evening', 'Relax'],
+    //     play: () {
+    //       Navigator.push(
+    //         context,
+    //         MaterialPageRoute(builder: (context) => AudioPlayingPage()),
+    //       );
+    //     },
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'Meditation for deep sleep',
+    //     duration: '10 min',
+    //     tags: ['Sleep', 'Evening'],
+    //     play: null,
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'A daily mindfulness practice',
+    //     duration: '10 min',
+    //     tags: ['Daily', 'Relax'],
+    //     play: null,
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'A daily mindfulness practice',
+    //     duration: '10 min',
+    //     tags: ['Daily', 'Relax'],
+    //     play: null,
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'A daily mindfulness practice',
+    //     duration: '10 min',
+    //     tags: ['Daily', 'Relax'],
+    //     play: null,
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'A daily mindfulness practice',
+    //     duration: '10 min',
+    //     tags: ['Daily', 'Relax'],
+    //     play: null,
+    //   ),
+    //   _buildSessionCard(
+    //     title: 'A daily mindfulness practice',
+    //     duration: '10 min',
+    //     tags: ['Daily', 'Relax'],
+    //     play: null,
+    //   ),
+    // ];
   }
 
   @override
@@ -123,13 +159,19 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withAlpha(
+                                        (0.1 * 255).round(),
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
-                                      Icons.arrow_back_ios_new,
-                                      color: Colors.white,
-                                      size: 18,
+                                    child: IconButton(
+                                      onPressed:
+                                          () => Navigator.of(context).pop(),
+                                      icon: Icon(
+                                        Icons.arrow_back_ios_new,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                     ),
                                   ),
                                   CircleAvatar(
@@ -160,21 +202,27 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withAlpha(
+                                    (0.2 * 255).round(),
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
                                       Icons.search,
-                                      color: Colors.white.withOpacity(0.7),
+                                      color: Colors.white.withAlpha(
+                                        (0.7 * 255).round(),
+                                      ),
                                       size: 20,
                                     ),
                                     SizedBox(width: 8),
                                     Text(
                                       'Search',
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withAlpha(
+                                          (0.7 * 255).round(),
+                                        ),
                                         fontSize: 16,
                                       ),
                                     ),
@@ -221,8 +269,9 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                               Text(
                                                 '5 min',
                                                 style: TextStyle(
-                                                  color: Colors.white
-                                                      .withOpacity(0.8),
+                                                  color: Colors.white.withAlpha(
+                                                    (0.8 * 255).round(),
+                                                  ),
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -249,8 +298,8 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                     child: Container(
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.deepPurple.withOpacity(
-                                          0.8,
+                                        color: Colors.deepPurple.withAlpha(
+                                          (0.8 * 255).round(),
                                         ),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -282,8 +331,9 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                               Text(
                                                 '8 min',
                                                 style: TextStyle(
-                                                  color: Colors.white
-                                                      .withOpacity(0.8),
+                                                  color: Colors.white.withAlpha(
+                                                    (0.8 * 255).round(),
+                                                  ),
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -325,7 +375,9 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                                   Text(
                                     'See all',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
+                                      color: Colors.white.withAlpha(
+                                        (0.7 * 255).round(),
+                                      ),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -335,20 +387,42 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                           ),
 
                           const SizedBox(height: 20),
+
                           // Bottom lists
-                          Expanded(
-                            child: ListView.separated(
-                              // padding: const EdgeInsets.symmetric(vertical: 16),
-                              shrinkWrap: true,
-                              itemCount: featureList.length,
-                              itemBuilder: (context, index) {
-                                final item = featureList[index];
-                                return item;
-                              },
-                              separatorBuilder:
-                                  (context, index) => SizedBox(height: 16),
-                            ),
-                          ),
+                          isLoading
+                              ? const Expanded(
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                              : Expanded(
+                                child: ListView.separated(
+                                  itemCount: audioList.length,
+                                  itemBuilder: (context, index) {
+                                    final audio = audioList[index];
+                                    return _buildSessionCard(audio: audio);
+                                  },
+                                  separatorBuilder:
+                                      (context, index) =>
+                                          const SizedBox(height: 16),
+                                ),
+                              ),
+
+                          // Expanded(
+                          //   child: ListView.separated(
+                          //     // padding: const EdgeInsets.symmetric(vertical: 16),
+                          //     shrinkWrap: true,
+                          //     itemCount: featureList.length,
+                          //     itemBuilder: (context, index) {
+                          //       final item = featureList[index];
+                          //       return item;
+                          //     },
+                          //     separatorBuilder:
+                          //         (context, index) => SizedBox(height: 16),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -363,10 +437,11 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
   }
 
   Widget _buildSessionCard({
-    required String title,
-    required String duration,
-    required List<String> tags,
-    required Function? play,
+    // required String title,
+    // required String duration,
+    // required List<String> tags,
+    // required Function? play,
+    required AudioModel audio,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,11 +450,11 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withAlpha((0.1 * 255).round()),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha((0.1 * 255).round()),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -391,7 +466,8 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    // title,
+                    audio.audioTitle ?? 'Untitled Audio',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -400,45 +476,56 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    duration,
+                    // duration,
+                    _formatDuration(audio.audioUrl), // Placeholder
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withAlpha((0.8 * 255).round()),
                       fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Row(
-                    children:
-                        tags
-                            .map(
-                              (tag) => Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  tag,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
+                    children: [
+                      if (audio.audioIsPremium == true) _buildTag('Premium'),
+                      if (audio.subAudioCategoryId != null)
+                        _buildTag(audio.audioStatus!),
+                    ],
+                    // tags
+                    //     .map(
+                    //       (tag) => Container(
+                    //         margin: const EdgeInsets.only(right: 6),
+                    //         padding: const EdgeInsets.symmetric(
+                    //           horizontal: 10,
+                    //           vertical: 4,
+                    //         ),
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.white.withOpacity(0.2),
+                    //           borderRadius: BorderRadius.circular(20),
+                    //         ),
+                    //         child: Text(
+                    //           tag,
+                    //           style: const TextStyle(
+                    //             color: Colors.white,
+                    //             fontSize: 11,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     )
+                    //     .toList(),
                   ),
                 ],
               ),
               const Spacer(),
               GestureDetector(
                 onTap: () {
-                  play?.call();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AudioPlayingPage()),
+                  );
                 },
+                // onTap: () {
+                //   play?.call();
+                // },
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: const BoxDecoration(
@@ -456,6 +543,21 @@ class _HomeAudioPageState extends State<HomeAudioPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTag(String tag) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha((0.2 * 255).round()),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        tag,
+        style: const TextStyle(color: Colors.white, fontSize: 11),
+      ),
     );
   }
 }
