@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
-import 'package:inner_child_app/domain/entities/community/community_model.dart';
+import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_detail_page.dart';
 
@@ -15,7 +15,7 @@ class CommunityGroupsPage extends ConsumerStatefulWidget {
 
 class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
   late final CommunityUsecase _communityUsecase;
-  List<CommunityModel> communityList = [];
+  List<CommunityGroupModel> communityList = [];
   bool isLoading = true;
 
   late final List<Widget> communityGroups;
@@ -63,12 +63,12 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
         details: 'created since June, 23',
         imagePath: 'assets/images/meditation_page_image.png',
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CommunityDetailPage(),
-            ),
-          );
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => CommunityDetailPage(communityGroupId: commu,),
+          //   ),
+          // );
         },
       ),
 
@@ -222,15 +222,15 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
                             // return communityGroups[index];
                             final community = communityList[index];
                             return GroupListItem(
-                              name: community.communityName,
-                              status: community.communityStatus,
-                              details: 'Created: ${community.communityCreatedAt.toLocal().toString().split(' ')[0]}',
+                              name: community.communityName ?? 'Unknown Community',
+                              status: community.communityStatus ?? 'Unknown',
+                              details: 'Created: ${community.communityCreatedAt?.toLocal().toString().split(' ')[0]}',
                               imagePath: 'assets/images/meditation_page_image.png', // Replace with dynamic image if available
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => CommunityDetailPage(
+                                    builder: (context) => CommunityDetailPage(communityGroupId: community.communityGroupId!,
                                       // pass community if needed
                                     ),
                                   ),

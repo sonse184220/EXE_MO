@@ -180,7 +180,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           border: Border.all(color: Color(0xFFEEEEEE), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha((0.05 * 255).round()),
               blurRadius: 4,
               offset: Offset(0, 2),
             ),
@@ -190,7 +190,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: Colors.black.withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 24),

@@ -9,4 +9,11 @@ class CommunityApiService {
   Future<Response> getAllCommunityGroups() async {
     return await _client.get('innerchild/community/all-communities');
   }
+
+  Future<Response> getCommunityGroupById(String id) async {
+    // final communityGroupIdObject = {
+    //   "communityGroupId": id
+    // }
+    return await _client.get('innerchild/community/community-detail/$id');
+  }
 }
