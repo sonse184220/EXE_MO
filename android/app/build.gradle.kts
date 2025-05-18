@@ -6,6 +6,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
+val customDebugkeystoreProperties = Properties()
+val customDebugkeystorePropertiesFile = rootProject.file("customDebugKey.properties")
+if (customDebugkeystorePropertiesFile.exists()) {
+    customDebugkeystoreProperties.load(customDebugkeystorePropertiesFile.inputStream())
+}
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -19,7 +25,7 @@ plugins {
 android {
     namespace = "com.example.inner_child_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+//    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -41,20 +47,19 @@ android {
         versionName = flutter.versionName
     }
 
-//    buildTypes {
-//        release {
-//            // TODO: Add your own signing config for the release build.
-//            // Signing with the debug keys for now, so `flutter run --release` works.
-//            signingConfig = signingConfigs.getByName("debug")
-//        }
-//    }
-
     signingConfigs {
         create("release") {
             storeFile = file(keystoreProperties["storeFile"] as String)
             storePassword = keystoreProperties["storePassword"] as String
             keyAlias = keystoreProperties["keyAlias"] as String
             keyPassword = keystoreProperties["keyPassword"] as String
+        }
+
+        getByName("debug") {
+            storeFile = file(customDebugkeystoreProperties["storeFile"] as String)
+            storePassword = customDebugkeystoreProperties["storePassword"] as String
+            keyAlias = customDebugkeystoreProperties["keyAlias"] as String
+            keyPassword = customDebugkeystoreProperties["keyPassword"] as String
         }
     }
 
@@ -67,6 +72,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

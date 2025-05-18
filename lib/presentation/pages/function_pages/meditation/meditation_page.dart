@@ -1,20 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/audio/audio_model.dart';
+import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/daily_mindfulness_page.dart';
 
-class MeditationPage extends StatefulWidget {
+class MeditationPage extends ConsumerStatefulWidget {
   const MeditationPage({super.key});
 
   @override
-  State<MeditationPage> createState() => _MeditationPageState();
+  ConsumerState<MeditationPage> createState() => _MeditationPageState();
 }
 
-class _MeditationPageState extends State<MeditationPage> {
+class _MeditationPageState extends ConsumerState<MeditationPage> {
+  late final AudioUseCase _audioUseCase;
+  List<AudioModel> audioListApi = [];
+  bool isLoading = true;
+
   late final List<Widget> audioList;
+
+  Future<void> _fetchAudios() async {
+    try {
+      final result = await _audioUseCase.getAllAudios();
+      if(result.isSuccess) {
+        NotifyAnotherFlushBar.showFlushbar( 'ok', isError: true);
+
+        setState(() {
+          audioListApi = result.data!;
+          isLoading = false;
+        });
+      } else {
+        NotifyAnotherFlushBar.showFlushbar( result.error ?? 'An unknown error occurred', isError: true);
+      }
+    } catch (e) {
+      NotifyAnotherFlushBar.showFlushbar('Error fetching audios list: $e', isError: true);
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    _audioUseCase = ref.read(audioUseCaseProvider);
+
     audioList = [
       _buildSessionOption('Quick session - 5 minutes', false, Icons.play_arrow),
 
@@ -35,6 +66,8 @@ class _MeditationPageState extends State<MeditationPage> {
       _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
       _buildSessionOption('Sleep music - 45 minutes', false, Icons.play_arrow),
     ];
+
+    _fetchAudios();
   }
 
   @override
@@ -136,7 +169,9 @@ class _MeditationPageState extends State<MeditationPage> {
                                       borderRadius: BorderRadius.circular(25),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
+                                          color: Colors.black.withAlpha(
+                                            (0.1 * 255).round(),
+                                          ),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -176,10 +211,17 @@ class _MeditationPageState extends State<MeditationPage> {
                           Expanded(
                             child: ListView.separated(
                               shrinkWrap: true,
-                              itemCount: audioList.length,
+                              itemCount: audioListApi.length,
                               itemBuilder: (context, index) {
-                                final item = audioList[index];
-                                return item;
+                                final audio = audioListApi[index];
+                                return _buildSessionOption(
+                                  audio.audioTitle ?? "Unknown",
+                                  index == 0,
+                                  // mark first one active as example
+                                  Icons.play_arrow,
+                                );
+                                // final item = audioList[index];
+                                // return item;
                               },
                               separatorBuilder:
                                   (context, index) => SizedBox(height: 15),
@@ -217,7 +259,9 @@ class _MeditationPageState extends State<MeditationPage> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withAlpha(
+                                    (0.1 * 255).round(),
+                                  ),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),

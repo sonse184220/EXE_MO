@@ -1,14 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/article/article_model.dart';
+import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/articles/article_detail.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
+  late final ArticleUseCase _articleUseCase;
+
+  List<ArticleModel> _articles = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _articleUseCase = ref.read(articleUseCaseProvider);
+    _loadArticles();
+  }
+
+  Future<void> _loadArticles() async {
+    try {
+      final articles = await _articleUseCase.getAllArticles();
+      setState(() {
+        _articles = articles.data!;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,89 +73,82 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       //Search Section
-                      Container(
-                        child: Row(
-                          // mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                    bottomLeft: Radius.circular(16),
-                                    bottomRight: Radius.circular(16),
-                                  ),
-                                  color: Color.fromRGBO(255, 255, 255, 1),
-                                  border: Border.all(
-                                    color: Color.fromRGBO(230, 230, 230, 1),
-                                    width: 1,
-                                  ),
+                      Row(
+                        // mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 16,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.search,
-                                      color: Color.fromRGBO(153, 153, 153, 1),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Search healing properties or article here',
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                            153,
-                                            153,
-                                            153,
-                                            1,
-                                          ),
-                                          fontSize: 14,
-                                          fontFamily: 'League Spartan',
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
+                                color: Color.fromRGBO(255, 255, 255, 1),
+                                border: Border.all(
+                                  color: Color.fromRGBO(230, 230, 230, 1),
+                                  width: 1,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Stack(
-                              alignment: Alignment.topRight,
-                              children: [
-                                const Icon(Icons.notifications_none, size: 28),
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 16,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.search,
+                                    color: Color.fromRGBO(153, 153, 153, 1),
                                   ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
-                                  ),
-                                  child: const Center(
+                                  SizedBox(width: 8),
+                                  Expanded(
                                     child: Text(
-                                      '+9',
+                                      'Search healing properties or article here',
                                       style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
+                                        color: Color.fromRGBO(153, 153, 153, 1),
+                                        fontSize: 14,
+                                        fontFamily: 'League Spartan',
                                       ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              const Icon(Icons.notifications_none, size: 28),
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    '+9',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 20,),
+                      SizedBox(height: 20),
                       //Mood Tracker Card Section
                       Container(
                         width: double.infinity,
@@ -143,8 +169,10 @@ class _HomePageState extends State<HomePage> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.4),
-                                Colors.black.withOpacity(0.2),
+                                Colors.black.withAlpha((0.4 * 255).toInt()),
+                                // 102
+                                Colors.black.withAlpha((0.2 * 255).toInt()),
+                                // 51
                               ],
                             ),
                           ),
@@ -195,171 +223,207 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 24),
 
                       //Healing Sessions Section
-                      Container(
-                        child: Column(
-                          children: [
-                            // Healing Sessions Title
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Healing Sessions',
+                      Column(
+                        children: [
+                          // Healing Sessions Title
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Healing Sessions',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text(
+                                  'See all',
                                   style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                    fontSize: 14,
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: const Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 14,
-                                    ),
-                                  ),
+                              ),
+                            ],
+                          ),
+                          // const SizedBox(height: 12),
+
+                          // Healing Sessions Cards
+                          SizedBox(
+                            height: 190,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+                                _buildHealingSessionCard(
+                                  image:
+                                      'https://images.unsplash.com/photo-1518791841217-8f162f1e1131',
+                                  title: 'Healing Frequency',
+                                  subtitle: 'Relax Moment',
+                                  icon: Icons.graphic_eq,
+                                ),
+                                _buildHealingSessionCard(
+                                  image:
+                                      'https://images.unsplash.com/photo-1499728603263-13726abce5fd',
+                                  title: 'Meditation Method',
+                                  subtitle: 'Find your own peace',
+                                  icon: Icons.self_improvement,
+                                ),
+                                _buildHealingSessionCard(
+                                  image:
+                                      'https://images.unsplash.com/photo-1517021897933-0e0319cfbc28',
+                                  title: 'Emotional Diary',
+                                  subtitle: 'How do you feel?',
+                                  icon: Icons.menu_book,
+                                ),
+                                _buildHealingSessionCard(
+                                  image:
+                                      'https://images.unsplash.com/photo-1544027993-37dbfe43562a',
+                                  title: 'Sharing Community',
+                                  subtitle: 'Sharing your emotion',
+                                  icon: Icons.people,
                                 ),
                               ],
                             ),
-                            // const SizedBox(height: 12),
+                          ),
+                          // const SizedBox(height: 24),
 
-                            // Healing Sessions Cards
-                            SizedBox(
-                              height: 190,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  _buildHealingSessionCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1518791841217-8f162f1e1131',
-                                    title: 'Healing Frequency',
-                                    subtitle: 'Relax Moment',
-                                    icon: Icons.graphic_eq,
-                                  ),
-                                  _buildHealingSessionCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1499728603263-13726abce5fd',
-                                    title: 'Meditation Method',
-                                    subtitle: 'Find your own peace',
-                                    icon: Icons.self_improvement,
-                                  ),
-                                  _buildHealingSessionCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1517021897933-0e0319cfbc28',
-                                    title: 'Emotional Diary',
-                                    subtitle: 'How do you feel?',
-                                    icon: Icons.menu_book,
-                                  ),
-                                  _buildHealingSessionCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1544027993-37dbfe43562a',
-                                    title: 'Sharing Community',
-                                    subtitle: 'Sharing your emotion',
-                                    icon: Icons.people,
-                                  ),
-                                ],
+                          // Articles Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Articles',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            // const SizedBox(height: 24),
-
-                            // Articles Section
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Articles',
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text(
+                                  'See all',
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                    fontSize: 14,
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: const Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Articles Cards
-                            SizedBox(
-                              height: 210,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  _buildArticleCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1560732488-6b0df240254a',
-                                    title:
-                                        'Why we heal: The evolution of psychological healing',
-                                    category: 'PSYCHOLOGICAL',
-                                    tap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => ArticleDetail(article: ArticleObject(
-                                          title: 'Papaver Somniferum',
-                                          source: 'Wikipedia, the free encyclopedia',
-                                          description: 'Prioritize your well-being! Manage stress, sleep well, stay active, and nourish your body. Small daily habits lead to a healthier, happier life. Your health is your greatest asset.',
-                                          tags: [
-                                            'Health',
-                                            'Active',
-                                            'Nourishment'
-                                          ],
-                                          category: 'Well-being',
-                                          actionTags: [
-                                            TagItem(
-                                              label: 'Well being',
-                                              icon: Icons.spa,
-                                              color: Colors.green,
-                                            ),
-                                            TagItem(
-                                              label: 'Stress',
-                                              icon: Icons.circle,
-                                              color: Colors.blue,
-                                            ),
-                                            TagItem(
-                                              label: 'Emotion control',
-                                              icon: Icons.sunny,
-                                              color: Colors.orange,
-                                            ),
-                                            TagItem(
-                                              label: 'Habit',
-                                              icon: Icons.thermostat,
-                                              color: Colors.purple,
-                                            ),
-                                          ],
-                                        ))),
-                                      );
-                                    },
-                                  ),
-                                  _buildArticleCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1545389336-cf090694435e',
-                                    title:
-                                        'Healing: A journey, Not a destination',
-                                    category: 'SPIRITUAL MINDSET',
-                                      tap: null
-                                  ),
-                                  _buildArticleCard(
-                                    image:
-                                        'https://images.unsplash.com/photo-1555708982-8645ec9ce3cc',
-                                    title: 'Healing the Healer',
-                                    category: 'HEALING',
-                                      tap: null
-                                  ),
-                                ],
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+
+                          _isLoading
+                              ? CircularProgressIndicator()
+                              : SizedBox(
+                                height: 210,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _articles.length,
+                                  itemBuilder: (context, index) {
+                                    final article = _articles[index];
+                                    return _buildArticleCard(
+                                      image: article.articleUrl ?? '',
+                                      title: article.articleName ?? 'Unknown',
+                                      category:
+                                          article.articleDescription ??
+                                          'Unknown',
+                                      tap: () {
+                                        if (article.articleId != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => ArticleDetail(
+                                                articleId: article.articleId!,
+                                              ),
+                                            ),
+                                          );
+                                        }else{
+                                          NotifyAnotherFlushBar.showFlushbar(
+                                            'Can not view article details.',
+                                          );
+                                        }
+
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+
+                          // Articles Cards
+                          // SizedBox(
+                          //   height: 210,
+                          //   child: ListView(
+                          //     scrollDirection: Axis.horizontal,
+                          //     children: [
+                          //       _buildArticleCard(
+                          //         image:
+                          //             'https://images.unsplash.com/photo-1560732488-6b0df240254a',
+                          //         title:
+                          //             'Why we heal: The evolution of psychological healing',
+                          //         category: 'PSYCHOLOGICAL',
+                          //         tap: () {
+                          //           Navigator.push(
+                          //             context,
+                          //             MaterialPageRoute(builder: (context) => ArticleDetail(article: ArticleObject(
+                          //               title: 'Papaver Somniferum',
+                          //               source: 'Wikipedia, the free encyclopedia',
+                          //               description: 'Prioritize your well-being! Manage stress, sleep well, stay active, and nourish your body. Small daily habits lead to a healthier, happier life. Your health is your greatest asset.',
+                          //               tags: [
+                          //                 'Health',
+                          //                 'Active',
+                          //                 'Nourishment'
+                          //               ],
+                          //               category: 'Well-being',
+                          //               actionTags: [
+                          //                 TagItem(
+                          //                   label: 'Well being',
+                          //                   icon: Icons.spa,
+                          //                   color: Colors.green,
+                          //                 ),
+                          //                 TagItem(
+                          //                   label: 'Stress',
+                          //                   icon: Icons.circle,
+                          //                   color: Colors.blue,
+                          //                 ),
+                          //                 TagItem(
+                          //                   label: 'Emotion control',
+                          //                   icon: Icons.sunny,
+                          //                   color: Colors.orange,
+                          //                 ),
+                          //                 TagItem(
+                          //                   label: 'Habit',
+                          //                   icon: Icons.thermostat,
+                          //                   color: Colors.purple,
+                          //                 ),
+                          //               ],
+                          //             ))),
+                          //           );
+                          //         },
+                          //       ),
+                          //       _buildArticleCard(
+                          //         image:
+                          //             'https://images.unsplash.com/photo-1545389336-cf090694435e',
+                          //         title:
+                          //             'Healing: A journey, Not a destination',
+                          //         category: 'SPIRITUAL MINDSET',
+                          //           tap: null
+                          //       ),
+                          //       _buildArticleCard(
+                          //         image:
+                          //             'https://images.unsplash.com/photo-1555708982-8645ec9ce3cc',
+                          //         title: 'Healing the Healer',
+                          //         category: 'HEALING',
+                          //           tap: null
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+                        ],
                       ),
                     ],
                   ),
@@ -431,6 +495,9 @@ Widget _buildArticleCard({
   required String category,
   required VoidCallback? tap,
 }) {
+  const String fallbackImage =
+      'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ=';
+  // 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/495px-No-Image-Placeholder.svg.png?20200912122019';
   return GestureDetector(
     onTap: tap,
     child: Container(
@@ -450,10 +517,20 @@ Widget _buildArticleCard({
               topRight: Radius.circular(12),
             ),
             child: Image.network(
-              image,
+              // image ?? '',
+              (image.isNotEmpty) ? image : fallbackImage,
+              // image,
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Image.network(
+                  fallbackImage,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                );
+              },
             ),
           ),
           // Content
@@ -470,6 +547,8 @@ Widget _buildArticleCard({
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
                 // Title

@@ -1,206 +1,304 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class NotificationPage extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/notification/notification_model.dart';
+
+class NotificationPage extends ConsumerStatefulWidget {
   const NotificationPage({super.key});
 
   @override
-  State<NotificationPage> createState() => _NotificationState();
+  NotificationState createState() => NotificationState();
 }
 
-class _NotificationState extends State<NotificationPage> {
+class NotificationState extends ConsumerState<NotificationPage> {
+  List<NotificationModel> apiNotifications = [];
+  bool isLoading = true;
+
+  late final _notificationUseCase;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _notificationUseCase = ref.read(notificationUseCaseProvider);
+    fetchNotifications();
+  }
+
+  Future<void> fetchNotifications() async {
+    // In a real app, you would replace this with your actual API endpoint
+    // For now, we'll simulate an API call and use the provided JSON data
+    try {
+      // Simulate API delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // This is where you would normally fetch from an API
+      // final response = await http.get(Uri.parse('your-api-endpoint'));
+
+      // Using the sample JSON you provided
+      const String sampleJsonData = '''
+      [
+        {
+          "notificationId": "N001",
+          "notificationUrl": "notification/welcome",
+          "notificationName": "Welcome Notification",
+          "notificationDescription": "Welcome to our application",
+          "userId": "U001",
+          "user": null
+        },
+        {
+          "notificationId": "N002",
+          "notificationUrl": "notification/renewal",
+          "notificationName": "Renewal Notification",
+          "notificationDescription": "Your subscription will renew soon",
+          "userId": "U002",
+          "user": null
+        },
+        {
+          "notificationId": "N003",
+          "notificationUrl": "notification/feature",
+          "notificationName": "Feature Notification",
+          "notificationDescription": "We have added new features",
+          "userId": "U003",
+          "user": null
+        }
+      ]
+      ''';
+
+      final List<dynamic> jsonData = jsonDecode(sampleJsonData);
+
+      setState(() {
+        apiNotifications =
+            jsonData.map((item) => NotificationModel.fromJson(item)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      // setState(() {
+      //   errorMessage = 'Failed to load notifications: $e';
+      //   isLoading = false;
+      // });
+      NotifyAnotherFlushBar.showFlushbar(
+        'Failed to load notifications: $e',
+        isError: true,
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Widget notificationMap(NotificationModel noti) {
+    return NotificationCard(
+      icon: Icons.favorite,
+      iconColor: Colors.orange,
+      title: noti.notificationName,
+      description:
+      noti.notificationDescription,
+      time: '14h',
+      buttons: [
+        NotificationButton(
+          text: 'Try now',
+          color: Colors.blue,
+          textColor: Colors.white,
+          onPressed: () {},
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
-        builder: (context, constraints) {
-      return ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
-          // child: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Notifications',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.filter_list),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_vert),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              // Notification List (Scrollable)
-              Expanded(
-                child: ListView(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                // child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // First notification with buttons
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title:
-                          'I have listed few things to help you improve your emotion',
-                      time: '2m',
-                      buttons: [
-                        NotificationButton(
-                          text: 'View Now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Notifications',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        NotificationButton(
-                          text: 'Ignore',
-                          color: Colors.transparent,
-                          textColor: Colors.black54,
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-
-                    // Second notification with buttons
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title: 'Have you written mood journal',
-                      time: '2m',
-                      buttons: [
-                        NotificationButton(
-                          text: 'Do now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                        ),
-                        NotificationButton(
-                          text: 'Ignore',
-                          color: Colors.transparent,
-                          textColor: Colors.black54,
-                          onPressed: () {},
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.filter_list),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.more_vert),
+                              onPressed: () {},
+                            ),
+                          ],
                         ),
                       ],
                     ),
 
-                    // Comment notification with profile picture
-                    CommentNotificationCard(
-                      profileImageUrl:
-                          'https://randomuser.me/api/portraits/men/32.jpg',
-                      name: 'Hùng',
-                      action: 'added a comment on',
-                      contentTitle: 'My daily file',
-                      time: '8h',
-                      comment: '"Nice, how do you control your emotion?"',
-                    ),
-
-                    // Feature alert notification
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title: 'New Feature Alert!',
-                      description:
-                          'We\'re pleased to introduce the latest enhancements in our app experience.',
-                      time: '14h',
-                      buttons: [
-                        NotificationButton(
-                          text: 'Try now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-
-                    // File share notification with profile picture
-                    FileShareNotificationCard(
-                      profileImageUrl:
-                          'https://randomuser.me/api/portraits/women/33.jpg',
-                      name: 'Vy',
-                      action: 'has shared a file with you',
-                      time: '14h',
-                      fileName: 'MoodTracker.pdf',
-                      fileSize: '2.2 MB',
-                    ),
-
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title: 'New Feature Alert!',
-                      description:
-                          'We\'re pleased to introduce the latest enhancements in our app experience.',
-                      time: '14h',
-                      buttons: [
-                        NotificationButton(
-                          text: 'Try now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title: 'New Feature Alert!',
-                      description:
-                          'We\'re pleased to introduce the latest enhancements in our app experience.',
-                      time: '14h',
-                      buttons: [
-                        NotificationButton(
-                          text: 'Try now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                    NotificationCard(
-                      icon: Icons.favorite,
-                      iconColor: Colors.orange,
-                      title: 'New Feature Alert!',
-                      description:
-                          'We\'re pleased to introduce the latest enhancements in our app experience.',
-                      time: '14h',
-                      buttons: [
-                        NotificationButton(
-                          text: 'Try now',
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                        ),
-                      ],
+                    // Notification List (Scrollable)
+                    Expanded(
+                      child:
+                          isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : RefreshIndicator(
+                                onRefresh: fetchNotifications,
+                                child: ListView(
+                                  children: [
+                                    ...apiNotifications.map(notificationMap),
+                                    // // First notification with buttons
+                                    // NotificationCard(
+                                    //   icon: Icons.favorite,
+                                    //   iconColor: Colors.orange,
+                                    //   title:
+                                    //       'I have listed few things to help you improve your emotion',
+                                    //   time: '2m',
+                                    //   buttons: [
+                                    //     NotificationButton(
+                                    //       text: 'View Now',
+                                    //       color: Colors.blue,
+                                    //       textColor: Colors.white,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //     NotificationButton(
+                                    //       text: 'Ignore',
+                                    //       color: Colors.transparent,
+                                    //       textColor: Colors.black54,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                    //
+                                    // // Second notification with buttons
+                                    // NotificationCard(
+                                    //   icon: Icons.favorite,
+                                    //   iconColor: Colors.orange,
+                                    //   title: 'Have you written mood journal',
+                                    //   time: '2m',
+                                    //   buttons: [
+                                    //     NotificationButton(
+                                    //       text: 'Do now',
+                                    //       color: Colors.blue,
+                                    //       textColor: Colors.white,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //     NotificationButton(
+                                    //       text: 'Ignore',
+                                    //       color: Colors.transparent,
+                                    //       textColor: Colors.black54,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                    //
+                                    // // Comment notification with profile picture
+                                    // CommentNotificationCard(
+                                    //   profileImageUrl:
+                                    //       'https://randomuser.me/api/portraits/men/32.jpg',
+                                    //   name: 'Hùng',
+                                    //   action: 'added a comment on',
+                                    //   contentTitle: 'My daily file',
+                                    //   time: '8h',
+                                    //   comment:
+                                    //       '"Nice, how do you control your emotion?"',
+                                    // ),
+                                    //
+                                    // // Feature alert notification
+                                    // NotificationCard(
+                                    //   icon: Icons.favorite,
+                                    //   iconColor: Colors.orange,
+                                    //   title: 'New Feature Alert!',
+                                    //   description:
+                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
+                                    //   time: '14h',
+                                    //   buttons: [
+                                    //     NotificationButton(
+                                    //       text: 'Try now',
+                                    //       color: Colors.blue,
+                                    //       textColor: Colors.white,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                    //
+                                    // // File share notification with profile picture
+                                    // FileShareNotificationCard(
+                                    //   profileImageUrl:
+                                    //       'https://randomuser.me/api/portraits/women/33.jpg',
+                                    //   name: 'Vy',
+                                    //   action: 'has shared a file with you',
+                                    //   time: '14h',
+                                    //   fileName: 'MoodTracker.pdf',
+                                    //   fileSize: '2.2 MB',
+                                    // ),
+                                    //
+                                    // NotificationCard(
+                                    //   icon: Icons.favorite,
+                                    //   iconColor: Colors.orange,
+                                    //   title: 'New Feature Alert!',
+                                    //   description:
+                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
+                                    //   time: '14h',
+                                    //   buttons: [
+                                    //     NotificationButton(
+                                    //       text: 'Try now',
+                                    //       color: Colors.blue,
+                                    //       textColor: Colors.white,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                    // NotificationCard(
+                                    //   icon: Icons.favorite,
+                                    //   iconColor: Colors.orange,
+                                    //   title: 'New Feature Alert!',
+                                    //   description:
+                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
+                                    //   time: '14h',
+                                    //   buttons: [
+                                    //     NotificationButton(
+                                    //       text: 'Try now',
+                                    //       color: Colors.blue,
+                                    //       textColor: Colors.white,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                  ],
+                                ),
+                              ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),);})
+            );
+          },
+        ),
       ),
     );
   }

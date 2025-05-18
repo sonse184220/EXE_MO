@@ -1,19 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/community/community_model.dart';
+import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_detail_page.dart';
 
-class CommunityGroupsPage extends StatefulWidget {
+class CommunityGroupsPage extends ConsumerStatefulWidget {
   const CommunityGroupsPage({super.key});
 
   @override
-  State<CommunityGroupsPage> createState() => _CommunityGroupsPageState();
+  ConsumerState<CommunityGroupsPage> createState() => _CommunityGroupsPageState();
 }
 
-class _CommunityGroupsPageState extends State<CommunityGroupsPage> {
+class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
+  late final CommunityUsecase _communityUsecase;
+  List<CommunityModel> communityList = [];
+  bool isLoading = true;
+
   late final List<Widget> communityGroups;
+
+  Future<void> _fetchCommunityGroups() async {
+    try {
+      final result = await _communityUsecase.getAllCommunityGroups(); // adjust method name if needed
+      setState(() {
+        communityList = result.data!;
+        // communityGroups = result.map((community) {
+        //   return GroupListItem(
+        //     name: community.communityName,
+        //     status: community.communityStatus,
+        //     details: 'Created: ${community.communityCreatedAt.toLocal().toString().split(' ')[0]}',
+        //     imagePath: 'assets/images/meditation_page_image.png', // update if image is dynamic
+        //     onTap: () {
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(
+        //           builder: (context) => CommunityDetailPage(), // pass data if needed
+        //         ),
+        //       );
+        //     },
+        //   );
+        // }).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      NotifyAnotherFlushBar.showFlushbar('Error fetch groups: $e', isError: true);
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _communityUsecase = ref.read(communityUseCaseProvider);
     communityGroups = [// Community group list
       GroupListItem(
         name: 'Santa Fe Community',
@@ -75,6 +117,8 @@ class _CommunityGroupsPageState extends State<CommunityGroupsPage> {
         imagePath: 'assets/ucla.jpg',
       ),
     ];
+
+    _fetchCommunityGroups();
   }
   @override
   Widget build(BuildContext context) {
@@ -173,9 +217,26 @@ class _CommunityGroupsPageState extends State<CommunityGroupsPage> {
                       Expanded(
                         child: ListView.separated(
                           shrinkWrap: true,
-                          itemCount: communityGroups.length,
+                          itemCount: communityList.length,
                           itemBuilder: (context, index) {
-                            return communityGroups[index];
+                            // return communityGroups[index];
+                            final community = communityList[index];
+                            return GroupListItem(
+                              name: community.communityName,
+                              status: community.communityStatus,
+                              details: 'Created: ${community.communityCreatedAt.toLocal().toString().split(' ')[0]}',
+                              imagePath: 'assets/images/meditation_page_image.png', // Replace with dynamic image if available
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CommunityDetailPage(
+                                      // pass community if needed
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
                           },
                           separatorBuilder: (context, index) => const Divider(),
                         ),
