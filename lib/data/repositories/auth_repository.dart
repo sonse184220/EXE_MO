@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
+import 'package:inner_child_app/core/utils/auth_utils/auth_notifier.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_util_methods.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
@@ -16,15 +17,16 @@ import '../../domain/entities/auth/forgot_password_token_model.dart';
 import '../datasources/remote/authentication_api_service.dart';
 
 class AuthRepository implements IAuthRepository {
-  final AuthApiService apiService;
+  final AuthApiService _apiService;
   final SecureStorageUtils _secureStorageUtils;
+  final AuthNotifier _authNotifier;
 
-  AuthRepository(this.apiService, this._secureStorageUtils);
+  AuthRepository(this._apiService, this._secureStorageUtils, this._authNotifier);
 
   @override
   Future<Result<String>> register(UserRegisterModel user) async {
     try {
-      final response = await apiService.register(user);
+      final response = await _apiService.register(user);
       final message = response.data['message'] ?? 'Registered successfully';
       return Result.success(message);
     } on DioException catch (e) {
@@ -39,7 +41,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String>> loginWithCredentials(UserLoginModel user) async {
     try {
-      final response = await apiService.loginWithCredentials(user);
+      final response = await _apiService.loginWithCredentials(user);
       if (response.statusCode == 200) {
         final data = response.data;
 
@@ -77,7 +79,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String>> loginWithGoogle(String firebaseToken) async {
     try {
-      final response = await apiService.loginWithGoogle(firebaseToken);
+      final response = await _apiService.loginWithGoogle(firebaseToken);
       // final message = response.data['message'] ?? 'Login successfully';
       // return Result.success(message);
       return Result.success('message for gg success');
@@ -125,7 +127,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String>> loginWithProfile(String profileToken) async {
     try {
-      final response = await apiService.loginWithProfile(profileToken);
+      final response = await _apiService.loginWithProfile(profileToken);
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -164,7 +166,7 @@ class AuthRepository implements IAuthRepository {
         final firstProfile = profiles[0];
         final userId = firstProfile.userId;
 
-        final response = await apiService.editProfile(userId, profile);
+        final response = await _apiService.editProfile(userId, profile);
         return Result.success('okla update profile');
       } else {
         return Result.failure('No profiles available.');
@@ -182,7 +184,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String>> forgotPassword(String email) async {
     try{
-      final response = await apiService.forgotPassword(email);
+      final response = await _apiService.forgotPassword(email);
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -225,7 +227,7 @@ class AuthRepository implements IAuthRepository {
       }
 
       // Call reset password API with token and new passwords
-      final response = await apiService.resetPassword(
+      final response = await _apiService.resetPassword(
         tokenModel.token,
         password,
         confirmPassword,
@@ -239,6 +241,16 @@ class AuthRepository implements IAuthRepository {
         return Result.failure('Failed to send email reset password. Please try again.');
       }
     } catch (e) {
+      return Result.failure('An error occurred: $e');
+    }
+  }
+
+  @override
+  Future<Result<bool>> logout() async {
+    try{
+      await _authNotifier.logout();
+      return Result.success(true);
+    }catch (e) {
       return Result.failure('An error occurred: $e');
     }
   }

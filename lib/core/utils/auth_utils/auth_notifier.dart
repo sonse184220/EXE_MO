@@ -7,7 +7,7 @@ import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 /// Auth notifier for authentication state management
 class AuthNotifier extends StateNotifier<AuthStatus> {
   final SecureStorageUtils _storage;
-  final accessToken = AppConstants.accessToken;
+  final tokenModel = AppConstants.tokenModel;
 
   AuthNotifier(this._storage) : super(AuthStatus.loading) {
     _initialize();
@@ -15,7 +15,7 @@ class AuthNotifier extends StateNotifier<AuthStatus> {
 
   /// Initialize auth state by checking for stored token
   Future<void> _initialize() async {
-    final token = await _storage.read(accessToken);
+    final token = await _storage.read(tokenModel);
     state = token != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
   }
 
@@ -23,7 +23,7 @@ class AuthNotifier extends StateNotifier<AuthStatus> {
   Future<void> login(String token) async {
     try {
       state = AuthStatus.loading;
-      await _storage.write(accessToken, token);
+      await _storage.write(tokenModel, token);
       state = AuthStatus.authenticated;
     } catch (e) {
       state = AuthStatus.unauthenticated;
@@ -35,7 +35,7 @@ class AuthNotifier extends StateNotifier<AuthStatus> {
   Future<void> logout() async {
     try {
       state = AuthStatus.loading;
-      await _storage.delete(accessToken);
+      await _storage.delete(tokenModel);
       state = AuthStatus.unauthenticated;
     } catch (e) {
       // Revert to previous authenticated state if logout fails
@@ -46,7 +46,7 @@ class AuthNotifier extends StateNotifier<AuthStatus> {
 
   /// Verify if token is still valid
   Future<void> checkAuthStatus() async {
-    final token = await _storage.read(accessToken);
+    final token = await _storage.read(tokenModel);
     final newState = token != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
 
     if (state != newState) {

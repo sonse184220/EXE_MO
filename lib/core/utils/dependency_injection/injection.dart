@@ -68,7 +68,7 @@ final audioApiServiceProvider = Provider(
 // ─────────────────────────────────────────────────────────────
 
 final authRepositoryProvider = Provider<IAuthRepository>(
-      (ref) => AuthRepository(ref.read(authApiServiceProvider), ref.read(storageProvider)),
+      (ref) => AuthRepository(ref.read(authApiServiceProvider), ref.read(storageProvider), ref.read(authNotifierProvider.notifier)),
 );
 
 final articleRepositoryProvider = Provider<IArticleRepository>(

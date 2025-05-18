@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
 import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/user_information/profile_edit_page.dart';
 import 'package:inner_child_app/presentation/pages/subscription_pages/subscription_page.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  late final AuthUsecase _authUsecase;
   late final List<Widget> settingsItems;
 
   @override
   void initState() {
     super.initState();
+
+    _authUsecase = ref.read(authUseCaseProvider);
+
     settingsItems = [
       _buildSettingItem(
         icon: Icons.person,
@@ -73,12 +81,23 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.exit_to_app,
         color: Colors.red,
         title: 'Logout',
-        tap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Login()),
-          );
-        },
+        tap: () async {
+          final result = await _authUsecase.logout();
+          if(result.isSuccess) {
+            Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Login()),
+                  );
+          }else{
+            NotifyAnotherFlushBar.showFlushbar('Logout fail');
+          }
+        }
+        // tap: () {
+        //   Navigator.push(
+        //     context,
+        //     MaterialPageRoute(builder: (context) => Login()),
+        //   );
+        // },
       ),
     ];
   }

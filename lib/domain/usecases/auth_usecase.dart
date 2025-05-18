@@ -45,4 +45,9 @@ class AuthUsecase {
   ) {
     return repository.resetPassword(password, confirmPassword);
   }
+
+  Future<Result<bool>> logout(
+      ) {
+    return repository.logout();
+  }
 }
