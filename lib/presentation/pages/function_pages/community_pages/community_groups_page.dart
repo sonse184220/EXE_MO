@@ -44,7 +44,7 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage> {
         isLoading = false;
       });
     } catch (e) {
-      NotifyAnotherFlushBar.showFlushbar('Error fetch groups: $e', isError: true);
+      Notify.showFlushbar('Error fetch groups: $e', isError: true);
       setState(() {
         isLoading = false;
       });

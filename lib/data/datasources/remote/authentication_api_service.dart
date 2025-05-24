@@ -47,7 +47,7 @@ class AuthApiService {
     return await _client.post('innerchild/auth/login', data: tokenObject);
   }
 
-  Future<Response> editProfile(String userId, ProfileEditModel profile) async {
+  Future<Response> editProfile(ProfileEditModel profile) async {
     final formData = FormData.fromMap({
       'FullName': profile.fullName,
       'DateOfBirth': profile.dateOfBirth?.toIso8601String(),
@@ -58,7 +58,7 @@ class AuthApiService {
     });
 
     return await _client.put(
-      'innerchild/auth/update-profile/$userId',
+      'innerchild/auth/update-user',
       data: formData,
     );
   }
@@ -79,11 +79,24 @@ class AuthApiService {
     final resetPasswordObject = {
       "token": token,
       "newPassword": password,
-      "confirmNewPassword": confirmPassword
+      "confirmNewPassword": confirmPassword,
     };
     return await _client.post(
       'innerchild/auth/reset-password',
       data: resetPasswordObject,
     );
+  }
+
+  Future<Response> getPersonalDetail() async {
+    return await _client.get('innerchild/auth/personal-detail');
+  }
+
+  Future<Response> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+    final dataObject = {
+      "currentPassword": currentPassword,
+      "newPassword": newPassword,
+      "confirmPassword": newPassword
+    };
+    return await _client.post('innerchild/auth/change-password', data: dataObject);
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/domain/entities/audio/audio_model.dart';
 import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/all_audio_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/audio_playing_page.dart';
 
 class HomeAudioPage extends ConsumerStatefulWidget {
@@ -372,6 +373,15 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AllAudioPage(), // <-- Your target page
+                                        ),
+                                      );
+                                    },child:
                                   Text(
                                     'See all',
                                     style: TextStyle(
@@ -380,7 +390,7 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                                       ),
                                       fontSize: 14,
                                     ),
-                                  ),
+                                  ),)
                                 ],
                               ),
                             ],

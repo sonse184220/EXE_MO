@@ -37,7 +37,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
       setState(() {
         _loading = false;
       });
-      NotifyAnotherFlushBar.showFlushbar('fetch article failed: $e',isError: true);
+      Notify.showFlushbar('fetch article failed: $e',isError: true);
     }
   }
 

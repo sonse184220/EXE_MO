@@ -191,7 +191,7 @@ class RegisterPageState extends ConsumerState<RegisterPage>
 
     // Show flushbar with the first error message if any
     if (errorMessages.isNotEmpty) {
-      NotifyAnotherFlushBar.showFlushbar('Please fix the following: ${errorMessages.first}', isError: true);
+      Notify.showFlushbar('Please fix the following: ${errorMessages.first}', isError: true);
     }
 
     // Update UI with setState
@@ -322,10 +322,10 @@ class RegisterPageState extends ConsumerState<RegisterPage>
         });
       },
       behavior: HitTestBehavior.opaque,
-      child: Scaffold(
+      child: SafeArea(
+        child:  Scaffold(
         resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          child: Container(
+        body: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -816,14 +816,14 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                           final result = await authUseCase.register(user);
                           if (result.isSuccess) {
                             // Show success toast/snackbar
-                            NotifyAnotherFlushBar.showFlushbar( "Registration successful!", isError: false);
+                            Notify.showFlushbar( "Registration successful!", isError: false);
                           } else {
                             // Show error toast/snackbar with result.error
-                            NotifyAnotherFlushBar.showFlushbar( "Registration fail!", isError: true);
+                            Notify.showFlushbar( "Registration fail!", isError: true);
                           }
                         } catch (e) {
                           // Show error message with flushbar
-                          NotifyAnotherFlushBar.showFlushbar( "Error: $e", isError: true);
+                          Notify.showFlushbar( "Error: $e", isError: true);
                         }
                       }
                     },

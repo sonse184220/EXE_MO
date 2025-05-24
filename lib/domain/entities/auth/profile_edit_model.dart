@@ -3,48 +3,52 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 class ProfileEditModel {
-  String fullName;
-  String phoneNumber;
+  String? userId;
+  String? email;
+  String? fullName;
+  String? phoneNumber;
   DateTime? dateOfBirth;
-  String gender;
-  String address;
+  String? gender;
+  String? profilePicture; // Can be a URL or file name
   File? profileImage;
 
   ProfileEditModel({
-    required this.fullName,
-    required this.phoneNumber,
-    required this.gender,
-    required this.address,
+    this.userId,
+    this.email,
+    this.fullName,
+    this.phoneNumber,
     this.dateOfBirth,
+    this.gender,
+    this.profilePicture,
     this.profileImage,
   });
 
   factory ProfileEditModel.fromJson(Map<String, dynamic> json) {
     return ProfileEditModel(
-      fullName: json['full_name'],
-      phoneNumber: json['phone_number'],
+      userId: json['userId'],
+      email: json['email'],
+      fullName: json['fullName'],
+      phoneNumber: json['phoneNumber'],
       gender: json['gender'],
-      address: json['address'],
-      dateOfBirth: json['date_of_birth'] != null
-          ? DateTime.parse(json['date_of_birth'])
+      dateOfBirth: json['dateOfBirth'] != null
+          ? DateTime.tryParse(json['dateOfBirth'])
           : null,
-      profileImage: json['profile_image'] != null
-          ? File(json['profile_image']) // If image path is available
-          : null,
+      profilePicture: json['profilePicture'],
     );
   }
 
   // Convert the ProfileEditModel to a JSON map
   Map<String, dynamic> toJson() {
     return {
-      'full_name': fullName,
-      'phone_number': phoneNumber,
-      'date_of_birth': dateOfBirth != null
+      'userId': userId,
+      'email': email,
+      'fullName': fullName,
+      'phoneNumber': phoneNumber,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth != null
           ? DateFormat('yyyy-MM-dd').format(dateOfBirth!)
           : null,
-      'gender': gender,
-      'address': address,
-      'profile_image': profileImage?.path,
+      'profilePicture': profilePicture,
     };
   }
 }

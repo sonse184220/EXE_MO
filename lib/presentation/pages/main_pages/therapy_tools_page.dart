@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/meditation/meditation_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
@@ -142,7 +143,7 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ChatAiPage(),
+                                      builder: (context) => ChatAiSessionListPage(),
                                     ),
                                   );
                                 },

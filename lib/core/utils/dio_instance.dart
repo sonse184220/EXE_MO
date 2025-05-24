@@ -11,9 +11,9 @@ class DioClient {
   DioClient(SecureStorageUtils storage)
     : dio = Dio(
         BaseOptions(
-          baseUrl: 'http://178.128.218.214:5000/',
-          // baseUrl: 'http://127.0.0.1:5271/',
-          // baseUrl: 'https://10.0.2.2:7011/',
+          // baseUrl: 'http://178.128.218.214:5000/',
+          baseUrl: 'http://127.0.0.1:5000/',
+          // baseUrl: 'http://10.0.2.2:5000/',
           connectTimeout: const Duration(seconds: 60),
           receiveTimeout: const Duration(seconds: 60),
         ),

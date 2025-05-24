@@ -1,14 +1,19 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 
-class PasswordChangePage extends StatefulWidget {
+class PasswordChangePage extends ConsumerStatefulWidget {
   const PasswordChangePage({super.key});
 
   @override
-  State<PasswordChangePage> createState() => _PasswordChangePageState();
+  ConsumerState<PasswordChangePage> createState() => _PasswordChangePageState();
 }
 
-class _PasswordChangePageState extends State<PasswordChangePage> {
+class _PasswordChangePageState extends ConsumerState<PasswordChangePage> {
+  late final AuthUsecase _authUsecase;
   final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -20,6 +25,82 @@ class _PasswordChangePageState extends State<PasswordChangePage> {
   String? _currentPasswordError;
   String? _newPasswordError;
   String? _confirmPasswordError;
+
+  Future<void> _changePassword() async {
+    if (!_validateForm()) {
+      return;
+    }
+
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final currentPassword = _currentPasswordController.text;
+    final newPassword = _newPasswordController.text;
+      final confirmPassword = _confirmPasswordController.text;
+
+      // Call your actual API method here
+      // Replace 'YourApiService.changePassword' with your actual API call
+      final result = await _authUsecase.changePassword(
+        currentPassword,
+        newPassword,
+          confirmPassword
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Handle successful response
+      if (result.isSuccess) {
+        // Show success dialog
+        Notify.showAwesomeDialog(
+          title: 'Password successfully updated',
+          message:
+          'Your password has been updated successfully. Please use your new password the next time you sign in.',
+          dialogType: DialogType.success,
+          btnOkText: 'Okay, Thanks',
+          onOkPress: () {
+            Navigator.pop(context); // Return to previous screen
+          },
+        );
+
+        // Clear the form
+        _currentPasswordController.clear();
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+      } else {
+        // Handle API error response
+        Notify.showFlushbar(
+          result.error ?? 'Failed to change password. Please try again.',
+          isError: true,
+        );
+      }
+
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Handle different types of errors
+      String errorMessage;
+      if (e.toString().contains('network') || e.toString().contains('connection')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Request timeout. Please try again.';
+      } else if (e.toString().contains('unauthorized') || e.toString().contains('401')) {
+        errorMessage = 'Current password is incorrect.';
+      } else {
+        errorMessage = 'An unexpected error occurred. Please try again.';
+      }
+
+      Notify.showFlushbar(
+        errorMessage,
+        isError: true,
+      );
+    }
+  }
 
   bool _isLoading = false;
 
@@ -67,7 +148,7 @@ class _PasswordChangePageState extends State<PasswordChangePage> {
 
     // Show flushbar with the first error message if any
     if (errorMessages.isNotEmpty) {
-      NotifyAnotherFlushBar.showFlushbar(
+      Notify.showFlushbar(
         'Please fix the following: ${errorMessages.first}',
         isError: true,
       );
@@ -76,137 +157,12 @@ class _PasswordChangePageState extends State<PasswordChangePage> {
     return isValid;
   }
 
-  Future<void> _changePassword() async {
-    if (!_validateForm()) {
-      return;
-    }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Here you would make the API call to update the password
-      // For example:
-      // final result = await AuthApi.changePassword(
-      //   _currentPasswordController.text,
-      //   _newPasswordController.text,
-      // );
-
-      // Simulate API call with a delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Show success dialog
-      _showSuccessDialog();
-
-      // Optionally clear the form
-      _currentPasswordController.clear();
-      _newPasswordController.clear();
-      _confirmPasswordController.clear();
-
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      NotifyAnotherFlushBar.showFlushbar(
-        'An error occurred: ${e.toString()}',
-        isError: true,
-      );
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.1 * 255).round()),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Success Icon
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 30),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Success Message
-                const Text(
-                  "Password successfully updated",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Description
-                Text(
-                  "Your password has been updated successfully. Please use your new password the next time you sign in.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade700, height: 1.5),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Okay Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Close dialog
-                      Navigator.pop(context); // Return to previous screen
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepOrange,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      "Okay, Thanks",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    _authUsecase = ref.read(authUseCaseProvider);
   }
 
   @override
