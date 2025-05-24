@@ -79,7 +79,7 @@ class NotificationState extends ConsumerState<NotificationPage> {
       //   errorMessage = 'Failed to load notifications: $e';
       //   isLoading = false;
       // });
-      NotifyAnotherFlushBar.showFlushbar(
+      Notify.showFlushbar(
         'Failed to load notifications: $e',
         isError: true,
       );

@@ -89,7 +89,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     MaterialPageRoute(builder: (context) => Login()),
                   );
           }else{
-            NotifyAnotherFlushBar.showFlushbar('Logout fail');
+            Notify.showFlushbar('Logout fail');
           }
         }
         // tap: () {

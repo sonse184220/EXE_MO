@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 
@@ -20,6 +23,33 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage> {
   bool isLoading = true;
 
   late final List<Widget> communityPosts;
+
+  Future<void> _createCommunityPost({
+    required String title,
+    required String content,
+    required XFile imageFile,
+  }) async {
+    try {
+      final imageBytes = await imageFile.readAsBytes();
+
+      final result = Result.success('data');
+      // = await _communityUsecase.createCommunityPost(
+      //   title: title,
+      //   content: content,
+      //   imageBinary: imageBytes,
+      //   groupId: widget.communityGroupId,
+      // );
+
+      if (result.isSuccess) {
+        Notify.showFlushbar('Post created successfully!');
+        await fetchCommunityGroupById(); // Refresh post list
+      } else {
+        Notify.showFlushbar('Failed to create post', isError: true);
+      }
+    } catch (e) {
+      Notify.showFlushbar('Error: ${e.toString()}', isError: true);
+    }
+  }
 
   Future<void> fetchCommunityGroupById() async {
     // Replace with your real API call
@@ -87,6 +117,10 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCreatePostDialog(),
+        child: const Icon(Icons.add),
+      ),
       body: SafeArea(
         child:
             isLoading
@@ -222,6 +256,90 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage> {
                   },
                 ),
       ),
+    );
+  }
+
+  void _showCreatePostDialog() {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController contentController = TextEditingController();
+    XFile? selectedImage;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Create Community Post'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: contentController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Content'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.image),
+                    label: const Text('Choose Image'),
+                    onPressed: () async {
+                      final picker = ImagePicker();
+                      final pickedFile =
+                      await picker.pickImage(source: ImageSource.gallery);
+                      if (pickedFile != null) {
+                        setState(() {
+                          selectedImage = pickedFile;
+                        });
+                      }
+                    },
+                  ),
+                  if (selectedImage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Selected: ${selectedImage!.name}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.trim().isEmpty ||
+                      contentController.text.trim().isEmpty ||
+                      selectedImage == null) {
+                    Notify.showFlushbar(
+                      "All fields are required.",
+                      isError: true,
+                    );
+                    return;
+                  }
+
+                  Navigator.pop(context); // close dialog
+                  await _createCommunityPost(
+                    title: titleController.text.trim(),
+                    content: contentController.text.trim(),
+                    imageFile: selectedImage!,
+                  );
+                },
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 }

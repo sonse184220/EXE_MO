@@ -343,7 +343,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                             ),
                                           );
                                         }else{
-                                          NotifyAnotherFlushBar.showFlushbar(
+                                          Notify.showFlushbar(
                                             'Can not view article details.',
                                           );
                                         }

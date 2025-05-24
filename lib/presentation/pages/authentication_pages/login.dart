@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/presentation/pages/admin/admin_main_screen.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/forgot_password_1.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';
@@ -38,7 +39,7 @@ class LoginPage extends ConsumerState<Login> {
       print(idToken);
       final result = await _authUseCase.loginWithGoogle(idToken);
       if (result.isSuccess) {
-        NotifyAnotherFlushBar.showFlushbar(
+        Notify.showFlushbar(
           result.data ?? 'Login google success.',
           isError: false,
         );
@@ -47,14 +48,14 @@ class LoginPage extends ConsumerState<Login> {
         //   MaterialPageRoute(builder: (context) => const MainScreen()),
         // );
       } else {
-        NotifyAnotherFlushBar.showFlushbar(
+        Notify.showFlushbar(
           result.error ?? 'Login google failed. Please check your credentials',
           isError: true,
         );
       }
     } catch (e) {
       print(e.toString());
-      NotifyAnotherFlushBar.showFlushbar(
+      Notify.showFlushbar(
         e.toString() ?? 'Login google failed. Please check your credentials',
         isError: true,
       );
@@ -68,7 +69,7 @@ class LoginPage extends ConsumerState<Login> {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (email.isEmpty || password.isEmpty) {
-      NotifyAnotherFlushBar.showFlushbar(
+      Notify.showFlushbar(
         'Please fill in both fields',
         isError: true,
       );
@@ -76,10 +77,7 @@ class LoginPage extends ConsumerState<Login> {
     }
 
     if (!emailRegex.hasMatch(_emailController.text)) {
-      NotifyAnotherFlushBar.showFlushbar(
-        'Email is not valid.',
-        isError: true,
-      );
+      Notify.showFlushbar('Email is not valid.', isError: true);
       return;
     }
 
@@ -93,7 +91,7 @@ class LoginPage extends ConsumerState<Login> {
         MaterialPageRoute(builder: (context) => const ProfileChoosingPage()),
       );
     } else {
-      NotifyAnotherFlushBar.showFlushbar(
+      Notify.showFlushbar(
         result.error ?? 'Login failed. Please check your credentials',
         isError: true,
       );
@@ -111,27 +109,37 @@ class LoginPage extends ConsumerState<Login> {
   Widget build(BuildContext context) {
     final authUseCase = ref.read(authUseCaseProvider);
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        floatingActionButton: FloatingActionButton(
+          onPressed:
+              () =>
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminMainScreen()),
+              ),
+          child: const Icon(Icons.add),
+        ),
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Container(
-                  width: double.infinity,
+                  // width: double.infinity,
                   // height: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
+                    // color: Colors.white,
+                    // borderRadius: BorderRadius.circular(16),
+                    // boxShadow: [
+                    //   BoxShadow(
+                    //     color: Colors.black12,
+                    //     blurRadius: 10,
+                    //     offset: Offset(0, 5),
+                    //   ),
+                    // ],
                   ),
                   // child: Container(
                   child: Column(
@@ -232,7 +240,14 @@ class LoginPage extends ConsumerState<Login> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPassword1()));},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ForgotPassword1(),
+                                    ),
+                                  );
+                                },
                                 child: const Text(
                                   'FORGET PASSWORD?',
                                   style: TextStyle(
@@ -259,8 +274,7 @@ class LoginPage extends ConsumerState<Login> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed:
-                              _handleLogin,
+                              onPressed: _handleLogin,
                               //     () {
                               //   Navigator.push(
                               //     context,
@@ -337,11 +351,11 @@ class LoginPage extends ConsumerState<Login> {
                               margin: EdgeInsets.only(top: 20, bottom: 20),
                               child: Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Don't have an account?",
@@ -360,7 +374,7 @@ class LoginPage extends ConsumerState<Login> {
                                             MaterialPageRoute(
                                               builder:
                                                   (context) =>
-                                                      const RegisterPage(),
+                                              const RegisterPage(),
                                             ),
                                           );
                                         },

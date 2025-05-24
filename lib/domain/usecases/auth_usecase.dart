@@ -50,4 +50,12 @@ class AuthUsecase {
       ) {
     return repository.logout();
   }
+
+  Future<Result<ProfileEditModel>> getPersonalDetail(){
+    return repository.getPersonalDetail();
+  }
+
+  Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword){
+    return repository.changePassword(currentPassword, newPassword, confirmPassword);
+  }
 }

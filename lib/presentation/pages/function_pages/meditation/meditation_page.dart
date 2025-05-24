@@ -24,17 +24,17 @@ class _MeditationPageState extends ConsumerState<MeditationPage> {
     try {
       final result = await _audioUseCase.getAllAudios();
       if(result.isSuccess) {
-        NotifyAnotherFlushBar.showFlushbar( 'ok', isError: true);
+        Notify.showFlushbar( 'ok', isError: true);
 
         setState(() {
           audioListApi = result.data!;
           isLoading = false;
         });
       } else {
-        NotifyAnotherFlushBar.showFlushbar( result.error ?? 'An unknown error occurred', isError: true);
+        Notify.showFlushbar( result.error ?? 'An unknown error occurred', isError: true);
       }
     } catch (e) {
-      NotifyAnotherFlushBar.showFlushbar('Error fetching audios list: $e', isError: true);
+      Notify.showFlushbar('Error fetching audios list: $e', isError: true);
       setState(() => isLoading = false);
     }
   }
