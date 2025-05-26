@@ -30,9 +30,19 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   late TabController _tabController;
 
   String? get currentUserId => ref.watch(authNotifierProvider).userInfo?.userId;
-  String? get currentProfileId => ref.watch(authNotifierProvider).userInfo?.profileId;
+
+  String? get currentProfileId =>
+      ref.watch(authNotifierProvider).userInfo?.profileId;
 
   late final List<Widget> communityPosts;
+
+  // Color scheme
+  static const Color primaryOrange = Color(0xFFFF6B35);
+  static const Color secondaryBrown = Color(0xFF8B4513);
+  static const Color darkBrown = Color(0xFF654321);
+  static const Color lightOrange = Color(0xFFFFE5D9);
+  static const Color textBlack = Color(0xFF1A1A1A);
+  static const Color lightGray = Color(0xFFF5F5F5);
 
   Future<void> _joinCommunity() async {
     if (currentUserId == null) return;
@@ -42,14 +52,13 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     });
 
     try {
-      // Replace with your actual join community method
       final result = await _communityUsecase.joinCommunity(
         widget.communityGroupId,
       );
 
       if (result.isSuccess) {
         Notify.showFlushbar('Successfully joined the community!');
-        await fetchCommunityGroupById(); // Refresh to update join status
+        await fetchCommunityGroupById();
       } else {
         Notify.showFlushbar(
           result.error ?? 'Failed to join community',
@@ -73,14 +82,13 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     });
 
     try {
-      // Replace with your actual leave community method
       final result = await _communityUsecase.leaveCommunity(
         widget.communityGroupId,
       );
 
       if (result.isSuccess) {
         Notify.showFlushbar('Successfully left the community!');
-        await fetchCommunityGroupById(); // Refresh to update join status
+        await fetchCommunityGroupById();
       } else {
         Notify.showFlushbar(
           result.error ?? 'Failed to leave community',
@@ -96,6 +104,24 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     }
   }
 
+  Future<void> _deletePost(String postId) async {
+    try {
+      // Add your delete post logic here
+      Notify.showFlushbar('Post deleted successfully!');
+      await fetchCommunityGroupById();
+    } catch (e) {
+      Notify.showFlushbar(
+        'Error deleting post: ${e.toString()}',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _editPost(dynamic post) async {
+    // Add your edit post logic here
+    _showCreatePostDialog(editingPost: post);
+  }
+
   bool get isUserJoined {
     if (currentUserId == null ||
         communityGroup?.communityMembersDetail == null) {
@@ -107,18 +133,13 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   }
 
   List<dynamic> get userPosts {
-    if (currentProfileId == null || communityGroup?.communityPostsDetail == null) {
+    if (currentProfileId == null ||
+        communityGroup?.communityPostsDetail == null) {
       return [];
     }
     return communityGroup!.communityPostsDetail!
         .where((post) => post.profileId == currentProfileId)
         .toList();
-    // if (currentUserId == null || communityGroup?.communityPostsDetail == null) {
-    //   return [];
-    // }
-    // return communityGroup!.communityPostsDetail!
-    //     .where((post) => post.userId == currentUserId)
-    //     .toList();
   }
 
   Future<void> _createCommunityPost({
@@ -126,6 +147,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     required String content,
     File? imageFile,
     VoidCallback? onCloseDialog,
+    dynamic editingPost,
   }) async {
     try {
       final createCommunityPostModel = CreateCommunityPostModel(
@@ -134,26 +156,32 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         communityPostImageFile: imageFile,
         communityGroupId: widget.communityGroupId,
       );
-      final result = await _communityUsecase.createCommunityPost(
-        createCommunityPostModel,
-      );
+
+      final result =
+          editingPost != null
+              ? await _communityUsecase.updateCommunityPost(
+                createCommunityPostModel,
+              )
+              : await _communityUsecase.createCommunityPost(
+                createCommunityPostModel,
+              );
 
       if (result.isSuccess) {
-        Notify.showFlushbar('Post created successfully!');
+        Notify.showFlushbar(
+          editingPost != null
+              ? 'Post updated successfully!'
+              : 'Post created successfully!',
+        );
         onCloseDialog?.call();
-        await fetchCommunityGroupById(); // Refresh post list
+        await fetchCommunityGroupById();
       } else {
         Notify.showFlushbar(
-          result.error ?? 'Failed to create post',
+          result.error ??
+              (editingPost != null
+                  ? 'Failed to update post'
+                  : 'Failed to create post'),
           isError: true,
         );
-      }
-
-      if (result.isSuccess) {
-        Notify.showFlushbar('Post created successfully!');
-        await fetchCommunityGroupById(); // Refresh post list
-      } else {
-        Notify.showFlushbar('Failed to create post', isError: true);
       }
     } catch (e) {
       Notify.showFlushbar('Error: ${e.toString()}', isError: true);
@@ -161,10 +189,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   }
 
   Future<void> fetchCommunityGroupById() async {
-    // Replace with your real API call
     final result = await _communityUsecase.getCommunityGroupById(
       widget.communityGroupId,
-    ); // Your method
+    );
 
     setState(() {
       communityGroup = result.data;
@@ -174,54 +201,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-
+    _tabController = TabController(length: 3, vsync: this);
     _communityUsecase = ref.read(communityUseCaseProvider);
-
-    communityPosts = [
-      CommunityPost(
-        authorName: 'Laura',
-        communityName: 'Santa Fe Community',
-        postTitle: 'The Power of Healing 🌿',
-        postImage: 'assets/forest.jpg',
-        category: 'Natural Energy',
-        subcategory: 'Healing ritual',
-      ),
-      CommunityPost(
-        authorName: 'Laura',
-        communityName: 'Santa Fe Community',
-        postTitle: 'The Power of Healing 🌿',
-        postImage: 'assets/forest.jpg',
-        category: 'Natural Energy',
-        subcategory: 'Healing ritual',
-      ),
-      CommunityPost(
-        authorName: 'Laura',
-        communityName: 'Santa Fe Community',
-        postTitle: 'The Power of Healing 🌿',
-        postImage: 'assets/forest.jpg',
-        category: 'Natural Energy',
-        subcategory: 'Healing ritual',
-      ),
-      CommunityPost(
-        authorName: 'Laura',
-        communityName: 'Santa Fe Community',
-        postTitle: 'The Power of Healing 🌿',
-        postImage: 'assets/forest.jpg',
-        category: 'Natural Energy',
-        subcategory: 'Healing ritual',
-      ),
-      CommunityPost(
-        authorName: 'Laura',
-        communityName: 'Santa Fe Community',
-        postTitle: 'The Power of Healing 🌿',
-        postImage: 'assets/forest.jpg',
-        category: 'Natural Energy',
-        subcategory: 'Healing ritual',
-      ),
-    ];
 
     fetchCommunityGroupById();
   }
@@ -229,241 +211,342 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   @override
   void dispose() {
     _tabController.dispose();
-    // TODO: implement dispose
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Building with currentUserId: $currentUserId');
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreatePostDialog(),
-        child: const Icon(Icons.add),
+      backgroundColor: lightGray,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: textBlack),
+        ),
+        title: const Text(
+          'Community',
+          style: TextStyle(
+            color: textBlack,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search, color: textBlack),
+          ),
+        ],
       ),
-      body: SafeArea(
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final posts = communityGroup?.communityPostsDetail ?? [];
-
-                    final allPosts = communityGroup?.communityPostsDetail ?? [];
-                    final myPosts = userPosts;
-
-                    return ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Community header image
-                            Stack(
-                              children: [
-                                Container(
-                                  height: 200,
-                                  width: double.infinity,
-                                  decoration: const BoxDecoration(
-                                    image: DecorationImage(
-                                      image: AssetImage(
-                                        'assets/images/meditation_page_image.png',
-                                      ),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 20,
-                                  left: 20,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withAlpha(
-                                        (0.7 * 255).toInt(),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.all(8),
-                                    child: IconButton(
-                                      onPressed:
-                                          () => Navigator.of(context).pop(),
-                                      icon: Icon(
-                                        Icons.arrow_back,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Community title and info
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                communityGroup?.communityName ??
-                                                    '',
-                                                style: const TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // Join/Leave Button
-                                        if (currentUserId != null)
-                                          isJoinLoading
-                                              ? const CircularProgressIndicator()
-                                              : ElevatedButton(
-                                                onPressed:
-                                                    isUserJoined
-                                                        ? _leaveCommunity
-                                                        : _joinCommunity,
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      isUserJoined
-                                                          ? Colors.red
-                                                          : Colors.blue,
-                                                  foregroundColor: Colors.white,
-                                                ),
-                                                child: Text(
-                                                  isUserJoined
-                                                      ? 'Leave'
-                                                      : 'Join',
-                                                ),
-                                              ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    // Tab Bar
-                                    // TabBar(
-                                    //   controller: _tabController,
-                                    //   labelColor: Colors.blue,
-                                    //   unselectedLabelColor: Colors.grey,
-                                    //   indicatorColor: Colors.blue,
-                                    //   tabs: const [
-                                    //     Tab(text: 'All Posts'),
-                                    //     Tab(text: 'My Posts'),
-                                    //   ],
-                                    // ),
-                                    const SizedBox(height: 15),
-
-                                    // Tab Bar
-                                    TabBar(
-                                      controller: _tabController,
-                                      labelColor: Colors.blue,
-                                      unselectedLabelColor: Colors.grey,
-                                      indicatorColor: Colors.blue,
-                                      tabs: const [
-                                        Tab(text: 'All Posts'),
-                                        Tab(text: 'My Posts'),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 15),
-
-                                    // Tab Bar View
-                                    Expanded(
-                                      child: TabBarView(
-                                        controller: _tabController,
-                                        children: [
-                                          // All Posts Tab
-                                          _buildPostsList(allPosts),
-
-                                          // My Posts Tab
-                                          _buildPostsList(myPosts),
-                                        ],
-                                      ),
-                                    ),
-
-                                    // Expanded(
-                                    //   child: ListView.separated(
-                                    //     itemCount: posts.length,
-                                    //     itemBuilder: (context, index) {
-                                    //       // return communityPosts[index];
-                                    //
-                                    //       final post = posts[index];
-                                    //       return CommunityPost(
-                                    //         authorName:
-                                    //             post.userName ?? 'Unknown',
-                                    //         communityName:
-                                    //             communityGroup?.communityName ??
-                                    //             '',
-                                    //         postTitle:
-                                    //             post.communityPostTitle ?? '',
-                                    //         postImage:
-                                    //             'assets/images/meditation_page_image.png',
-                                    //         // fallback asset
-                                    //         category:
-                                    //             post.communityPostStatus ??
-                                    //             'General',
-                                    //         subcategory:
-                                    //             post.communityPostCreatedAt
-                                    //                 ?.toIso8601String() ??
-                                    //             '',
-                                    //       );
-                                    //     },
-                                    //     separatorBuilder:
-                                    //         (context, index) => const Divider(),
-                                    //   ),
-                                    // ),
-                                  ],
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: primaryOrange),
+              )
+              : Column(
+                children: [
+                  // Community Info Header
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                communityGroup?.communityName ?? '',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textBlack,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(
+                                '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Join/Leave Button
+                        if (currentUserId != null)
+                          isJoinLoading
+                              ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: primaryOrange,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : ElevatedButton(
+                                onPressed:
+                                    isUserJoined
+                                        ? _leaveCommunity
+                                        : _joinCommunity,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      isUserJoined ? Colors.red : primaryOrange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: Text(
+                                  isUserJoined ? 'Leave' : 'Join',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+
+                  // Search Bar
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: lightGray,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: const TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search Posts and comments',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 15,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+
+                  // Tab Bar
+                  Container(
+                    color: Colors.white,
+                    child: TabBar(
+                      controller: _tabController,
+                      labelColor: primaryOrange,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: primaryOrange,
+                      // indicatorWeight: 3,
+                      // onTap: (index) {
+                      //   setState(() {});
+                      // },
+                      tabs: const [
+                        Tab(text: 'Posts'),
+                        Tab(text: 'My Posts'),
+                        Tab(text: 'Trending'),
+                      ],
+                    ),
+                  ),
+
+                  // Tab Bar View
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // All Posts Tab
+                        _buildPostsTab(),
+                        // My Posts Tab
+                        _buildMyPostsTab(),
+                        // Trending Tab
+                        _buildTrendingTab(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCreatePostDialog(),
+        backgroundColor: primaryOrange,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  void _showCreatePostDialog() {
+  Widget _buildMyPostsTab() {
+    final myPosts = userPosts;
+
+    if (myPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.post_add, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'You haven\'t posted anything yet',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to create your first post',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: myPosts.length,
+      itemBuilder: (context, index) {
+        final post = myPosts[index];
+
+        return CommunityPostCard(
+          post: post,
+          communityName: communityGroup?.communityName ?? '',
+          isUserPost: true,
+          // Always true for my posts tab
+          onEdit: () => _editPost(post),
+          onDelete: () => _showDeleteConfirmation(post),
+        );
+      },
+    );
+  }
+
+  Widget _buildTrendingTab() {
+    // You can implement trending logic here
+    // For now, showing posts sorted by engagement or recent activity
+    final posts = communityGroup?.communityPostsDetail ?? [];
+    final trendingPosts = posts.take(5).toList(); // Simple implementation
+
+    if (trendingPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.trending_up, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No trending posts yet',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: trendingPosts.length,
+      itemBuilder: (context, index) {
+        final post = trendingPosts[index];
+        final isUserPost = post.profileId == currentProfileId;
+
+        return CommunityPostCard(
+          post: post,
+          communityName: communityGroup?.communityName ?? '',
+          isUserPost: isUserPost,
+          onEdit: isUserPost ? () => _editPost(post) : null,
+          onDelete: isUserPost ? () => _showDeleteConfirmation(post) : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildPostsTab() {
+    final posts = communityGroup?.communityPostsDetail ?? [];
+
+    if (posts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.post_add, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No posts found',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final post = posts[index];
+        final isUserPost = post.profileId == currentProfileId;
+
+        return CommunityPostCard(
+          post: post,
+          communityName: communityGroup?.communityName ?? '',
+          isUserPost: isUserPost,
+          onEdit: () => _editPost(post),
+          onDelete: () => _showDeleteConfirmation(post),
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(dynamic post) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Post'),
+            content: const Text('Are you sure you want to delete this post?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deletePost(post.id ?? '');
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showCreatePostDialog({dynamic editingPost}) {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController contentController = TextEditingController();
     File? selectedImage;
+
+    if (editingPost != null) {
+      titleController.text = editingPost.communityPostTitle ?? '';
+      contentController.text = editingPost.communityPostContent ?? '';
+    }
 
     showDialog(
       context: context,
@@ -471,7 +554,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Create Community Post'),
+              title: Text(editingPost != null ? 'Edit Post' : 'Create Post'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -490,6 +573,10 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                     ElevatedButton.icon(
                       icon: const Icon(Icons.image),
                       label: const Text('Choose Image'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryOrange,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () async {
                         final picker = ImagePicker();
                         final pickedFile = await picker.pickImage(
@@ -506,7 +593,6 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          // 'Selected: ${selectedImage!.name}',
                           'Selected: ${selectedImage!.path.split('/').last}',
                           style: const TextStyle(
                             fontSize: 12,
@@ -533,17 +619,21 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                       return;
                     }
 
-                    // Navigator.pop(context); // close dialog
                     await _createCommunityPost(
                       title: titleController.text.trim(),
                       content: contentController.text.trim(),
                       imageFile: selectedImage,
+                      editingPost: editingPost,
                       onCloseDialog: () {
-                        Navigator.pop(context); // Close dialog only on success
+                        Navigator.pop(context);
                       },
                     );
                   },
-                  child: const Text('Create'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryOrange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(editingPost != null ? 'Update' : 'Create'),
                 ),
               ],
             );
@@ -552,152 +642,228 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       },
     );
   }
-
-  Widget _buildPostsList(List<dynamic> posts) {
-    if (posts.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.post_add, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No posts found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: posts.length,
-      itemBuilder: (context, index) {
-        final post = posts[index];
-        return CommunityPost(
-          authorName: post.userName ?? 'Unknown',
-          communityName: communityGroup?.communityName ?? '',
-          postTitle: post.communityPostTitle ?? '',
-          postImage: 'assets/images/meditation_page_image.png',
-          category: post.communityPostStatus ?? 'General',
-          subcategory: post.communityPostCreatedAt?.toIso8601String() ?? '',
-        );
-      },
-      separatorBuilder: (context, index) => const Divider(),
-    );
-  }
 }
 
-class CommunityPost extends StatelessWidget {
-  final String authorName;
+class CommunityPostCard extends StatelessWidget {
+  final dynamic post;
   final String communityName;
-  final String postTitle;
-  final String postImage;
-  final String category;
-  final String subcategory;
+  final bool isUserPost;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const CommunityPost({
+  const CommunityPostCard({
     super.key,
-    required this.authorName,
+    required this.post,
     required this.communityName,
-    required this.postTitle,
-    required this.postImage,
-    required this.category,
-    required this.subcategory,
+    required this.isUserPost,
+    this.onEdit,
+    this.onDelete,
   });
+
+  static const Color primaryOrange = Color(0xFFFF6B35);
+  static const Color secondaryBrown = Color(0xFF8B4513);
+  static const Color textBlack = Color(0xFF1A1A1A);
+  static const String fallbackImage =
+      'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ=';
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Post header
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Post header
+            Row(
               children: [
                 // Author avatar
-                const CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('assets/avatar.jpg'),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: primaryOrange.withOpacity(0.2),
+                  child: Text(
+                    (post.userName ?? 'U')[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: primaryOrange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                // Author name and community
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(color: Colors.black, fontSize: 14),
+                const SizedBox(width: 12),
+                // Author info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextSpan(
-                        text: authorName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        post.userName ?? 'Unknown User',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textBlack,
+                        ),
                       ),
-                      const TextSpan(text: ' shared to '),
-                      TextSpan(
-                        text: communityName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        _formatDate(post.communityPostCreatedAt),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
                 ),
+                // Three dots menu for user posts
+                if (isUserPost)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        onEdit?.call();
+                      } else if (value == 'delete') {
+                        onDelete?.call();
+                      }
+                    },
+                    itemBuilder:
+                        (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: primaryOrange),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete'),
+                              ],
+                            ),
+                          ),
+                        ],
+                  ),
               ],
             ),
-          ),
 
-          // Post title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              postTitle,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
+            const SizedBox(height: 12),
 
-          const SizedBox(height: 10),
-
-          // Post image
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(postImage),
-                fit: BoxFit.cover,
+            // Post content
+            Text(
+              post.communityPostTitle ?? '',
+              style: const TextStyle(
+                fontSize: 14,
+                color: textBlack,
+                height: 1.4,
               ),
             ),
-          ),
 
-          // Post footer
-          Container(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 15),
+
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              child: Image.network(
+                post.communityPostImageUrl ?? fallbackImage,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.network(
+                    fallbackImage,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  );
+                },
+              ),
+            ),
+
+            // // Post image
+            // Container(
+            //   height: 150,
+            //   width: double.infinity,
+            //   decoration: BoxDecoration(
+            //     image: DecorationImage(
+            //       image: AssetImage(post.communityPostImageUrl),
+            //       fit: BoxFit.cover,
+            //     ),
+            //   ),
+            // ),
+
+            const SizedBox(height: 12),
+
+            // Hashtags or category
+            if (post.communityPostStatus != null)
+              Text(
+                '#${post.communityPostStatus}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: primaryOrange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            // Post actions
+            Row(
               children: [
-                Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  subcategory,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
+                _buildActionButton(Icons.favorite_border, '12'),
+                const SizedBox(width: 24),
+                _buildActionButton(Icons.chat_bubble_outline, '5'),
+                const SizedBox(width: 24),
+                _buildActionButton(Icons.share_outlined, ''),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildActionButton(IconData icon, String count) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        if (count.isNotEmpty) ...[
+          const SizedBox(width: 4),
+          Text(count, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        ],
+      ],
+    );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
+    } else {
+      return 'now';
+    }
   }
 }
