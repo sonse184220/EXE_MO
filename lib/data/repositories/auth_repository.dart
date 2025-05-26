@@ -136,9 +136,11 @@ class AuthRepository implements IAuthRepository {
       if (response.statusCode == 200) {
         final data = response.data;
         final tokenModel = TokenModel.fromJson(data);
-        final tokenModelToJson = jsonEncode(tokenModel.toJson());
-        String tokenModelString = AppConstants.tokenModel;
-        await _secureStorageUtils.write(tokenModelString, tokenModelToJson);
+
+        await _authNotifier.login(tokenModel);
+        // final tokenModelToJson = jsonEncode(tokenModel.toJson());
+        // String tokenModelString = AppConstants.tokenModel;
+        // await _secureStorageUtils.write(tokenModelString, tokenModelToJson);
 
         return Result.success('Profile login success');
       } else {

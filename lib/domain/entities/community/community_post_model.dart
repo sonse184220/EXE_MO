@@ -7,6 +7,9 @@ class CommunityPostModel {
   final DateTime? communityPostCreatedAt;
   final String? communityGroupId;
   final String? profileId;
+  final String? userId;
+  final String? userName;
+  final String? profilePicture;
 
   CommunityPostModel({
     this.communityPostId,
@@ -17,6 +20,9 @@ class CommunityPostModel {
     this.communityPostCreatedAt,
     this.communityGroupId,
     this.profileId,
+    this.userId,
+    this.userName,
+    this.profilePicture,
   });
 
   factory CommunityPostModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +37,9 @@ class CommunityPostModel {
           : null,
       communityGroupId: json['communityGroupId'],
       profileId: json['profileId'],
+      userId: json['userId'],
+      userName: json['userName'],
+      profilePicture: json['profilePicture'],
     );
   }
 
@@ -44,6 +53,9 @@ class CommunityPostModel {
       'communityPostCreatedAt': communityPostCreatedAt?.toIso8601String(),
       'communityGroupId': communityGroupId,
       'profileId': profileId,
+      'userId': userId,
+      'userName': userName,
+      'profilePicture': profilePicture,
     };
   }
 }

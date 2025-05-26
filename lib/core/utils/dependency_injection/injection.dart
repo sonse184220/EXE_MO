@@ -17,6 +17,7 @@ import 'package:inner_child_app/data/repositories/auth_repository.dart';
 import 'package:inner_child_app/data/repositories/chat_ai_repository.dart';
 import 'package:inner_child_app/data/repositories/community_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
+import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 import 'package:inner_child_app/domain/repositories/i_article_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_audio_category_repository.dart';
@@ -163,7 +164,7 @@ final audioSubcategoryUseCaseProvider = Provider(
 // 📍 State Notifiers
 // ─────────────────────────────────────────────────────────────
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthStatus>(
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
       (ref) => AuthNotifier(ref.read(storageProvider)),
 );
 
