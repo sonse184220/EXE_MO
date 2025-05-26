@@ -8,4 +8,5 @@ abstract class ICommunityRepository{
   Future<Result<String>> createCommunityPost(CreateCommunityPostModel post);
   Future<Result<String>> joinCommunity(String communityGroupId);
   Future<Result<String>> leaveCommunity(String communityGroupId);
+  Future<Result<String>> updateCommunityPost(CreateCommunityPostModel post);
 }

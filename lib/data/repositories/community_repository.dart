@@ -86,7 +86,7 @@ class CommunityRepository implements ICommunityRepository {
     try {
       final response = await _apiService.leaveCommunity(communityGroupId);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         // final data = response.data;
 
         // final community = CommunityGroupModel.fromJson(data);
@@ -96,5 +96,11 @@ class CommunityRepository implements ICommunityRepository {
     } catch (e) {
       return Result.failure('Leave community error: $e');
     }
+  }
+
+  @override
+  Future<Result<String>> updateCommunityPost(CreateCommunityPostModel post) {
+    // TODO: implement updateCommunityPost
+    throw UnimplementedError();
   }
 }
