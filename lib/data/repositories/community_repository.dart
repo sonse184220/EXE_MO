@@ -1,6 +1,7 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
+import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 
 class CommunityRepository implements ICommunityRepository {
@@ -43,6 +44,57 @@ class CommunityRepository implements ICommunityRepository {
       return Result.success(null);
     } catch (e) {
       return Result.failure('Fetch community group by Id error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> createCommunityPost(CreateCommunityPostModel post) async {
+    try {
+      final response = await _apiService.createCommunityPost(post);
+
+      if (response.statusCode == 201) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Post created succesfully');
+      }
+      return Result.failure('Fail to create community post. Please try again');
+    } catch (e) {
+      return Result.failure('Create community post error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> joinCommunity(String communityGroupId) async {
+    try {
+      final response = await _apiService.joinCommunity(communityGroupId);
+
+      if (response.statusCode == 201) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Join community succesfully');
+      }
+      return Result.failure('Fail to Join community. Please try again');
+    } catch (e) {
+      return Result.failure('Join community error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> leaveCommunity(String communityGroupId) async {
+    try {
+      final response = await _apiService.leaveCommunity(communityGroupId);
+
+      if (response.statusCode == 201) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Leave community succesfully');
+      }
+      return Result.failure('Fail to leave community. Please try again');
+    } catch (e) {
+      return Result.failure('Leave community error: $e');
     }
   }
 }
