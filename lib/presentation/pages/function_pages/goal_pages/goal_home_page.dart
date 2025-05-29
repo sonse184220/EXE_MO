@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/entities/goal/goal_model.dart';
+import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_progress_page.dart';
 import 'package:intl/intl.dart';
 
-class GoalHomePage extends StatefulWidget {
+class GoalHomePage extends ConsumerStatefulWidget {
   // final String userName;
   // final List<HabitItem> habits;
   // final int completedHabits;
@@ -18,10 +22,16 @@ class GoalHomePage extends StatefulWidget {
   });
 
   @override
-  State<GoalHomePage> createState() => _GoalHomePageState();
+  ConsumerState<GoalHomePage> createState() => _GoalHomePageState();
 }
 
-class _GoalHomePageState extends State<GoalHomePage> {
+class _GoalHomePageState extends ConsumerState<GoalHomePage> {
+  late final GoalUsecase _goalUsecase;
+
+  List<GoalModel> _goals = [];
+  bool _isLoading = true;
+  String? _error;
+
   final percentageBetterThan = 20; // This would come from backend data
 
   final String userName = "Nhi";
@@ -43,17 +53,68 @@ class _GoalHomePageState extends State<GoalHomePage> {
     HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
   ];
 
+  Future<void> _fetchGoals() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final goals = await _goalUsecase.getOwnGoals();
+      setState(() {
+        _goals = goals.data!;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _goalUsecase = ref.read(goalUseCaseProvider);
+    _fetchGoals();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Calculate completion percentage
+    final completedGoals =
+        _goals.where((goal) => goal.goalStatus?.toLowerCase() == "completed").length;
     final completionPercentage =
-    habits.isEmpty
-        ? 0
-        : (completedHabits / habits.length * 100).round();
+    _goals.isEmpty ? 0 : ((completedGoals / _goals.length) * 100).round();
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    // // Calculate completion percentage
+    // final completionPercentage =
+    // habits.isEmpty
+    //     ? 0
+    //     : (completedHabits / habits.length * 100).round();
+
+    return SafeArea(
+      child:  Scaffold(
+      body:
+      _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error: $_error'),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _fetchGoals,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ) :
+      LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -82,11 +143,11 @@ class _GoalHomePageState extends State<GoalHomePage> {
                     GestureDetector(onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GoalProgressPage()));}, child: _buildProgressCard(
                       completionPercentage,
                       completedHabits,
-                      habits.length,
+                      _goals.length,
                     ),),
 
                     // Today Goals Section
-                    _buildTodayGoalsSection(habits),
+                    _buildTodayGoalsSection(_goals),
 
                     // Performance Stats
                     _buildPerformanceStats(
@@ -250,7 +311,7 @@ class _GoalHomePageState extends State<GoalHomePage> {
     );
   }
 
-  Widget _buildTodayGoalsSection(List<HabitItem> habits) {
+  Widget _buildTodayGoalsSection(List<GoalModel> goals) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,14 +332,26 @@ class _GoalHomePageState extends State<GoalHomePage> {
             ],
           ),
           SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              itemCount: habits.length,
-              itemBuilder: (context, index) {
-                return HabitListItem(habit: habits[index]);
-              },
+          ...goals.map((goal) => ListTile(
+            leading: Icon(
+              goal.goalStatus?.toLowerCase() == "completed"
+                  ? Icons.check
+                  : Icons.radio_button_unchecked,
+              color: goal.goalStatus?.toLowerCase() == "completed"
+                  ? Colors.green
+                  : Colors.grey,
             ),
-          ),
+            title: Text(goal.goalTitle ?? "Untitled Goal"),
+            subtitle: Text(goal.goalDescription ?? ''),
+          )),
+          // Expanded(
+          //   child: ListView.builder(
+          //     itemCount: habits.length,
+          //     itemBuilder: (context, index) {
+          //       return HabitListItem(habit: habits[index]);
+          //     },
+          //   ),
+          // ),
           SizedBox(height: 20),
         ],
       ),
