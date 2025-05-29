@@ -4,6 +4,7 @@ import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_a
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/meditation/meditation_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/quiz/all_quiz_page.dart';
 
 class TherapyToolsPage extends StatefulWidget {
   const TherapyToolsPage({super.key});
@@ -132,9 +133,16 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                                 },
                               },
                               {
-                                'title': 'Frequency Sounds',
+                                'title': 'Mental Health Quiz',
                                 'imageAsset': 'assets/images/frequency.png',
-                                'navigate': null,
+                                'navigate': () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AllQuizPage(),
+                                    ),
+                                  );
+                                },
                               },
                               {
                                 'title': 'AI Chat',

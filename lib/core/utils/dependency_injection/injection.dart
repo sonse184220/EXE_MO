@@ -8,7 +8,9 @@ import 'package:inner_child_app/data/datasources/remote/audio_category_api_servi
 import 'package:inner_child_app/data/datasources/remote/audio_subcategory_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/chat_ai_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/goal_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/notification_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/quiz_api_service.dart';
 import 'package:inner_child_app/data/repositories/audio_category_repository.dart';
 import 'package:inner_child_app/data/repositories/audio_repository.dart';
 import 'package:inner_child_app/data/repositories/article_repository.dart';
@@ -16,7 +18,9 @@ import 'package:inner_child_app/data/repositories/audio_subcategory_repository.d
 import 'package:inner_child_app/data/repositories/auth_repository.dart';
 import 'package:inner_child_app/data/repositories/chat_ai_repository.dart';
 import 'package:inner_child_app/data/repositories/community_repository.dart';
+import 'package:inner_child_app/data/repositories/goal_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
+import 'package:inner_child_app/data/repositories/quiz_repository.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 import 'package:inner_child_app/domain/repositories/i_article_repository.dart';
@@ -26,7 +30,9 @@ import 'package:inner_child_app/domain/repositories/i_audio_subcategory_reposito
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_chat_ai_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_goal_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_notification_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_quiz_repository.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/domain/usecases/audio_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/audio_subcategory_usecase.dart';
@@ -34,7 +40,9 @@ import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/domain/usecases/chat_ai_usecase.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
+import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
+import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import '../../../data/datasources/remote/authentication_api_service.dart';
 // ─────────────────────────────────────────────────────────────
 // 🔐 Secure Storage
@@ -88,6 +96,14 @@ final audioSubcategoryAiApiServiceProvider = Provider(
       (ref) => AudioSubcategoryApiService(ref.read(dioClientProvider)),
 );
 
+final quizApiServiceProvider = Provider(
+      (ref) => QuizApiService(ref.read(dioClientProvider)),
+);
+
+final goalApiServiceProvider = Provider(
+      (ref) => GoalApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -124,6 +140,14 @@ final audioSubcategoryRepositoryProvider = Provider<IAudioSubcategoryRepository>
       (ref) => AudioSubcategoryRepository(ref.read(audioSubcategoryAiApiServiceProvider)),
 );
 
+final quizRepositoryProvider = Provider<IQuizRepository>(
+      (ref) => QuizRepository(ref.read(quizApiServiceProvider)),
+);
+
+final goalRepositoryProvider = Provider<IGoalRepository>(
+      (ref) => GoalRepository(ref.read(goalApiServiceProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // ⚙️ Use Cases
 // ─────────────────────────────────────────────────────────────
@@ -158,6 +182,14 @@ final audioCategoryUseCaseProvider = Provider(
 
 final audioSubcategoryUseCaseProvider = Provider(
       (ref) => AudioSubcategoryUsecase(ref.read(audioSubcategoryRepositoryProvider)),
+);
+
+final quizUseCaseProvider = Provider(
+      (ref) => QuizUsecase(ref.read(quizRepositoryProvider)),
+);
+
+final goalUseCaseProvider = Provider(
+      (ref) => GoalUsecase(ref.read(goalRepositoryProvider)),
 );
 
 // ─────────────────────────────────────────────────────────────
