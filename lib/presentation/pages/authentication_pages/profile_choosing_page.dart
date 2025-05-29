@@ -93,9 +93,9 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return SafeArea(
+      child: Scaffold(
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return Container(
               decoration: BoxDecoration(
@@ -233,8 +233,7 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap:
-      onTap,
+      onTap: onTap,
       // () {
       //   Navigator.push(
       //     context,

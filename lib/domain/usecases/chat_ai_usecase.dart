@@ -19,4 +19,8 @@ class ChatAIUseCase {
   Future<Result<String>> createNewChatSession(String title) {
     return _chatAiRepository.createNewChatSession(title);
   }
+
+  Future<Result<String>> sendChatMessage(String message, String chatSessionId) {
+    return _chatAiRepository.sendChatMessage(message, chatSessionId);
+  }
 }

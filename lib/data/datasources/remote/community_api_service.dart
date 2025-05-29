@@ -32,4 +32,9 @@ class CommunityApiService {
   Future<Response> leaveCommunity(String communityGroupId) async {
     return await _client.post('innerchild/community/leave-community/$communityGroupId');
   }
+
+  Future<Response> updateCommunityPost(String postId, CreateCommunityPostModel post) async {
+    final formdata = await post.toFormData();
+    return await _client.put('innerchild/community/update-post/$postId', data: formdata);
+  }
 }

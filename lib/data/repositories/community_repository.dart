@@ -99,8 +99,19 @@ class CommunityRepository implements ICommunityRepository {
   }
 
   @override
-  Future<Result<String>> updateCommunityPost(CreateCommunityPostModel post) {
-    // TODO: implement updateCommunityPost
-    throw UnimplementedError();
+  Future<Result<String>> updateCommunityPost(String postId, CreateCommunityPostModel post) async {
+    try {
+      final response = await _apiService.updateCommunityPost(postId, post);
+
+      if (response.statusCode == 204) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Post updated succesfully');
+      }
+      return Result.failure('Fail to update post. Please try again');
+    } catch (e) {
+      return Result.failure('Update post error: $e');
+    }
   }
 }

@@ -24,7 +24,10 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage> {
       final result = await _chatAIUseCase.createNewChatSession(title);
       if (result.isSuccess) {
         Notify.showFlushbar('Session created!');
-        await fetchChatSessions(); // Refresh the list
+        if (mounted) {
+          await fetchChatSessions();
+        }
+        // await fetchChatSessions(); // Refresh the list
       } else {
         Notify.showFlushbar('Failed to create session', isError: true);
       }
@@ -66,15 +69,17 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return
+      SafeArea(
+        child:
+        Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateSessionDialog(),
         backgroundColor: Colors.orangeAccent,
         child: const Icon(Icons.add, color: Colors.brown,),
       ),
       backgroundColor: Colors.grey[100],
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
             // Custom styled header
             Padding(
@@ -147,7 +152,7 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  session.aichatSessionTitle,
+                                  session.aiChatSessionTitle,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -155,7 +160,7 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Started: ${session.aichatSessionCreatedAt.toLocal()}',
+                                  'Started: ${session.aiChatSessionCreatedAt.toLocal()}',
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 13,

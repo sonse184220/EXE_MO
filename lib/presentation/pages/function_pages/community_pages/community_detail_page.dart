@@ -159,7 +159,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
       final result =
           editingPost != null
-              ? await _communityUsecase.updateCommunityPost(
+              ? await _communityUsecase.updateCommunityPost(editingPost.communityPostId,
                 createCommunityPostModel,
               )
               : await _communityUsecase.createCommunityPost(
@@ -216,7 +216,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       backgroundColor: lightGray,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -234,152 +234,153 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search, color: textBlack),
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {},
+        //     icon: const Icon(Icons.search, color: textBlack),
+        //   ),
+        // ],
+      ),
+      body:
+      isLoading
+          ? const Center(
+        child: CircularProgressIndicator(color: primaryOrange),
+      )
+          : Column(
+        children: [
+          // Community Info Header
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        communityGroup?.communityName ?? '',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textBlack,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Join/Leave Button
+                if (currentUserId != null)
+                  isJoinLoading
+                      ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: primaryOrange,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : ElevatedButton(
+                    onPressed:
+                    isUserJoined
+                        ? _leaveCommunity
+                        : _joinCommunity,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                      isUserJoined ? Colors.red : primaryOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      isUserJoined ? 'Leave' : 'Join',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Search Bar
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: lightGray,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: const TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search Posts and comments',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Tab Bar
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: primaryOrange,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: primaryOrange,
+              // indicatorWeight: 3,
+              // onTap: (index) {
+              //   setState(() {});
+              // },
+              tabs: const [
+                Tab(text: 'Posts'),
+                Tab(text: 'My Posts'),
+                Tab(text: 'Trending'),
+              ],
+            ),
+          ),
+
+          // Tab Bar View
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // All Posts Tab
+                _buildPostsTab(),
+                // My Posts Tab
+                _buildMyPostsTab(),
+                // Trending Tab
+                _buildTrendingTab(),
+              ],
+            ),
           ),
         ],
       ),
-      body:
-          isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: primaryOrange),
-              )
-              : Column(
-                children: [
-                  // Community Info Header
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                communityGroup?.communityName ?? '',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: textBlack,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Join/Leave Button
-                        if (currentUserId != null)
-                          isJoinLoading
-                              ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: primaryOrange,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : ElevatedButton(
-                                onPressed:
-                                    isUserJoined
-                                        ? _leaveCommunity
-                                        : _joinCommunity,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      isUserJoined ? Colors.red : primaryOrange,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 8,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                child: Text(
-                                  isUserJoined ? 'Leave' : 'Join',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
-
-                  // Search Bar
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: lightGray,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search Posts and comments',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Tab Bar
-                  Container(
-                    color: Colors.white,
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: primaryOrange,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: primaryOrange,
-                      // indicatorWeight: 3,
-                      // onTap: (index) {
-                      //   setState(() {});
-                      // },
-                      tabs: const [
-                        Tab(text: 'Posts'),
-                        Tab(text: 'My Posts'),
-                        Tab(text: 'Trending'),
-                      ],
-                    ),
-                  ),
-
-                  // Tab Bar View
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        // All Posts Tab
-                        _buildPostsTab(),
-                        // My Posts Tab
-                        _buildMyPostsTab(),
-                        // Trending Tab
-                        _buildTrendingTab(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreatePostDialog(),
         backgroundColor: primaryOrange,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-    );
+    ));
+      // SafeArea(child: );
   }
 
   Widget _buildMyPostsTab() {
