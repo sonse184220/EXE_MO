@@ -57,6 +57,25 @@ class ChatAiRepository implements IChatAiRepository {
       final response = await _chatAiService.createNewChatSession(title);
 
       if (response.statusCode == 201) {
+        // final data = response.data;
+
+        return Result.success('Session $title created successfully');
+      }
+
+      return Result.failure(
+        'Failed to create session: ${response.statusCode}',
+      );
+    } catch (e) {
+      return Result.failure('Create session error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> sendChatMessage(String message, String chatSessionId) async {
+    try {
+      final response = await _chatAiService.sendChatMessage(message, chatSessionId);
+
+      if (response.statusCode == 200) {
         final data = response.data;
 
         return Result.success(data);

@@ -28,7 +28,7 @@ class CommunityUsecase {
     return iCommunityRepository.leaveCommunity(communityGroupId);
   }
 
-  Future<Result<String>> updateCommunityPost(CreateCommunityPostModel post) {
-    return iCommunityRepository.updateCommunityPost(post);
+  Future<Result<String>> updateCommunityPost(String postId, CreateCommunityPostModel post) {
+    return iCommunityRepository.updateCommunityPost(postId, post);
   }
 }

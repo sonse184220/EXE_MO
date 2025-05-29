@@ -20,4 +20,12 @@ class ChatAiApiService {
     };
     return await _client.post('innerchild/aichat/create-session', data: dataObject);
   }
+
+  Future<Response> sendChatMessage(String message, String chatSessionId) async {
+    final dataObject = {
+      "message": message,
+      "aiChatSessionId": chatSessionId
+    };
+    return await _client.post('innerchild/aichat/send-chat', data: dataObject);
+  }
 }

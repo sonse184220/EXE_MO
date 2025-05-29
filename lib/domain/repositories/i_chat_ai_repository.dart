@@ -5,4 +5,5 @@ abstract class IChatAiRepository {
   Future<Result<List<ChatSessionModel>>> getAllChatSessions();
   Future<Result<ChatSessionModel>> getChatSessionById(String id);
   Future<Result<String>> createNewChatSession(String title);
+  Future<Result<String>> sendChatMessage(String message, String chatSessionId);
 }

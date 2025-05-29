@@ -34,12 +34,14 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return
+      SafeArea(child: Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: CustomNavbar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
       ),
+      )
     );
   }
 }
