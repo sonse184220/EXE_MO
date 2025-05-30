@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/admin/admin_main_screen.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/forgot_password_1.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
@@ -23,7 +24,7 @@ class LoginPage extends ConsumerState<Login> {
 
   bool _obscurePassword = true;
 
-  late final _authUseCase;
+  late final AuthUsecase _authUseCase;
 
   @override
   void initState() {
@@ -37,10 +38,10 @@ class LoginPage extends ConsumerState<Login> {
       var userCredential = await signInWithGoogle();
       final idToken = await userCredential.user?.getIdToken();
       print(idToken);
-      final result = await _authUseCase.loginWithGoogle(idToken);
+      final result = await _authUseCase.loginWithGoogle(idToken!);
       if (result.isSuccess) {
         Notify.showFlushbar(
-          result.data ?? 'Login google success.',
+          'Login google success.',
           isError: false,
         );
         // Navigator.pushReplacement(
@@ -268,7 +269,7 @@ class LoginPage extends ConsumerState<Login> {
                           children: [
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.brown,
+                                backgroundColor: Color(0xFFE37083),
                                 minimumSize: const Size.fromHeight(50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
