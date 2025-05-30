@@ -351,9 +351,11 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                     axisAlignment: -1.0, // Grow from top
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // App Logo
                         Container(
+                          alignment: Alignment.centerLeft,
                           width: 70,
                           height: 80,
                           decoration: const BoxDecoration(
@@ -795,7 +797,7 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                   // Register Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
+                      backgroundColor: Color(0xFFE37083),
                       minimumSize: const Size.fromHeight(50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),

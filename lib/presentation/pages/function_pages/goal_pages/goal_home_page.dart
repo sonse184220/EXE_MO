@@ -34,7 +34,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
 
   final percentageBetterThan = 20; // This would come from backend data
 
-  final String userName = "Nhi";
+  String? get userName => ref.watch(authNotifierProvider).userInfo?.userId;
 
   // final List<HabitItem> habits;
   final int completedHabits = 3;
@@ -85,9 +85,11 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
   @override
   Widget build(BuildContext context) {
     final completedGoals =
-        _goals.where((goal) => goal.goalStatus?.toLowerCase() == "completed").length;
+        _goals
+            .where((goal) => goal.goalStatus?.toLowerCase() == "completed")
+            .length;
     final completionPercentage =
-    _goals.isEmpty ? 0 : ((completedGoals / _goals.length) * 100).round();
+        _goals.isEmpty ? 0 : ((completedGoals / _goals.length) * 100).round();
 
     // // Calculate completion percentage
     // final completionPercentage =
@@ -96,72 +98,84 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
     //     : (completedHabits / habits.length * 100).round();
 
     return SafeArea(
-      child:  Scaffold(
-      body:
-      _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: $_error'),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _fetchGoals,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ) :
-      LayoutBuilder(
-          builder: (context, constraints) {
-            return ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
+      child: Scaffold(
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Error: $_error'),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: _fetchGoals,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+                : LayoutBuilder(
+                  builder: (context, constraints) {
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header Section
+                            _buildHeader( 'Unknown'),
+
+                            // Progress Card
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => GoalProgressPage(),
+                                  ),
+                                );
+                              },
+                              child: _buildProgressCard(
+                                completionPercentage,
+                                completedHabits,
+                                _goals.length,
+                              ),
+                            ),
+
+                            // Today Goals Section
+                            _buildTodayGoalsSection(_goals),
+
+                            // Performance Stats
+                            _buildPerformanceStats(
+                              percentageBetterThan,
+                              tasksLeft,
+                            ),
+
+                            SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    _buildHeader(userName),
-
-                    // Progress Card
-                    GestureDetector(onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GoalProgressPage()));}, child: _buildProgressCard(
-                      completionPercentage,
-                      completedHabits,
-                      _goals.length,
-                    ),),
-
-                    // Today Goals Section
-                    _buildTodayGoalsSection(_goals),
-
-                    // Performance Stats
-                    _buildPerformanceStats(
-                      percentageBetterThan,
-                      tasksLeft,
-                    ),
-
-                    SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }
@@ -325,33 +339,36 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
               ),
               TextButton(
                 onPressed: () {
-                  // View all goals functionality
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => GoalManagePage()),
+                  );
                 },
                 child: Text("See all", style: TextStyle(color: Colors.orange)),
               ),
             ],
           ),
           SizedBox(height: 10),
-          ...goals.map((goal) => ListTile(
-            leading: Icon(
-              goal.goalStatus?.toLowerCase() == "completed"
-                  ? Icons.check
-                  : Icons.radio_button_unchecked,
-              color: goal.goalStatus?.toLowerCase() == "completed"
-                  ? Colors.green
-                  : Colors.grey,
-            ),
-            title: Text(goal.goalTitle ?? "Untitled Goal"),
-            subtitle: Text(goal.goalDescription ?? ''),
-          )),
-          // Expanded(
-          //   child: ListView.builder(
-          //     itemCount: habits.length,
-          //     itemBuilder: (context, index) {
-          //       return HabitListItem(habit: habits[index]);
-          //     },
+          // ...goals.map((goal) => ListTile(
+          //   leading: Icon(
+          //     goal.goalStatus?.toLowerCase() == "completed"
+          //         ? Icons.check
+          //         : Icons.radio_button_unchecked,
+          //     color: goal.goalStatus?.toLowerCase() == "completed"
+          //         ? Colors.green
+          //         : Colors.grey,
           //   ),
-          // ),
+          //   title: Text(goal.goalTitle ?? "Untitled Goal"),
+          //   subtitle: Text(goal.goalDescription ?? ''),
+          // )),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _goals.length,
+              itemBuilder: (context, index) {
+                return GoalListItem(goal: _goals[index]);
+              },
+            ),
+          ),
           SizedBox(height: 20),
         ],
       ),
@@ -437,15 +454,15 @@ class HabitItem {
   });
 }
 
-// Reusable HabitListItem Widget
-class HabitListItem extends StatelessWidget {
-  final HabitItem habit;
+// Reusable GoalListItem Widget
+class GoalListItem extends StatelessWidget {
+  final GoalModel goal;
   final VoidCallback? onToggle;
   final VoidCallback? onOptions;
 
-  const HabitListItem({
+  const GoalListItem({
     super.key,
-    required this.habit,
+    required this.goal,
     this.onToggle,
     this.onOptions,
   });
@@ -463,7 +480,7 @@ class HabitListItem extends StatelessWidget {
           SizedBox(width: 15),
           Expanded(
             child: Text(
-              habit.title,
+              goal.goalTitle!,
               style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
           ),
@@ -480,12 +497,14 @@ class HabitListItem extends StatelessWidget {
                   width: 2,
                 ),
                 color:
-                habit.isCompleted ? Color(0xFF5FE394) : Colors.transparent,
+                    goal.goalStatus == 'completed'
+                        ? Color(0xFF5FE394)
+                        : Colors.transparent,
               ),
               child:
-              habit.isCompleted
-                  ? Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
+                  goal.goalStatus == 'completed'
+                      ? Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
             ),
           ),
           IconButton(

@@ -81,6 +81,11 @@ class DioClient {
     print('📡 PUT → $path');
     return dio.put(path, data: data);
   }
+
+  Future<Response> delete(String path, {Map<String, dynamic>? queryParams, dynamic data}) {
+    print('📡 DELETE → $path');
+    return dio.delete(path, queryParameters: queryParams, data: data);
+  }
 }
 
 // import 'package:dio/dio.dart';
