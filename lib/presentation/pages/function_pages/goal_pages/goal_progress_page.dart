@@ -210,7 +210,7 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
       children: [
         IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {},
+          onPressed: () {Navigator.pop(context);},
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),

@@ -84,9 +84,23 @@ class AuthRepository implements IAuthRepository {
   Future<Result<String>> loginWithGoogle(String firebaseToken) async {
     try {
       final response = await _apiService.loginWithGoogle(firebaseToken);
-      // final message = response.data['message'] ?? 'Login successfully';
-      // return Result.success(message);
-      return Result.success('message for gg success');
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final profiles =
+        (data as List<dynamic>)
+            .map((e) => AccountProfile.fromJson(e))
+            .toList();
+        final profilesJson = jsonEncode(
+          profiles.map((p) => p.toJson()).toList(),
+        );
+        String profilesKey = AppConstants.profiles;
+        await _secureStorageUtils.write(profilesKey, profilesJson);
+      } else {
+        throw Exception('Login with Google failed: ${response.statusCode}');
+      }
+
+      return Result.success('Login with Google Successfully');
     } on DioException catch (e) {
       final responseData = e.response?.data;
 

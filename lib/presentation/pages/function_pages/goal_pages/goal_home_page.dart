@@ -3,22 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/domain/entities/goal/goal_model.dart';
 import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_progress_page.dart';
 import 'package:intl/intl.dart';
 
 class GoalHomePage extends ConsumerStatefulWidget {
-  // final String userName;
-  // final List<HabitItem> habits;
-  // final int completedHabits;
-  // final int tasksLeft;
-
   const GoalHomePage({
     super.key,
-    // required this.userName,
-    // required this.habits,
-    // required this.completedHabits,
-    // required this.tasksLeft,
   });
 
   @override
@@ -225,7 +217,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GoalManagePage()),
+                MaterialPageRoute(builder: (context) => GoalListPage()),
               );
             },
           ),

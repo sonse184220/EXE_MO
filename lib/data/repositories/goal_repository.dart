@@ -88,4 +88,22 @@ class GoalRepository implements IGoalRepository {
       return Result.failure('Update goal error: $e');
     }
   }
+
+  @override
+  Future<Result<GoalModel>> getOwnGoalDetail(String goalId) async {
+    try {
+      final response = await _goalApiService.getOwnGoalDetail(goalId);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final goal =
+        GoalModel.fromJson(data);
+        return Result.success(goal);
+      }
+      return Result.failure('Fail to get goal by id. Please try again');
+    } catch (e) {
+      return Result.failure('Get goal by id goal error: $e');
+    }
+  }
 }

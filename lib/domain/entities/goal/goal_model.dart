@@ -6,7 +6,7 @@ class GoalModel {
   final DateTime? goalStartDate;
   final DateTime? goalEndDate;
   final int? goalTargetCount;
-  final int? goalPeriodDays;
+  late final int? goalPeriodDays;
   final String? goalStatus;
   final DateTime? goalCreatedAt;
   final DateTime? goalUpdatedAt;

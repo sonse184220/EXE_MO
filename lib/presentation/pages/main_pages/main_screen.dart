@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:inner_child_app/presentation/pages/main_pages/goals_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_home_page.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/homepage.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/notification.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/settings_page.dart';
@@ -21,9 +21,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const HomePage(),
     const TherapyToolsPage(),
-    const GoalsPage(),
-    const SettingsPage(),
+    const GoalHomePage(),
     const NotificationPage(),
+    const SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

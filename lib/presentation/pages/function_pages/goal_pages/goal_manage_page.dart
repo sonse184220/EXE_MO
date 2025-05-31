@@ -5,6 +5,7 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/goal/create_goal_model.dart';
 import 'package:inner_child_app/domain/entities/goal/goal_model.dart';
 import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_list_page.dart';
 
 class GoalManagePage extends ConsumerStatefulWidget {
   const GoalManagePage({super.key});
@@ -768,7 +769,12 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             ),
             TextButton(
               onPressed: () {
-                // "See all" functionality would go here
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => GoalListPage()),
+                  );
+
               },
               child: Text(
                 'See all',
