@@ -7,4 +7,5 @@ abstract class IGoalRepository {
   Future<Result<String>> createOwnGoals(CreateGoalModel goal);
   Future<Result<String>> updateOwnGoals(String goalId, CreateGoalModel goal);
   Future<Result<String>> deleteOwnGoals(String goalId);
+  Future<Result<GoalModel>> getOwnGoalDetail(String goalId);
 }

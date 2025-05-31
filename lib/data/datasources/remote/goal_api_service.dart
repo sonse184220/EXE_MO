@@ -24,4 +24,8 @@ class GoalApiService {
   Future<Response> deleteOwnGoals(String goalId) async {
     return await _client.delete('innerchild/goal/delete-own-goal/$goalId');
   }
+
+  Future<Response> getOwnGoalDetail(String goalId) async {
+    return await _client.get('innerchild/goal/detail/$goalId');
+  }
 }

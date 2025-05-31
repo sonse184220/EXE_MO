@@ -291,12 +291,12 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
           .map((goal) => GoalProgressCard(
         goal: goal,
         tapped: () {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => GoalDetailPage(goalId: goal.goalId),
-          //   ),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GoalDetailPage(goalId: goal.goalId!),
+            ),
+          );
         },
       ))
           .toList(),

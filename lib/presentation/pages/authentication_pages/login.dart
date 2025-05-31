@@ -44,10 +44,10 @@ class LoginPage extends ConsumerState<Login> {
           'Login google success.',
           isError: false,
         );
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const MainScreen()),
-        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileChoosingPage()),
+        );
       } else {
         Notify.showFlushbar(
           result.error ?? 'Login google failed. Please check your credentials',
@@ -55,7 +55,6 @@ class LoginPage extends ConsumerState<Login> {
         );
       }
     } catch (e) {
-      print(e.toString());
       Notify.showFlushbar(
         e.toString() ?? 'Login google failed. Please check your credentials',
         isError: true,

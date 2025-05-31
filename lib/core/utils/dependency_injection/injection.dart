@@ -9,6 +9,8 @@ import 'package:inner_child_app/data/datasources/remote/audio_subcategory_api_se
 import 'package:inner_child_app/data/datasources/remote/chat_ai_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/goal_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/mood_journal_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/mood_journal_type_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/notification_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_api_service.dart';
 import 'package:inner_child_app/data/repositories/audio_category_repository.dart';
@@ -19,10 +21,11 @@ import 'package:inner_child_app/data/repositories/auth_repository.dart';
 import 'package:inner_child_app/data/repositories/chat_ai_repository.dart';
 import 'package:inner_child_app/data/repositories/community_repository.dart';
 import 'package:inner_child_app/data/repositories/goal_repository.dart';
+import 'package:inner_child_app/data/repositories/mood_journal_repository.dart';
+import 'package:inner_child_app/data/repositories/mood_journal_type_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_repository.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
-import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 import 'package:inner_child_app/domain/repositories/i_article_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_audio_category_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_audio_repository.dart';
@@ -31,6 +34,8 @@ import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_chat_ai_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_goal_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_mood_journal_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_mood_journal_type_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_notification_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_repository.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
@@ -41,6 +46,8 @@ import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/domain/usecases/chat_ai_usecase.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
+import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
+import 'package:inner_child_app/domain/usecases/mood_journal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import '../../../data/datasources/remote/authentication_api_service.dart';
@@ -104,6 +111,14 @@ final goalApiServiceProvider = Provider(
       (ref) => GoalApiService(ref.read(dioClientProvider)),
 );
 
+final moodJournalApiServiceProvider = Provider(
+      (ref) => MoodJournalApiService(ref.read(dioClientProvider)),
+);
+
+final moodJournalTypeApiServiceProvider = Provider(
+      (ref) => MoodJournalTypeApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -148,6 +163,14 @@ final goalRepositoryProvider = Provider<IGoalRepository>(
       (ref) => GoalRepository(ref.read(goalApiServiceProvider)),
 );
 
+final moodJournalRepositoryProvider = Provider<IMoodJournalRepository>(
+      (ref) => MoodJournalRepository(ref.read(moodJournalApiServiceProvider)),
+);
+
+final moodJournalTypeRepositoryProvider = Provider<IMoodJournalTypeRepository>(
+      (ref) => MoodJournalTypeRepository(ref.read(moodJournalTypeApiServiceProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // ⚙️ Use Cases
 // ─────────────────────────────────────────────────────────────
@@ -190,6 +213,14 @@ final quizUseCaseProvider = Provider(
 
 final goalUseCaseProvider = Provider(
       (ref) => GoalUsecase(ref.read(goalRepositoryProvider)),
+);
+
+final moodJournalUseCaseProvider = Provider(
+      (ref) => MoodJournalUsecase(ref.read(moodJournalRepositoryProvider)),
+);
+
+final moodJournalTypeUseCaseProvider = Provider(
+      (ref) => MoodJournalTypeUsecase(ref.read(moodJournalTypeRepositoryProvider)),
 );
 
 // ─────────────────────────────────────────────────────────────

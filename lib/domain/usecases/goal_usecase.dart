@@ -23,4 +23,8 @@ class GoalUsecase {
   Future<Result<String>> deleteOwnGoals(String goalId) {
     return _goalRepository.deleteOwnGoals(goalId);
   }
+
+  Future<Result<GoalModel>> getOwnGoalDetail(String goalId) {
+    return _goalRepository.getOwnGoalDetail(goalId);
+  }
 }
