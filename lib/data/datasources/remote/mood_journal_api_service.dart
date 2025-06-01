@@ -11,4 +11,14 @@ class MoodJournalApiService {
     final dataObject = request.toJson();
     return _client.post('innerchild/moodjournal/add-log', data: dataObject);
   }
+
+  Future<Response> getMoodJournalHistory( ) {
+
+    return _client.get('innerchild/moodjournal/history');
+  }
+
+  Future<Response> updateMoodJournal(String moodJournalId, LogMoodJournalRequest request) {
+    final dataObject = request.toJson();
+    return _client.put('innerchild/moodjournal/update/$moodJournalId', data: dataObject);
+  }
 }
