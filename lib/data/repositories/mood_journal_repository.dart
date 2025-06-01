@@ -1,6 +1,7 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/data/datasources/remote/mood_journal_api_service.dart';
 import 'package:inner_child_app/domain/entities/mood_journal/log_mood_journal_request.dart';
+import 'package:inner_child_app/domain/entities/mood_journal/mood_journal_model.dart';
 import 'package:inner_child_app/domain/repositories/i_mood_journal_repository.dart';
 
 class MoodJournalRepository implements IMoodJournalRepository {
@@ -25,6 +26,46 @@ class MoodJournalRepository implements IMoodJournalRepository {
       return Result.failure('Fail to create log. Please try again');
     } catch (e) {
       return Result.failure('Create log error: $e');
+    }
+  }
+
+  @override
+  Future<Result<List<MoodJournalModel>>> getMoodJournalHistory() async {
+    try {
+      final response = await _apiService.getMoodJournalHistory();
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final history =
+        (data as List<dynamic>)
+            .map((e) => MoodJournalModel.fromJson(e))
+            .toList();
+        return Result.success(history);
+      }
+      return Result.failure('Fail to fetch mood journal history. Please try again');
+    } catch (e) {
+      return Result.failure('Fetch mood journal history error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> updateMoodJournal(String moodJournalId, LogMoodJournalRequest request) async {
+    try {
+      final response = await _apiService.updateMoodJournal(moodJournalId, request);
+
+      if (response.statusCode == 201) {
+        final data = response.data;
+
+        // final types =
+        // (data as List<dynamic>)
+        //     .map((e) => MoodJournalTypeModel.fromJson(e))
+        //     .toList();
+        return Result.success('Mood Journal updated successfully');
+      }
+      return Result.failure('Fail to update Mood Journal. Please try again');
+    } catch (e) {
+      return Result.failure('Update Mood Journal error: $e');
     }
   }
 }

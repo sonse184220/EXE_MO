@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/quiz/quiz_model.dart';
+import 'package:inner_child_app/domain/entities/quiz_category/quiz_category_model.dart';
+import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/quiz/quiz_taking_page.dart';
 
@@ -12,13 +16,13 @@ class AllQuizPage extends ConsumerStatefulWidget {
 }
 
 class _AllQuizPageState extends ConsumerState<AllQuizPage> {
-  // late final QuizCategoryUsecase _quizCategoryUsecase;
+  late final QuizCategoryUsecase _quizCategoryUsecase;
   // late final QuizSubcategoryUsecase _quizSubcategoryUsecase;
   late final QuizUsecase _quizUseCase;
 
   List<QuizModel> allQuizList = [];
   List<QuizModel> filteredQuizList = [];
-  List<QuizCategory> categories = [];
+  List<QuizCategoryModel> categories = [];
   List<SubQuizCategoryModel> allSubCategories = [];
 
   bool isLoading = true;
@@ -32,7 +36,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   void initState() {
     super.initState();
     // Initialize use cases
-    // _quizCategoryUsecase = ref.read(quizCategoryUseCaseProvider);
+    _quizCategoryUsecase = ref.read(quizCategoryUseCaseProvider);
     // _quizSubcategoryUsecase = ref.read(quizSubcategoryUseCaseProvider);
     _quizUseCase = ref.read(quizUseCaseProvider);
 
@@ -48,150 +52,88 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     });
 
     try {
-      // final quizResult = await _quizUseCase.getAllQuizzes();
+      final quizResult = await _quizUseCase.getAllQuizzes();
       final loadedCategories = await _loadCategories();
-      final loadedSubCategories = await _loadSubCategories();
+      // final loadedSubCategories = await _loadSubCategories();
 
-      throw Error();
+      // throw Error();
 
-      // setState(() {
-      //   allQuizList = quizResult.data!;
-      //   filteredQuizList = List.from(allQuizList);
-      //   isLoading = false;
-      // });
+      if(quizResult.isSuccess) {
+        setState(() {
+          allQuizList = quizResult.data!;
+          filteredQuizList = List.from(allQuizList);
+          isLoading = false;
+        });
+      }else{
+        Notify.showFlushbar('Error loading data', isError: true);
+      }
     } catch (e) {
-      final mockQuizList = [
-        QuizModel(
-          quizId: 'q1',
-          quizTitle: 'General Anxiety Test',
-          quizDescription: 'Measure your general level of anxiety.',
-          subQuizCategoryId: '1',
-          questionCount: 10,
-          estimatedDuration: 5,
-          quizDifficulty: 'Easy',
-          quizIsPremium: false,
-        ),
-        QuizModel(
-          quizId: 'q2',
-          quizTitle: 'Social Anxiety Assessment',
-          quizDescription: 'Understand your level of social anxiety.',
-          subQuizCategoryId: '1',
-          questionCount: 8,
-          estimatedDuration: 4,
-          quizDifficulty: 'Medium',
-          quizIsPremium: false,
-        ),
-        QuizModel(
-          quizId: 'q3',
-          quizTitle: 'Depression Self-Check',
-          quizDescription: 'Quick screening for depressive symptoms.',
-          subQuizCategoryId: '2',
-          questionCount: 12,
-          estimatedDuration: 6,
-          quizDifficulty: 'Medium',
-          quizIsPremium: false,
-        ),
-        QuizModel(
-          quizId: 'q4',
-          quizTitle: 'Major Depression Inventory',
-          quizDescription: 'Detailed depression scale assessment.',
-          subQuizCategoryId: '2',
-          questionCount: 15,
-          estimatedDuration: 8,
-          quizDifficulty: 'Hard',
-          quizIsPremium: true,
-        ),
-        QuizModel(
-          quizId: 'q5',
-          quizTitle: 'Big Five Personality Traits',
-          quizDescription: 'Find out where you stand in the Big Five.',
-          subQuizCategoryId: '3',
-          questionCount: 25,
-          estimatedDuration: 12,
-          quizDifficulty: 'Medium',
-          quizIsPremium: false,
-        ),
-        QuizModel(
-          quizId: 'q6',
-          quizTitle: 'Mindfulness Awareness Test',
-          quizDescription: 'Measure your present-moment awareness.',
-          subQuizCategoryId: '4',
-          questionCount: 10,
-          estimatedDuration: 5,
-          quizDifficulty: 'Easy',
-          quizIsPremium: false,
-        ),
-        QuizModel(
-          quizId: 'q7',
-          quizTitle: 'Emotional Intimacy Scale',
-          quizDescription: 'Gauge emotional closeness in relationships.',
-          subQuizCategoryId: '5',
-          questionCount: 12,
-          estimatedDuration: 6,
-          quizDifficulty: 'Medium',
-          quizIsPremium: true,
-        ),
-      ];
 
+
+      Notify.showFlushbar('Error loading data: $e', isError: true);
       setState(() {
-        allQuizList = mockQuizList;
-        filteredQuizList = List.from(mockQuizList);
+        allQuizList = [];
+        filteredQuizList = List.from(allQuizList);
         isLoading = false;
       });
-      debugPrint('Error loading data: $e');
-      // setState(() {
-      //   isLoading = false;
-      // });
     }
   }
 
-  Future<List<QuizCategory>> _loadCategories() async {
+  Future<List<QuizCategoryModel>> _loadCategories() async {
     try {
-      throw Error();
-      // final result = await _quizCategoryUsecase.getAllQuizCategories();
-      // final loadedCategories = result.data!;
+      // throw Error();
+      final result = await _quizCategoryUsecase.getAllQuizCategories();
+      if(result.isSuccess) {
+        final loadedCategories = result.data!;
+
+        setState(() {
+          categories = loadedCategories;
+        });
+
+        return loadedCategories;
+      }
+
+
+      Notify.showFlushbar('Fail to load categories', isError: true);
+      return [];
+    } catch (e) {
+      Notify.showFlushbar('Error loading categories: $e', isError: true);
+
+      return [];
+
+      // final mockCategories = [
+      //   QuizCategory(
+      //     quizCategoryId: '1',
+      //     quizCategoryName: 'Self-Assessment',
+      //     subQuizCategories: [],
+      //   ),
+      //   QuizCategory(
+      //     quizCategoryId: '2',
+      //     quizCategoryName: 'Personality',
+      //     subQuizCategories: [],
+      //   ),
+      //   QuizCategory(
+      //     quizCategoryId: '3',
+      //     quizCategoryName: 'Mental Health',
+      //     subQuizCategories: [],
+      //   ),
+      //   QuizCategory(
+      //     quizCategoryId: '4',
+      //     quizCategoryName: 'Mindfulness',
+      //     subQuizCategories: [],
+      //   ),
+      //   QuizCategory(
+      //     quizCategoryId: '5',
+      //     quizCategoryName: 'Relationships',
+      //     subQuizCategories: [],
+      //   ),
+      // ];
 
       // setState(() {
-      //   categories = loadedCategories;
+      //   categories = mockCategories;
       // });
       //
-      // return loadedCategories;
-    } catch (e) {
-      debugPrint('Error loading categories: $e');
-
-      final mockCategories = [
-        QuizCategory(
-          quizCategoryId: '1',
-          quizCategoryName: 'Self-Assessment',
-          subQuizCategories: [],
-        ),
-        QuizCategory(
-          quizCategoryId: '2',
-          quizCategoryName: 'Personality',
-          subQuizCategories: [],
-        ),
-        QuizCategory(
-          quizCategoryId: '3',
-          quizCategoryName: 'Mental Health',
-          subQuizCategories: [],
-        ),
-        QuizCategory(
-          quizCategoryId: '4',
-          quizCategoryName: 'Mindfulness',
-          subQuizCategories: [],
-        ),
-        QuizCategory(
-          quizCategoryId: '5',
-          quizCategoryName: 'Relationships',
-          subQuizCategories: [],
-        ),
-      ];
-
-      setState(() {
-        categories = mockCategories;
-      });
-
-      return mockCategories;
+      // return mockCategories;
     }
   }
 
@@ -294,10 +236,10 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
               ) ??
                   false);
 
-          bool matchesSubCategory =
-              quiz.subQuizCategoryId == selectedSubCategoryId;
+          // bool matchesSubCategory =
+          //     quiz.subQuizCategoryId == selectedSubCategoryId;
 
-          return matchesSearch && matchesSubCategory;
+          return matchesSearch;
         }).toList();
       }
     });
@@ -326,11 +268,11 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
         .toList();
   }
 
-  String _formatQuizInfo(QuizModel quiz) {
-    final questionCount = quiz.questionCount ?? 0;
-    final duration = quiz.estimatedDuration ?? 10;
-    return '$questionCount questions • ${duration}min';
-  }
+  // String _formatQuizInfo(QuizModel quiz) {
+  //   final questionCount = quiz.questionCount ?? 0;
+  //   final duration = quiz.estimatedDuration ?? 10;
+  //   return '$questionCount questions • ${duration}min';
+  // }
 
   void _showFilterModal() {
     showModalBottomSheet(
@@ -350,9 +292,9 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return  SafeArea(
+      child:  Scaffold(
+      body:LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -773,9 +715,9 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
             ...categories.map((category) {
               return DropdownMenuItem<String>(
                 value: category.quizCategoryId,
-                child: Text(category.quizCategoryName),
+                child: Text(category.quizCategoryName ?? 'Unknown'),
               );
-            }).toList(),
+            }),
           ],
           onChanged: (value) {
             setModalState(() {
@@ -979,7 +921,8 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                   ),
                 const SizedBox(height: 8),
                 Text(
-                  _formatQuizInfo(quiz),
+                  // _formatQuizInfo(quiz),
+                  'Holder',
                   style: TextStyle(
                     color: Colors.white.withAlpha((0.8 * 255).round()),
                     fontSize: 12,
@@ -987,14 +930,14 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (quiz.quizDifficulty != null)
-                      _buildTag(quiz.quizDifficulty!, _getDifficultyColor(quiz.quizDifficulty!)),
-                    if (quiz.quizIsPremium == true)
-                      _buildTag('Premium', Colors.amber),
-                  ],
-                ),
+                // Row(
+                //   children: [
+                //     if (quiz.quizDifficulty != null)
+                //       _buildTag(quiz.quizDifficulty!, _getDifficultyColor(quiz.quizDifficulty!)),
+                //     if (quiz.quizIsPremium == true)
+                //       _buildTag('Premium', Colors.amber),
+                //   ],
+                // ),
               ],
             ),
           ),
@@ -1007,7 +950,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => QuizTakingPage(quizId: "1",),
+                  builder: (_) => QuizTakingPage(quizId: quiz.quizId!,),
                 ),
               );
             },
@@ -1063,27 +1006,27 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   }
 }
 
-class QuizModel {
-  final String? quizId;
-  final String? quizTitle;
-  final String? quizDescription;
-  final String? subQuizCategoryId;
-  final int? questionCount;
-  final int? estimatedDuration;
-  final String? quizDifficulty;
-  final bool? quizIsPremium;
-
-  QuizModel({
-    this.quizId,
-    this.quizTitle,
-    this.quizDescription,
-    this.subQuizCategoryId,
-    this.questionCount,
-    this.estimatedDuration,
-    this.quizDifficulty,
-    this.quizIsPremium,
-  });
-}
+// class QuizModel {
+//   final String? quizId;
+//   final String? quizTitle;
+//   final String? quizDescription;
+//   final String? subQuizCategoryId;
+//   final int? questionCount;
+//   final int? estimatedDuration;
+//   final String? quizDifficulty;
+//   final bool? quizIsPremium;
+//
+//   QuizModel({
+//     this.quizId,
+//     this.quizTitle,
+//     this.quizDescription,
+//     this.subQuizCategoryId,
+//     this.questionCount,
+//     this.estimatedDuration,
+//     this.quizDifficulty,
+//     this.quizIsPremium,
+//   });
+// }
 
 class QuizCategory {
   final String quizCategoryId;

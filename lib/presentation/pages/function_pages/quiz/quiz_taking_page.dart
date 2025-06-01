@@ -1,30 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/quiz/quiz_model.dart';
+import 'package:inner_child_app/domain/entities/quiz/quiz_question_model.dart';
+import 'package:inner_child_app/domain/entities/quiz/quiz_user_answer_model.dart';
+import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 
-// Models
-class Quiz {
-  final String id;
-  final String title;
-  final List<Question> questions;
-
-  Quiz({required this.id, required this.title, required this.questions});
-}
-
-class Question {
-  final String id;
-  final String questionText;
-  final List<String> options;
-  // final int correctAnswerIndex;
-  final String explanation;
-
-  Question({
-    required this.id,
-    required this.questionText,
-    required this.options,
-    // required this.correctAnswerIndex,
-    required this.explanation,
-  });
-}
-
+// // Models
+// class Quiz {
+//   final String id;
+//   final String title;
+//   final List<Question> questions;
+//
+//   Quiz({required this.id, required this.title, required this.questions});
+// }
+//
+// class Question {
+//   final String id;
+//   final String questionText;
+//   final List<String> options;
+//   // final int correctAnswerIndex;
+//   final String explanation;
+//
+//   Question({
+//     required this.id,
+//     required this.questionText,
+//     required this.options,
+//     // required this.correctAnswerIndex,
+//     required this.explanation,
+//   });
+// }
+//
 class UserAnswer {
   final String questionId;
   final int selectedIndex;
@@ -38,127 +45,89 @@ class UserAnswer {
 }
 
 // Main Quiz Taking Page
-class QuizTakingPage extends StatefulWidget {
+class QuizTakingPage extends ConsumerStatefulWidget {
   final String quizId;
 
   const QuizTakingPage({super.key, required this.quizId});
 
   @override
-  State<QuizTakingPage> createState() => _QuizTakingPageState();
+  ConsumerState<QuizTakingPage> createState() => _QuizTakingPageState();
 }
 
-class _QuizTakingPageState extends State<QuizTakingPage> {
-  Quiz? quiz;
+class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
+  late final QuizUsecase _quizUsecase;
+
+  QuizModel? quiz;
   PageController pageController = PageController();
   int currentQuestionIndex = 0;
-  List<UserAnswer> userAnswers = [];
+  List<QuizUserAnswerModel> userAnswers = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+
+    _quizUsecase = ref.read(quizUseCaseProvider);
+
     _fetchQuizData();
   }
 
   // Simulate API call to fetch quiz data
   Future<void> _fetchQuizData() async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
+    final result = await _quizUsecase.getQuizDetail(widget.quizId);
 
-    // Fake data with longer options to test view more functionality
-    final fakeQuiz = Quiz(
-      id: widget.quizId,
-      title: "Math Quiz",
-      questions: [
-        Question(
-          id: "1",
-          questionText: "If David's age is 27 years old in 2011. What was his age in 2003?",
-          options: [
-            "19 years - This is the correct answer because we need to subtract 8 years from his current age",
-            "37 years - This would be his age if we added 8 years instead of subtracting",
-            "20 years - This is close but not quite right, off by one year",
-            "17 years - This would be if we subtracted 10 years instead of 8 years"
-          ],
-          // correctAnswerIndex: 0,
-          explanation: "David was 27 in 2011. To find his age in 2003, we subtract 8 years (2011 - 2003 = 8). So 27 - 8 = 19 years old.",
-        ),
-        Question(
-          id: "2",
-          questionText: "What is the result of 25 × 4?",
-          options: [
-            "90 - This would be the result if we calculated 25 × 3.6 approximately",
-            "100 - This is the correct answer: 25 × 4 = 100",
-            "110 - This is too high, perhaps from miscalculating 25 × 4.4",
-            "120 - This would be closer to 25 × 5 but still not accurate"
-          ],
-          // correctAnswerIndex: 1,
-          explanation: "25 × 4 = 100. You can think of it as 25 × 4 = (20 + 5) × 4 = 80 + 20 = 100.",
-        ),
-        Question(
-          id: "3",
-          questionText: "If a rectangle has length 12 cm and width 8 cm, what is its perimeter?",
-          options: ["40 cm", "48 cm", "96 cm", "20 cm"],
-          // correctAnswerIndex: 0,
-          explanation: "Perimeter = 2(length + width) = 2(12 + 8) = 2(20) = 40 cm.",
-        ),
-        Question(
-          id: "4",
-          questionText: "What is 15% of 200?",
-          options: ["25", "30", "35", "40"],
-          // correctAnswerIndex: 1,
-          explanation: "15% of 200 = (15/100) × 200 = 0.15 × 200 = 30.",
-        ),
-        Question(
-          id: "5",
-          questionText: "What is the square root of 144?",
-          options: ["11", "12", "13", "14"],
-          // correctAnswerIndex: 1,
-          explanation: "√144 = 12, because 12 × 12 = 144.",
-        ),
-      ],
-    );
+    if(result.isSuccess) {
+      setState(() {
+        quiz = result.data;
+        isLoading = false;
+      });
+    } else{
+      Notify.showFlushbar('Fail to get quiz');
+    }
 
-    setState(() {
-      quiz = fakeQuiz;
-      isLoading = false;
-    });
+
+    // setState(() {
+    //   // quiz = [];
+    //   isLoading = false;
+    // });
   }
 
-  void _selectAnswer(int selectedIndex) {
+  void _selectAnswer(String quizAnswerOptionId) {
     if (quiz == null) return;
 
-    final currentQuestion = quiz!.questions[currentQuestionIndex];
-    final questionId = currentQuestion.id;
+    final currentQuestion = quiz!.questions?[currentQuestionIndex];
+    final questionId = currentQuestion?.quizQuestionId!;
 
     // Check if user already answered this question
-    final existingIndex = userAnswers.indexWhere((a) => a.questionId == questionId);
+    final existingIndex = userAnswers.indexWhere((a) => a.quizQuestionId == questionId);
 
     if (existingIndex != -1) {
       // Replace existing answer
-      userAnswers[existingIndex] = UserAnswer(
-        questionId: questionId,
-        selectedIndex: selectedIndex,
+      userAnswers[existingIndex] = QuizUserAnswerModel(
+        quizQuestionId: questionId!,
+        quizAnswerOptionId: quizAnswerOptionId,
       );
     } else {
       // Add new answer
-      userAnswers.add(UserAnswer(
-        questionId: questionId,
-        selectedIndex: selectedIndex,
+      userAnswers.add(QuizUserAnswerModel(
+        quizQuestionId: questionId!,
+        quizAnswerOptionId: quizAnswerOptionId,
       ));
     }
 
     setState(() {});
   }
 
-  UserAnswer? _getUserAnswer(String questionId) {
+  QuizUserAnswerModel? _getUserAnswer(String questionId) {
     try {
-      return userAnswers.firstWhere((answer) => answer.questionId == questionId);
+      return userAnswers.firstWhere((answer) => answer.quizQuestionId == questionId);
     } catch (e) {
       return null;
     }
   }
 
   void _nextQuestion() {
-    if (currentQuestionIndex < quiz!.questions.length - 1) {
+    if (currentQuestionIndex < quiz!.questions!.length - 1) {
       pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -189,7 +158,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => QuestionNavigationModal(
-        questions: quiz!.questions,
+        questions: quiz!.questions!,
         userAnswers: userAnswers,
         currentQuestionIndex: currentQuestionIndex,
         onQuestionSelected: (index) {
@@ -203,29 +172,29 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
+      return SafeArea(child: Scaffold(
         backgroundColor: const Color(0xFFF5E6D3),
         body: const Center(
           child: CircularProgressIndicator(
             color: Color(0xFF4CAF50),
           ),
         ),
-      );
+      ));
     }
 
     if (quiz == null) {
-      return Scaffold(
+      return SafeArea(child: Scaffold(
         backgroundColor: const Color(0xFFF5E6D3),
         body: const Center(
           child: Text("Failed to load quiz"),
         ),
-      );
+      ));
     }
 
-    return Scaffold(
+    return SafeArea(
+      child:  Scaffold(
       backgroundColor: const Color(0xFFF5E6D3),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
             // Header
             _buildHeader(),
@@ -240,9 +209,9 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
                     currentQuestionIndex = index;
                   });
                 },
-                itemCount: quiz!.questions.length,
+                itemCount: quiz!.questions?.length,
                 itemBuilder: (context, index) {
-                  return _buildQuestionPage(quiz!.questions[index]);
+                  return _buildQuestionPage(quiz!.questions![index]);
                 },
               ),
             ),
@@ -269,7 +238,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
           ),
           Expanded(
             child: Text(
-              quiz!.title,
+              quiz!.quizTitle!,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -310,7 +279,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
                 ),
               ),
               Text(
-                "/${quiz!.questions.length}",
+                "/${quiz!.questions?.length}",
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF8B4513),
@@ -320,7 +289,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
           ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
-            value: (currentQuestionIndex + 1) / quiz!.questions.length,
+            value: (currentQuestionIndex + 1) / quiz!.questions!.length,
             backgroundColor: const Color(0xFFE0E0E0),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
             minHeight: 8,
@@ -330,8 +299,8 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
     );
   }
 
-  Widget _buildQuestionPage(Question question) {
-    final userAnswer = _getUserAnswer(question.id);
+  Widget _buildQuestionPage(QuizQuestionModel question) {
+    final userAnswer = _getUserAnswer(question.quizQuestionId!);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -348,7 +317,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              question.questionText,
+              question.quizQuestionContent ?? 'Unknown',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -359,10 +328,10 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
           ),
           const SizedBox(height: 24),
           // Options
-          ...question.options.asMap().entries.map((entry) {
+          ...?question.options?.asMap().entries.map((entry) {
             final index = entry.key;
             final option = entry.value;
-            final isSelected = userAnswer?.selectedIndex == index;
+            final isSelected = userAnswer?.quizAnswerOptionId == option.quizAnswerOptionId;
             // final isCorrect = index == question.correctAnswerIndex;
             final showResult = userAnswer != null;
             final hasAnswer = userAnswer != null;
@@ -370,19 +339,19 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: ExpandableOptionButton(
-                text: option,
+                text: option.quizContent ?? 'Unknown',
                 isSelected: isSelected,
                 // isCorrect: isCorrect,
                 // showResult: showResult,
                 // isDisabled: false, // Disable if already answered
-                onTap: () => _selectAnswer(index),
+                onTap: () => _selectAnswer(option.quizAnswerOptionId!),
               ),
             );
           }),
           const SizedBox(height: 16),
           // Explanation (if answer is selected)
-          if (userAnswer != null)
-            _buildExplanation(question.explanation),
+          // if (userAnswer != null)
+          //   _buildExplanation(question.explanation),
         ],
       ),
     );
@@ -393,7 +362,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
   }
 
   Widget _buildNavigationButtons() {
-    final hasAnswer = _getUserAnswer(quiz!.questions[currentQuestionIndex].id) != null;
+    final hasAnswer = _getUserAnswer(quiz!.questions![currentQuestionIndex].quizQuestionId!) != null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -418,7 +387,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
               ),
             ),
           if (currentQuestionIndex > 0) const SizedBox(width: 12),
-          if (currentQuestionIndex < quiz!.questions.length - 1 && hasAnswer)
+          if (currentQuestionIndex < quiz!.questions!.length - 1 && hasAnswer)
             Expanded(
               child: ElevatedButton(
                 onPressed: _nextQuestion,
@@ -436,7 +405,7 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
                 ),
               ),
             ),
-          if (currentQuestionIndex == quiz!.questions.length - 1 && hasAnswer)
+          if (currentQuestionIndex == quiz!.questions!.length - 1 && hasAnswer)
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
@@ -462,9 +431,10 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
     );
   }
 
-  void _showQuizResults() {
+  void _showQuizResults() async {
+
     final correctAnswers = userAnswers.length;
-    final totalQuestions = quiz!.questions.length;
+    final totalQuestions = quiz!.questions?.length;
 
     showDialog(
       context: context,
@@ -735,8 +705,8 @@ class _ExpandableExplanationState extends State<ExpandableExplanation> {
 
 // Question Navigation Modal
 class QuestionNavigationModal extends StatelessWidget {
-  final List<Question> questions;
-  final List<UserAnswer> userAnswers;
+  final List<QuizQuestionModel> questions;
+  final List<QuizUserAnswerModel> userAnswers;
   final int currentQuestionIndex;
   final Function(int) onQuestionSelected;
 
@@ -748,9 +718,9 @@ class QuestionNavigationModal extends StatelessWidget {
     required this.onQuestionSelected,
   });
 
-  UserAnswer? _getUserAnswer(String questionId) {
+  QuizUserAnswerModel? _getUserAnswer(String questionId) {
     try {
-      return userAnswers.firstWhere((answer) => answer.questionId == questionId);
+      return userAnswers.firstWhere((answer) => answer.quizQuestionId == questionId);
     } catch (e) {
       return null;
     }
@@ -814,7 +784,7 @@ class QuestionNavigationModal extends StatelessWidget {
                 itemCount: questions.length,
                 itemBuilder: (context, index) {
                   final question = questions[index];
-                  final userAnswer = _getUserAnswer(question.id);
+                  final userAnswer = _getUserAnswer(question.quizQuestionId!);
                   final isAnswered = userAnswer != null;
                   // final isCorrect = userAnswer?.isCorrect ?? false;
                   final isCurrent = index == currentQuestionIndex;
@@ -887,33 +857,33 @@ class QuestionNavigationModal extends StatelessWidget {
     );
   }
 }
-
-// Usage Example (how to navigate to the quiz page)
-class QuizListPage extends StatelessWidget {
-  const QuizListPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Available Quizzes"),
-      ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: const Text("Math Quiz"),
-            subtitle: const Text("5 questions"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QuizTakingPage(quizId: "math_quiz_1"),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
+//
+// // Usage Example (how to navigate to the quiz page)
+// class QuizListPage extends StatelessWidget {
+//   const QuizListPage({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text("Available Quizzes"),
+//       ),
+//       body: ListView(
+//         children: [
+//           ListTile(
+//             title: const Text("Math Quiz"),
+//             subtitle: const Text("5 questions"),
+//             onTap: () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(
+//                   builder: (context) => const QuizTakingPage(quizId: "math_quiz_1"),
+//                 ),
+//               );
+//             },
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
