@@ -6,6 +6,7 @@ import 'package:inner_child_app/domain/entities/quiz/quiz_model.dart';
 import 'package:inner_child_app/domain/entities/quiz_category/quiz_category_model.dart';
 import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/quiz/quiz_attempt_history_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/quiz/quiz_taking_page.dart';
 
 class AllQuizPage extends ConsumerStatefulWidget {
@@ -17,13 +18,15 @@ class AllQuizPage extends ConsumerStatefulWidget {
 
 class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   late final QuizCategoryUsecase _quizCategoryUsecase;
+
   // late final QuizSubcategoryUsecase _quizSubcategoryUsecase;
   late final QuizUsecase _quizUseCase;
 
   List<QuizModel> allQuizList = [];
   List<QuizModel> filteredQuizList = [];
   List<QuizCategoryModel> categories = [];
-  List<SubQuizCategoryModel> allSubCategories = [];
+
+  // List<SubQuizCategoryModel> allSubCategories = [];
 
   bool isLoading = true;
   String? selectedCategoryId;
@@ -58,18 +61,16 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
 
       // throw Error();
 
-      if(quizResult.isSuccess) {
+      if (quizResult.isSuccess) {
         setState(() {
           allQuizList = quizResult.data!;
           filteredQuizList = List.from(allQuizList);
           isLoading = false;
         });
-      }else{
+      } else {
         Notify.showFlushbar('Error loading data', isError: true);
       }
     } catch (e) {
-
-
       Notify.showFlushbar('Error loading data: $e', isError: true);
       setState(() {
         allQuizList = [];
@@ -83,7 +84,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     try {
       // throw Error();
       final result = await _quizCategoryUsecase.getAllQuizCategories();
-      if(result.isSuccess) {
+      if (result.isSuccess) {
         final loadedCategories = result.data!;
 
         setState(() {
@@ -92,7 +93,6 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
 
         return loadedCategories;
       }
-
 
       Notify.showFlushbar('Fail to load categories', isError: true);
       return [];
@@ -137,110 +137,113 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     }
   }
 
-  Future<List<SubQuizCategoryModel>> _loadSubCategories() async {
-    try {
-      throw Error();
-      // final result = await _quizSubcategoryUsecase.getAllSubQuizCategories();
-      // final loadedSubCategories = result.data!;
-      //
-      // setState(() {
-      //   allSubCategories = loadedSubCategories;
-      // });
-      //
-      // return loadedSubCategories;
-    } catch (e) {
-      debugPrint('Error loading subcategories: $e');
-
-      final mockSubCategories = [
-        SubQuizCategoryModel(
-          subQuizCategoryId: '1',
-          subQuizCategoryName: 'Anxiety Assessment',
-          quizCategoryId: '1',
-          quizCategoryName: 'Self-Assessment',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '2',
-          subQuizCategoryName: 'Depression Scale',
-          quizCategoryId: '1',
-          quizCategoryName: 'Self-Assessment',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '3',
-          subQuizCategoryName: 'Big Five Traits',
-          quizCategoryId: '2',
-          quizCategoryName: 'Personality',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '4',
-          subQuizCategoryName: 'Myers-Briggs Type',
-          quizCategoryId: '2',
-          quizCategoryName: 'Personality',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '5',
-          subQuizCategoryName: 'Stress Level',
-          quizCategoryId: '3',
-          quizCategoryName: 'Mental Health',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '6',
-          subQuizCategoryName: 'Emotional Intelligence',
-          quizCategoryId: '3',
-          quizCategoryName: 'Mental Health',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '7',
-          subQuizCategoryName: 'Awareness Practice',
-          quizCategoryId: '4',
-          quizCategoryName: 'Mindfulness',
-        ),
-        SubQuizCategoryModel(
-          subQuizCategoryId: '8',
-          subQuizCategoryName: 'Love Languages',
-          quizCategoryId: '5',
-          quizCategoryName: 'Relationships',
-        ),
-      ];
-
-      setState(() {
-        allSubCategories = mockSubCategories;
-      });
-
-      return mockSubCategories;
-    }
-  }
+  // Future<List<SubQuizCategoryModel>> _loadSubCategories() async {
+  //   try {
+  //     throw Error();
+  //     // final result = await _quizSubcategoryUsecase.getAllSubQuizCategories();
+  //     // final loadedSubCategories = result.data!;
+  //     //
+  //     // setState(() {
+  //     //   allSubCategories = loadedSubCategories;
+  //     // });
+  //     //
+  //     // return loadedSubCategories;
+  //   } catch (e) {
+  //     debugPrint('Error loading subcategories: $e');
+  //
+  //     final mockSubCategories = [
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '1',
+  //         subQuizCategoryName: 'Anxiety Assessment',
+  //         quizCategoryId: '1',
+  //         quizCategoryName: 'Self-Assessment',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '2',
+  //         subQuizCategoryName: 'Depression Scale',
+  //         quizCategoryId: '1',
+  //         quizCategoryName: 'Self-Assessment',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '3',
+  //         subQuizCategoryName: 'Big Five Traits',
+  //         quizCategoryId: '2',
+  //         quizCategoryName: 'Personality',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '4',
+  //         subQuizCategoryName: 'Myers-Briggs Type',
+  //         quizCategoryId: '2',
+  //         quizCategoryName: 'Personality',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '5',
+  //         subQuizCategoryName: 'Stress Level',
+  //         quizCategoryId: '3',
+  //         quizCategoryName: 'Mental Health',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '6',
+  //         subQuizCategoryName: 'Emotional Intelligence',
+  //         quizCategoryId: '3',
+  //         quizCategoryName: 'Mental Health',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '7',
+  //         subQuizCategoryName: 'Awareness Practice',
+  //         quizCategoryId: '4',
+  //         quizCategoryName: 'Mindfulness',
+  //       ),
+  //       SubQuizCategoryModel(
+  //         subQuizCategoryId: '8',
+  //         subQuizCategoryName: 'Love Languages',
+  //         quizCategoryId: '5',
+  //         quizCategoryName: 'Relationships',
+  //       ),
+  //     ];
+  //
+  //     setState(() {
+  //       allSubCategories = mockSubCategories;
+  //     });
+  //
+  //     return mockSubCategories;
+  //   }
+  // }
 
   void _filterQuizzesBySubCategory() {
     setState(() {
       if (selectedSubCategoryId == null) {
-        filteredQuizList = allQuizList.where((quiz) {
-          return searchQuery.isEmpty ||
-              (quiz.quizTitle?.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ??
-                  false) ||
-              (quiz.quizDescription?.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ??
-                  false);
-        }).toList();
+        filteredQuizList =
+            allQuizList.where((quiz) {
+              return searchQuery.isEmpty ||
+                  (quiz.quizTitle?.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      ) ??
+                      false) ||
+                  (quiz.quizDescription?.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      ) ??
+                      false);
+            }).toList();
       } else {
-        filteredQuizList = allQuizList.where((quiz) {
-          bool matchesSearch = searchQuery.isEmpty ||
-              (quiz.quizTitle?.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ??
-                  false) ||
-              (quiz.quizDescription?.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ??
-                  false);
+        filteredQuizList =
+            allQuizList.where((quiz) {
+              bool matchesSearch =
+                  searchQuery.isEmpty ||
+                  (quiz.quizTitle?.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      ) ??
+                      false) ||
+                  (quiz.quizDescription?.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      ) ??
+                      false);
 
-          // bool matchesSubCategory =
-          //     quiz.subQuizCategoryId == selectedSubCategoryId;
+              // bool matchesSubCategory =
+              //     quiz.subQuizCategoryId == selectedSubCategoryId;
 
-          return matchesSearch;
-        }).toList();
+              return matchesSearch;
+            }).toList();
       }
     });
   }
@@ -262,11 +265,11 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     });
   }
 
-  List<SubQuizCategoryModel> _getSubCategoriesForCategory(String categoryId) {
-    return allSubCategories
-        .where((sub) => sub.quizCategoryId == categoryId)
-        .toList();
-  }
+  // List<SubQuizCategoryModel> _getSubCategoriesForCategory(String categoryId) {
+  //   return allSubCategories
+  //       .where((sub) => sub.quizCategoryId == categoryId)
+  //       .toList();
+  // }
 
   // String _formatQuizInfo(QuizModel quiz) {
   //   final questionCount = quiz.questionCount ?? 0;
@@ -292,58 +295,66 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    return  SafeArea(
-      child:  Scaffold(
-      body:LayoutBuilder(
+    return SafeArea(
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => QuizAttemptHistoryPage()));},
+          backgroundColor: Color(0xFFFFCB7C),
+          child: Icon(Icons.history),
+        ),
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Container(
-                color: const Color(0xFF4B3621),
-                child: Stack(
-                  children: [
-                    // Background Image
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: (screenHeight * 1 / 2) * 0.6,
-                      child: Image.asset(
-                        'assets/images/quiz_background.png',
-                        fit: BoxFit.cover,
+                color: Colors.white,
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // Header Section
+                      _buildHeader(),
+
+                      const SizedBox(height: 20),
+
+                      // Search and Filter Row
+                      _buildSearchAndFilterRow(),
+
+                      const SizedBox(height: 16),
+
+                      // Active Filters Display
+                      if (selectedSubCategoryId != null ||
+                          searchQuery.isNotEmpty)
+                        _buildActiveFilters(),
+
+                      const SizedBox(height: 16),
+
+                      // Quiz List
+                      Expanded(
+                        child:
+                            isLoading ? _buildLoadingState() : _buildQuizList(),
                       ),
-                    ),
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          // Header Section
-                          _buildHeader(),
-
-                          const SizedBox(height: 20),
-
-                          // Search and Filter Row
-                          _buildSearchAndFilterRow(),
-
-                          const SizedBox(height: 16),
-
-                          // Active Filters Display
-                          if (selectedSubCategoryId != null || searchQuery.isNotEmpty)
-                            _buildActiveFilters(),
-
-                          const SizedBox(height: 16),
-
-                          // Quiz List
-                          Expanded(
-                            child: isLoading ? _buildLoadingState() : _buildQuizList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                // Stack(
+                //   children: [
+                //     // Background Image
+                //     Positioned(
+                //       top: 0,
+                //       left: 0,
+                //       right: 0,
+                //       height: (screenHeight * 1 / 2) * 0.6,
+                //       child: Image.asset(
+                //         'assets/images/quiz_background.png',
+                //         fit: BoxFit.cover,
+                //       ),
+                //     ),
+                //
+                //   ],
+                // ),
               ),
             );
           },
@@ -357,15 +368,15 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withAlpha((0.1 * 255).round()),
-            shape: BoxShape.circle,
-          ),
+          // decoration: BoxDecoration(
+          //   color: Colors.grey.shade200,
+          //   shape: BoxShape.circle,
+          // ),
           child: IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(
               Icons.arrow_back_ios_new,
-              color: Colors.white,
+              color: Colors.black87,
               size: 18,
             ),
           ),
@@ -376,7 +387,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.black87,
           ),
         ),
         const Spacer(),
@@ -405,26 +416,23 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
             height: 46,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha((0.2 * 255).round()),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.search,
-                  color: Colors.white.withAlpha((0.7 * 255).round()),
-                  size: 20,
-                ),
+                Icon(Icons.search, color: Colors.grey.shade600, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87),
                     decoration: InputDecoration(
                       hintText: 'Search quizzes...',
                       hintStyle: TextStyle(
-                        color: Colors.white.withAlpha((0.7 * 255).round()),
+                        color: Colors.grey.shade500,
                         fontSize: 15,
                       ),
                       border: InputBorder.none,
@@ -441,7 +449,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                     },
                     child: Icon(
                       Icons.close,
-                      color: Colors.white.withAlpha((0.7 * 255).round()),
+                      color: Colors.grey.shade600,
                       size: 20,
                     ),
                   ),
@@ -472,11 +480,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const Icon(
-                  Icons.tune,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                const Icon(Icons.tune, color: Colors.white, size: 20),
                 if (selectedSubCategoryId != null)
                   Positioned(
                     top: 8,
@@ -503,27 +507,24 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          if (selectedSubCategoryId != null) ...[
-            _buildFilterChip(
-              _getSubCategoryName(selectedSubCategoryId!),
-                  () {
-                setState(() {
-                  selectedSubCategoryId = null;
-                  selectedCategoryId = null;
-                });
-                _filterQuizzesBySubCategory();
-              },
-            ),
-            const SizedBox(width: 8),
-          ],
+          // if (selectedSubCategoryId != null) ...[
+          //   _buildFilterChip(
+          //     _getSubCategoryName(selectedSubCategoryId!),
+          //         () {
+          //       setState(() {
+          //         selectedSubCategoryId = null;
+          //         selectedCategoryId = null;
+          //       });
+          //       _filterQuizzesBySubCategory();
+          //     },
+          //   ),
+          //   const SizedBox(width: 8),
+          // ],
           if (searchQuery.isNotEmpty) ...[
-            _buildFilterChip(
-              'Search: "$searchQuery"',
-                  () {
-                _searchController.clear();
-                _onSearchChanged('');
-              },
-            ),
+            _buildFilterChip('Search: "$searchQuery"', () {
+              _searchController.clear();
+              _onSearchChanged('');
+            }),
           ],
         ],
       ),
@@ -534,19 +535,17 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha((0.2 * 255).round()),
+        color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withAlpha((0.3 * 255).round()),
-        ),
+        border: Border.all(color: Colors.orange.shade200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Colors.orange.shade700,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -554,11 +553,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(
-              Icons.close,
-              size: 16,
-              color: Colors.white,
-            ),
+            child: Icon(Icons.close, size: 16, color: Colors.orange.shade700),
           ),
         ],
       ),
@@ -647,7 +642,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        _buildSubcategoryList(setModalState),
+                        // _buildSubcategoryList(setModalState),
                       ],
                     ],
                   ),
@@ -658,9 +653,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.grey.shade200),
-                  ),
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: SizedBox(
                   width: double.infinity,
@@ -730,91 +723,89 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     );
   }
 
-  Widget _buildSubcategoryList(StateSetter setModalState) {
-    final subCategories = _getSubCategoriesForCategory(selectedCategoryId!);
+  // Widget _buildSubcategoryList(StateSetter setModalState) {
+  //   final subCategories = _getSubCategoriesForCategory(selectedCategoryId!);
+  //
+  //   if (subCategories.isEmpty) {
+  //     return Container(
+  //       padding: const EdgeInsets.all(20),
+  //       child: Text(
+  //         'No subcategories available',
+  //         style: TextStyle(
+  //           color: Colors.grey.shade600,
+  //           fontSize: 14,
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //
+  //   return Expanded(
+  //     child: ListView.separated(
+  //       itemCount: subCategories.length,
+  //       separatorBuilder: (context, index) => const SizedBox(height: 8),
+  //       itemBuilder: (context, index) {
+  //         final subCategory = subCategories[index];
+  //         final isSelected = selectedSubCategoryId == subCategory.subQuizCategoryId;
+  //
+  //         return GestureDetector(
+  //           onTap: () {
+  //             setModalState(() {
+  //               if (selectedSubCategoryId == subCategory.subQuizCategoryId) {
+  //                 selectedSubCategoryId = null;
+  //               } else {
+  //                 selectedSubCategoryId = subCategory.subQuizCategoryId;
+  //               }
+  //             });
+  //           },
+  //           child: Container(
+  //             padding: const EdgeInsets.all(16),
+  //             decoration: BoxDecoration(
+  //               color: isSelected ? Colors.orange.shade50 : Colors.white,
+  //               borderRadius: BorderRadius.circular(12),
+  //               border: Border.all(
+  //                 color: isSelected ? Colors.orange : Colors.grey.shade200,
+  //               ),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: Text(
+  //                     subCategory.subQuizCategoryName,
+  //                     style: TextStyle(
+  //                       fontSize: 14,
+  //                       fontWeight: FontWeight.w500,
+  //                       color: isSelected ? Colors.orange.shade700 : Colors.black87,
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 if (isSelected)
+  //                   const Icon(
+  //                     Icons.check_circle,
+  //                     color: Colors.orange,
+  //                     size: 20,
+  //                   ),
+  //               ],
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 
-    if (subCategories.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        child: Text(
-          'No subcategories available',
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-          ),
-        ),
-      );
-    }
-
-    return Expanded(
-      child: ListView.separated(
-        itemCount: subCategories.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final subCategory = subCategories[index];
-          final isSelected = selectedSubCategoryId == subCategory.subQuizCategoryId;
-
-          return GestureDetector(
-            onTap: () {
-              setModalState(() {
-                if (selectedSubCategoryId == subCategory.subQuizCategoryId) {
-                  selectedSubCategoryId = null;
-                } else {
-                  selectedSubCategoryId = subCategory.subQuizCategoryId;
-                }
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.orange.shade50 : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? Colors.orange : Colors.grey.shade200,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      subCategory.subQuizCategoryName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.orange.shade700 : Colors.black87,
-                      ),
-                    ),
-                  ),
-                  if (isSelected)
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _getSubCategoryName(String subCategoryId) {
-    try {
-      final subCategory = allSubCategories.firstWhere(
-            (sub) => sub.subQuizCategoryId == subCategoryId,
-      );
-      return subCategory.subQuizCategoryName;
-    } catch (e) {
-      return 'Selected Subcategory';
-    }
-  }
+  // String _getSubCategoryName(String subCategoryId) {
+  //   try {
+  //     final subCategory = allSubCategories.firstWhere(
+  //           (sub) => sub.subQuizCategoryId == subCategoryId,
+  //     );
+  //     return subCategory.subQuizCategoryName;
+  //   } catch (e) {
+  //     return 'Selected Subcategory';
+  //   }
+  // }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(color: Colors.white),
-    );
+    return const Center(child: CircularProgressIndicator(color: Colors.orange));
   }
 
   Widget _buildQuizList() {
@@ -823,27 +814,20 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.quiz_outlined,
-              size: 64,
-              color: Colors.white.withAlpha((0.6 * 255).round()),
-            ),
+            Icon(Icons.quiz_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'No quizzes found',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withAlpha((0.8 * 255).round()),
+                color: Colors.grey.shade600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Try adjusting your filters or search terms',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withAlpha((0.6 * 255).round()),
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -864,11 +848,12 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha((0.1 * 255).round()),
+        // color: Colors.white,
+        color: Color(0xFFFFB876),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((0.1 * 255).round()),
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -881,14 +866,11 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: Color(0xFFFFCB7C),
+              // color: Colors.orange.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.quiz,
-              color: Colors.orange,
-              size: 24,
-            ),
+            child: const Icon(Icons.quiz, color: Colors.orange, size: 24),
           ),
 
           const SizedBox(width: 16),
@@ -901,7 +883,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                 Text(
                   quiz.quizTitle ?? 'Untitled Quiz',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -912,10 +894,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                 if (quiz.quizDescription != null)
                   Text(
                     quiz.quizDescription!,
-                    style: TextStyle(
-                      color: Colors.white.withAlpha((0.7 * 255).round()),
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.brown, fontSize: 13),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -924,7 +903,8 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                   // _formatQuizInfo(quiz),
                   'Holder',
                   style: TextStyle(
-                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    // color: Color(0xFFE37083),
+                    color: Colors.black38,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -950,7 +930,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => QuizTakingPage(quizId: quiz.quizId!,),
+                  builder: (_) => QuizTakingPage(quizId: quiz.quizId!),
                 ),
               );
             },
@@ -977,9 +957,9 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         tag,
@@ -1006,50 +986,28 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
   }
 }
 
-// class QuizModel {
-//   final String? quizId;
-//   final String? quizTitle;
-//   final String? quizDescription;
-//   final String? subQuizCategoryId;
-//   final int? questionCount;
-//   final int? estimatedDuration;
-//   final String? quizDifficulty;
-//   final bool? quizIsPremium;
+// class QuizCategory {
+//   final String quizCategoryId;
+//   final String quizCategoryName;
+//   final List<SubQuizCategoryModel> subQuizCategories;
 //
-//   QuizModel({
-//     this.quizId,
-//     this.quizTitle,
-//     this.quizDescription,
-//     this.subQuizCategoryId,
-//     this.questionCount,
-//     this.estimatedDuration,
-//     this.quizDifficulty,
-//     this.quizIsPremium,
+//   QuizCategory({
+//     required this.quizCategoryId,
+//     required this.quizCategoryName,
+//     required this.subQuizCategories,
 //   });
 // }
 
-class QuizCategory {
-  final String quizCategoryId;
-  final String quizCategoryName;
-  final List<SubQuizCategoryModel> subQuizCategories;
-
-  QuizCategory({
-    required this.quizCategoryId,
-    required this.quizCategoryName,
-    required this.subQuizCategories,
-  });
-}
-
-class SubQuizCategoryModel {
-  final String subQuizCategoryId;
-  final String subQuizCategoryName;
-  final String quizCategoryId;
-  final String quizCategoryName;
-
-  SubQuizCategoryModel({
-    required this.subQuizCategoryId,
-    required this.subQuizCategoryName,
-    required this.quizCategoryId,
-    required this.quizCategoryName,
-  });
-}
+// class SubQuizCategoryModel {
+//   final String subQuizCategoryId;
+//   final String subQuizCategoryName;
+//   final String quizCategoryId;
+//   final String quizCategoryName;
+//
+//   SubQuizCategoryModel({
+//     required this.subQuizCategoryId,
+//     required this.subQuizCategoryName,
+//     required this.quizCategoryId,
+//     required this.quizCategoryName,
+//   });
+// }

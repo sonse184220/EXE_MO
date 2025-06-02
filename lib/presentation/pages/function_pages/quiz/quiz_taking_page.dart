@@ -62,6 +62,7 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
   int currentQuestionIndex = 0;
   List<QuizUserAnswerModel> userAnswers = [];
   bool isLoading = true;
+  bool isSubmitting = false;
 
   @override
   void initState() {
@@ -72,7 +73,6 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
     _fetchQuizData();
   }
 
-  // Simulate API call to fetch quiz data
   Future<void> _fetchQuizData() async {
     final result = await _quizUsecase.getQuizDetail(widget.quizId);
 
@@ -363,6 +363,7 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
 
   Widget _buildNavigationButtons() {
     final hasAnswer = _getUserAnswer(quiz!.questions![currentQuestionIndex].quizQuestionId!) != null;
+    final allAnswered = userAnswers.length == quiz!.questions!.length;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -408,53 +409,118 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
           if (currentQuestionIndex == quiz!.questions!.length - 1 && hasAnswer)
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle quiz completion
-                  _showQuizResults();
-                },
+                onPressed: allAnswered && !isSubmitting ? _submitQuiz : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: allAnswered ? const Color(0xFF4CAF50) : Colors.grey,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  "Finish",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: isSubmitting
+                    ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : Text(
+                  allAnswered ? "Submit Quiz" : "Answer All Questions",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
+            // Expanded(
+            //   child: ElevatedButton(
+            //     onPressed: () {
+            //       // Handle quiz completion
+            //       // _showQuizResults();
+            //       _submitQuiz();
+            //     },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: const Color(0xFF4CAF50),
+            //       foregroundColor: Colors.white,
+            //       padding: const EdgeInsets.symmetric(vertical: 12),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //     ),
+            //     child: const Text(
+            //       "Finish",
+            //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            //     ),
+            //   ),
+            // ),
         ],
       ),
     );
   }
 
-  void _showQuizResults() async {
+  Future<void> _submitQuiz() async {
+    if (isSubmitting) return;
 
-    final correctAnswers = userAnswers.length;
-    final totalQuestions = quiz!.questions?.length;
+    setState(() {
+      isSubmitting = true;
+    });
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Quiz Completed!"),
-        content: Text(
-          "You answered $correctAnswers out of $totalQuestions questions correctly.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
+    try {
+      // final apiAnswers = _convertToApiFormat();
+
+      // Check if all questions are answered
+      if (userAnswers.length != quiz!.questions!.length) {
+        Notify.showFlushbar('Please answer all questions before submitting', isError: true);
+        setState(() {
+          isSubmitting = false;
+        });
+        return;
+      }
+
+      // Call your API method here - replace this with your actual API call
+      final result = await _quizUsecase.submitQuiz(widget.quizId, userAnswers);
+
+      if (result.isSuccess) {
+        // Show success and navigate to results
+        // _showQuizResults(result.data); // Pass the result data if needed
+        Notify.showFlushbar('Submit quiz successfully!');
+      } else {
+        Notify.showFlushbar('Failed to submit quiz: ${result.error}', isError: true);
+      }
+    } catch (e) {
+      Notify.showFlushbar('Error submitting quiz: $e');
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
+    }
   }
+
+  // void _showQuizResults() async {
+  //
+  //   final correctAnswers = userAnswers.length;
+  //   final totalQuestions = quiz!.questions?.length;
+  //
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text("Quiz Completed!"),
+  //       content: Text(
+  //         "You answered $correctAnswers out of $totalQuestions questions correctly.",
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.of(context).pop();
+  //             Navigator.of(context).pop();
+  //           },
+  //           child: const Text("OK"),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {

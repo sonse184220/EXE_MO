@@ -13,6 +13,7 @@ import 'package:inner_child_app/data/datasources/remote/mood_journal_api_service
 import 'package:inner_child_app/data/datasources/remote/mood_journal_type_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/notification_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/quiz_attempt_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_category_api_service.dart';
 import 'package:inner_child_app/data/repositories/audio_category_repository.dart';
 import 'package:inner_child_app/data/repositories/audio_repository.dart';
@@ -25,6 +26,7 @@ import 'package:inner_child_app/data/repositories/goal_repository.dart';
 import 'package:inner_child_app/data/repositories/mood_journal_repository.dart';
 import 'package:inner_child_app/data/repositories/mood_journal_type_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
+import 'package:inner_child_app/data/repositories/quiz_attempt_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_category_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_repository.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
@@ -39,6 +41,7 @@ import 'package:inner_child_app/domain/repositories/i_goal_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_mood_journal_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_mood_journal_type_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_notification_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_quiz_attempt_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_category_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_repository.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
@@ -52,6 +55,7 @@ import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
+import 'package:inner_child_app/domain/usecases/quiz_attempt_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import '../../../data/datasources/remote/authentication_api_service.dart';
@@ -127,6 +131,10 @@ final quizCategoryApiServiceProvider = Provider(
       (ref) => QuizCategoryApiService(ref.read(dioClientProvider)),
 );
 
+final quizAttemptApiServiceProvider = Provider(
+      (ref) => QuizAttemptApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -183,6 +191,10 @@ final quizCategoryRepositoryProvider = Provider<IQuizCategoryRepository>(
       (ref) => QuizCategoryRepository(ref.read(quizCategoryApiServiceProvider)),
 );
 
+final quizAttemptRepositoryProvider = Provider<IQuizAttemptRepository>(
+      (ref) => QuizAttemptRepository(ref.read(quizAttemptApiServiceProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // ⚙️ Use Cases
 // ─────────────────────────────────────────────────────────────
@@ -237,6 +249,10 @@ final moodJournalTypeUseCaseProvider = Provider(
 
 final quizCategoryUseCaseProvider = Provider(
       (ref) => QuizCategoryUsecase(ref.read(quizCategoryRepositoryProvider)),
+);
+
+final quizAttemptUseCaseProvider = Provider(
+      (ref) => QuizAttemptUsecase(ref.read(quizAttemptRepositoryProvider)),
 );
 
 // ─────────────────────────────────────────────────────────────
