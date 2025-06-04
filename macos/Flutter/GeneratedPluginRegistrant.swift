@@ -14,7 +14,11 @@ import google_sign_in_ios
 import just_audio
 import path_provider_foundation
 import rive_common
+<<<<<<< Updated upstream
 import sqflite_darwin
+=======
+import url_launcher_macos
+>>>>>>> Stashed changes
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioSessionPlugin.register(with: registry.registrar(forPlugin: "AudioSessionPlugin"))
@@ -26,5 +30,9 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   JustAudioPlugin.register(with: registry.registrar(forPlugin: "JustAudioPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   RivePlugin.register(with: registry.registrar(forPlugin: "RivePlugin"))
+<<<<<<< Updated upstream
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))
+=======
+  UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
+>>>>>>> Stashed changes
 }
