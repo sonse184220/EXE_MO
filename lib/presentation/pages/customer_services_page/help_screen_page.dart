@@ -1,7 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/data/datasources/remote/help_category_api_service.dart';
+import 'package:inner_child_app/domain/usecases/help_category_usecase.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import '../../../core/utils/result_model.dart';
+import '../../../domain/entities/help/help_category_model.dart';
+import '../../../domain/entities/help/help_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 class HelpScreenPage extends StatefulWidget {
   const HelpScreenPage({super.key});
 
@@ -10,6 +18,7 @@ class HelpScreenPage extends StatefulWidget {
 }
 
 class _HelpScreenPageState extends State<HelpScreenPage> {
+
   final List<Widget> helpSection = [
     FAQ(),ContactUs()
   ];
@@ -92,21 +101,21 @@ class _HelpScreenPageState extends State<HelpScreenPage> {
 
 
 
-Widget _buildTabButton(String label, bool isSelected, VoidCallback onTap) {
-  return Container(
-    margin: const EdgeInsets.only(right: 8),
-    child: ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        foregroundColor: isSelected ? Colors.white : Colors.black,
-        backgroundColor: isSelected ? Colors.black : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      ),
-      child: Text(label, style: const TextStyle(fontSize: 14)),
-    ),
-  );
-}
+// Widget _buildTabButton(String label, bool isSelected, VoidCallback onTap) {
+//   return Container(
+//     margin: const EdgeInsets.only(right: 8),
+//     child: ElevatedButton(
+//       onPressed: onTap,
+//       style: ElevatedButton.styleFrom(
+//         foregroundColor: isSelected ? Colors.white : Colors.black,
+//         backgroundColor: isSelected ? Colors.black : Colors.white,
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//       ),
+//       child: Text(label, style: const TextStyle(fontSize: 14)),
+//     ),
+//   );
+// }
 
 class HelpTabContent extends StatelessWidget {
   const HelpTabContent({super.key});
@@ -115,52 +124,7 @@ class HelpTabContent extends StatelessWidget {
       'question': 'How do I reset my password?',
       'answer': 'You can reset your password from the Settings page.',
     },
-    {
-      'question':
-          'How to contact support button in the Help Center button in the Help Center?',
-      'answer':
-          'Use the "Contact us" button in the Help Center button in the Help Centerbutton in the Help Center.',
-    },
-    {
-      'question': 'Where can I view my purchase history?',
-      'answer': 'Go to your Profile and select Purchase History.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
-    {
-      'question': 'Can I delete my account?',
-      'answer': 'Yes, from the Account Settings page.',
-    },
+
   ];
 
   @override
@@ -240,51 +204,125 @@ Widget buildSearchBox() {
   );
 }
 
-class FAQ extends StatefulWidget {
+class FAQ extends ConsumerStatefulWidget {
   const FAQ({super.key});
 
   @override
-  State<FAQ> createState() => _FAQState();
+  ConsumerState<FAQ> createState() => _FAQState();
 }
 
-class _FAQState extends State<FAQ> {
-  final List<String> tabLabels = [
-    'General',
-    'Account',
-    'Payment',
-    'Service',
-    'Help',
-    'Help',
-  ];
-  int selectedIndex = 0;
+class _FAQState extends ConsumerState<FAQ> {
+  late Future<Result<List<HelpCategoryModel>>> _futureHelpCategories;
+  int selectedIndex =0;
+  @override
+  void initState() {
+    super.initState();
+    final helpCategoryUseCase = ref.read(helpCategoryUseCaseProvider);
+    _futureHelpCategories = helpCategoryUseCase.getAllHelpCategory();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(tabLabels.length, (index) {
-              return _buildTabButton(
-                tabLabels[index],
-                index == selectedIndex,
-                () {
-                  setState(() {
-                    selectedIndex = index;
-                  });
+    return FutureBuilder<Result<List<HelpCategoryModel>>>(
+      future: _futureHelpCategories,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || snapshot.data == null || snapshot.data!.isFailure) {
+          return const Center(child: Text('Failed to load data'));
+        }
+
+        final helpCategories = snapshot.data!.data!;
+        final currentHelps = helpCategories[selectedIndex].helps;
+
+        return Column(
+          children: [
+            // Tab horizontal
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(helpCategories.length, (index) {
+                  return _buildTabButton(
+                    helpCategories[index].helpCategoryName,
+                    index == selectedIndex,
+                        () {
+                      setState(() {
+                        selectedIndex = index;
+                      });
+                    },
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 14),
+            buildSearchBox(),
+            const SizedBox(height: 14),
+            Expanded(
+              child: ListView.builder(
+                itemCount: currentHelps.length,
+                itemBuilder: (context, index) {
+                  final help = currentHelps[index];
+                  return _buildHelpTile(help);
                 },
-              );
-            }),
-          ),
-        ),
-        SizedBox(height: 14),
-        buildSearchBox(),
-        SizedBox(height: 14),
-        Expanded(child: HelpTabContent()),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
+
+Widget _buildTabButton(String label, bool isSelected, VoidCallback onTap) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+    child: ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        foregroundColor: isSelected ? Colors.white : Colors.black, // text color
+        backgroundColor: isSelected ? Colors.black : Colors.white, // background
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        elevation: isSelected ? 3 : 0,
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+  );
+}
+
+
+Widget _buildHelpTile(HelpModel help) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+    padding: const EdgeInsets.all(8.0),
+    decoration: BoxDecoration(
+      color: Colors.grey[200],
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    child: ExpansionTile(
+      shape: const Border(),
+      title: Text(
+        help.helpQuestion,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(help.helpAnswer),
+        ),
+      ],
+    ),
+  );
+}
+
+
 
 class ContactUs extends StatefulWidget {
   const ContactUs({super.key});
@@ -298,18 +336,18 @@ class _ContactUsState extends State<ContactUs> {
   Widget build(BuildContext context) {
     return ListView(
       children: [
-        _buildSocialMediaItem(FontAwesomeIcons.headphones, 'Customer Service'),
-        _buildSocialMediaItem(FontAwesomeIcons.whatsapp, 'WhatsApp'),
-        _buildSocialMediaItem(FontAwesomeIcons.globe, 'Website'),
-        _buildSocialMediaItem(FontAwesomeIcons.facebook, 'Facebook'),
-        _buildSocialMediaItem(FontAwesomeIcons.twitter, 'Twitter'),
-        _buildSocialMediaItem(FontAwesomeIcons.instagram, 'Instagram'),
+        _buildSocialMediaItem(FontAwesomeIcons.headphones, 'Customer Service','a'),
+        _buildSocialMediaItem(FontAwesomeIcons.whatsapp, 'WhatsApp','a'),
+        _buildSocialMediaItem(FontAwesomeIcons.globe, 'Website','a'),
+        _buildSocialMediaItem(FontAwesomeIcons.facebook, 'Facebook','https://www.facebook.com/profile.php?id=100067662162826'),
+        _buildSocialMediaItem(FontAwesomeIcons.twitter, 'Twitter','a'),
+        _buildSocialMediaItem(FontAwesomeIcons.instagram, 'Instagram','a'),
 
       ],
     );
   }
 
-  Widget _buildSocialMediaItem(IconData icon, String label) {
+  Widget _buildSocialMediaItem(IconData icon, String label,String url) {
     return Container(
       margin: const EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
@@ -338,9 +376,15 @@ class _ContactUsState extends State<ContactUs> {
             ),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'Details for $label go here.',
-                style: const TextStyle(color: Colors.black87),
+              child: GestureDetector(
+                onTap: () => _launchURL(url),
+                child: Text(
+                  url,
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ),
           ),
@@ -348,6 +392,14 @@ class _ContactUsState extends State<ContactUs> {
       ),
     );
   }
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
 }
+
+
 
 
