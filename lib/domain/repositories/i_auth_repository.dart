@@ -1,5 +1,6 @@
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
+import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_login_model.dart';
 import '../../core/utils/result_model.dart';
 import '../entities/auth/user_register_model.dart';
@@ -16,4 +17,5 @@ abstract class IAuthRepository {
   Future<Result<bool>> logout();
   Future<Result<ProfileEditModel>> getPersonalDetail();
   Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword);
+  Future<Result<UserDetailModel>> getUserDetail(String userId);
 }

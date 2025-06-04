@@ -28,4 +28,23 @@ class AudioRepository implements IAudioRepository {
         return Result.failure('Fetch audios error: $e');
       }
     }
+
+  @override
+  Future<Result<AudioModel>> getAudioDetail(String audioId) async {
+    try{
+      final response = await audioApiService.getAudioDetail(audioId);
+
+      if(response.statusCode == 200) {
+        final data = response.data;
+
+        final audioDetail =
+       AudioModel.fromJson(data);
+        return Result.success(audioDetail);
+      }
+
+      return Result.failure('Failed to fetch audio detail: ${response.statusCode}');
+    }catch(e){
+      return Result.failure('Fetch audio detail error: $e');
+    }
+  }
 }

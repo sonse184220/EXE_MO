@@ -8,6 +8,7 @@ import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
 import 'package:inner_child_app/domain/entities/auth/token_model.dart';
+import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_login_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_register_model.dart';
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
@@ -320,6 +321,25 @@ class AuthRepository implements IAuthRepository {
       }
     } catch (e) {
       return Result.failure('An error occurred: $e');
+    }
+  }
+
+  @override
+  Future<Result<UserDetailModel>> getUserDetail(String userId) async {
+    try {
+      final response = await _apiService.getUserDetail(userId);
+
+      if (response.statusCode == 200) {
+        final data = response.data!;
+
+        final userData = UserDetailModel.fromJson(data);
+
+        return Result.success(userData);
+      }else{
+        return Result.failure('Getuser detail fail');
+      }
+    } catch (e) {
+      return Result.failure('An error occurred while getting user detail: $e');
     }
   }
 }

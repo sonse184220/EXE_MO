@@ -5,6 +5,11 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/article/article_model.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/articles/article_detail.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/quiz/all_quiz_page.dart';
+import 'package:inner_child_app/presentation/pages/main_pages/therapy_tools_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -238,7 +243,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> TherapyToolsPage())),
                                 child: const Text(
                                   'See all',
                                   style: TextStyle(
@@ -260,23 +265,26 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 _buildHealingSessionCard(
                                   image:
                                       'https://images.unsplash.com/photo-1518791841217-8f162f1e1131',
-                                  title: 'Healing Frequency',
-                                  subtitle: 'Relax Moment',
-                                  icon: Icons.graphic_eq,
+                                  title: 'AI Chat',
+                                  subtitle: 'Helpful talk',
+                                  icon: Icons.chat,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatAiSessionListPage()))
                                 ),
                                 _buildHealingSessionCard(
                                   image:
                                       'https://images.unsplash.com/photo-1499728603263-13726abce5fd',
-                                  title: 'Meditation Method',
+                                  title: 'Audio Library',
                                   subtitle: 'Find your own peace',
-                                  icon: Icons.self_improvement,
+                                  icon: Icons.audio_file_outlined,
                                 ),
                                 _buildHealingSessionCard(
                                   image:
                                       'https://images.unsplash.com/photo-1517021897933-0e0319cfbc28',
                                   title: 'Emotional Diary',
                                   subtitle: 'How do you feel?',
-                                  icon: Icons.menu_book,
+                                  icon: Icons.note_alt_outlined,
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> MoodJournalWriting()))
+
                                 ),
                                 _buildHealingSessionCard(
                                   image:
@@ -284,6 +292,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   title: 'Sharing Community',
                                   subtitle: 'Sharing your emotion',
                                   icon: Icons.people,
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> CommunityGroupsPage()))
+                                ),
+                                _buildHealingSessionCard(
+                                    image:
+                                    'https://images.unsplash.com/photo-1544027993-37dbfe43562a',
+                                    title: 'Mental Health Quiz',
+                                    subtitle: 'Are you ok?',
+                                    icon: Icons.quiz,
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> AllQuizPage()))
                                 ),
                               ],
                             ),
@@ -443,8 +460,9 @@ Widget _buildHealingSessionCard({
   required String title,
   required String subtitle,
   required IconData icon,
+  VoidCallback? onTap
 }) {
-  return Container(
+  return GestureDetector(onTap: onTap,child: Container(
     width: 120,
     margin: const EdgeInsets.only(right: 12),
     child: Column(
@@ -486,7 +504,7 @@ Widget _buildHealingSessionCard({
         ),
       ],
     ),
-  );
+  ),);
 }
 
 Widget _buildArticleCard({

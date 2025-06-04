@@ -15,40 +15,27 @@ class ProfileChoosingPage extends ConsumerStatefulWidget {
 
 class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
   late final AuthUsecase _authUseCase;
+
   List<AccountProfile> profileList = [];
+
+  bool isLoading = false;
+  bool isProfileLoggingIn = false;
+
+  String? errorMessage;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _authUseCase = ref.read(authUseCaseProvider);
     fetchProfiles();
   }
 
-  final List<ProfileData> profiles = [
-    ProfileData(
-      name: "Playful",
-      image: "assets/images/appLogo.png",
-      color: Colors.orangeAccent,
-    ),
-    ProfileData(
-      name: "Creative",
-      image: "assets/images/appLogo.png",
-      color: Colors.purpleAccent,
-    ),
-    ProfileData(
-      name: "Curious",
-      image: "assets/images/appLogo.png",
-      color: Colors.greenAccent,
-    ),
-    ProfileData(
-      name: "Add Profile",
-      isAddProfile: true,
-      color: Colors.grey.shade300,
-    ),
-  ];
-
   Future<void> fetchProfiles() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
       final result = await _authUseCase.getAvailableProfiles();
 
@@ -57,37 +44,49 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
           profileList = result.data!;
         });
       } else {
-        debugPrint('Fetch failed: ${result.error}');
+        setState(() {
+          errorMessage = result.error ?? "Failed to load profiles.";
+        });
       }
-      // profileList = fetchedProfiles?.map((e) => AccountProfile(
-      //   profileId: e.profileId,
-      //   profileStatus: e.profileStatus,
-      //   profileToken: e.profileToken,
-      //   userId: e.userId// if needed
-      // )).toList();
     } catch (e) {
+      setState(() {
+        errorMessage = "An unexpected error occurred.";
+      });
       debugPrint('Error fetching profiles: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   Future<void> _handleProfileSelection(AccountProfile profile) async {
+    setState(() {
+      isProfileLoggingIn = true;
+    });
     try {
       final result = await _authUseCase.loginWithProfile(profile.profileToken);
 
       if (!mounted) return;
 
       if (result.isSuccess) {
-        // Proceed to main screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => MainScreen()),
         );
       } else {
-        debugPrint("Profile check failed: ${result.error}");
-        // Optionally show error dialog/snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.error ?? "Login failed")),
+        );
       }
     } catch (e) {
       debugPrint("Error during profile check: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isProfileLoggingIn = false;
+        });
+      }
     }
   }
 
@@ -95,8 +94,50 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: LayoutBuilder(
+        body: Stack(children: [LayoutBuilder(
           builder: (context, constraints) {
+            if (isLoading) {
+              return Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              );
+            }
+
+            if (errorMessage != null) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0, 0.6],
+                    colors: [Color(0xFFFFA450), Color(0x8CFF5C00)],
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: fetchProfiles,
+                      child: Text("Retry"),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             return Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -115,7 +156,6 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // App Logo
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 30),
                         child: Image.asset(
@@ -123,8 +163,6 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
                           height: 100,
                         ),
                       ),
-
-                      // Who's Playing Text
                       Text(
                         "Who's Playing?",
                         style: TextStyle(
@@ -140,49 +178,29 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
                           ],
                         ),
                       ),
-
-                      // Profiles Grid
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 30),
                           child: GridView.builder(
                             physics: NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.9,
-                                  crossAxisSpacing: 20,
-                                  mainAxisSpacing: 30,
-                                ),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.9,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 30,
+                            ),
                             itemCount: profileList.length,
                             itemBuilder: (context, index) {
                               final selectedProfile = profileList[index];
-                              return
-                              // GestureDetector(
-                              // onTap: () {
-                              //   Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //       builder: (context) => MainScreen(),
-                              //     ),
-                              //   );
-                              // },
-                              // child:
-                              ProfileAvatar(
+                              return ProfileAvatar(
                                 profile: selectedProfile,
-                                onTap:
-                                    () => _handleProfileSelection(
-                                      selectedProfile,
-                                    ),
+                                onTap: () => _handleProfileSelection(selectedProfile),
                               );
-                              // );
                             },
                           ),
                         ),
                       ),
-
-                      // Edit Button
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -204,11 +222,233 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
               ),
             );
           },
-        ),
+        ),    if (isProfileLoggingIn)
+          Container(
+            color: Colors.black45,
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          ),],),
       ),
     );
   }
 }
+
+
+// class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
+//   late final AuthUsecase _authUseCase;
+//   List<AccountProfile> profileList = [];
+//   bool isLoading = false;
+//
+//   @override
+//   void initState() {
+//     // TODO: implement initState
+//     super.initState();
+//     _authUseCase = ref.read(authUseCaseProvider);
+//     fetchProfiles();
+//   }
+//
+//   final List<ProfileData> profiles = [
+//     ProfileData(
+//       name: "Playful",
+//       image: "assets/images/appLogo.png",
+//       color: Colors.orangeAccent,
+//     ),
+//     ProfileData(
+//       name: "Creative",
+//       image: "assets/images/appLogo.png",
+//       color: Colors.purpleAccent,
+//     ),
+//     ProfileData(
+//       name: "Curious",
+//       image: "assets/images/appLogo.png",
+//       color: Colors.greenAccent,
+//     ),
+//     ProfileData(
+//       name: "Add Profile",
+//       isAddProfile: true,
+//       color: Colors.grey.shade300,
+//     ),
+//   ];
+//
+//   Future<void> fetchProfiles() async {
+//     try {
+//       setState(() {
+//         isLoading = true;
+//       });
+//       final result = await _authUseCase.getAvailableProfiles();
+//
+//       if (result.isSuccess && result.data != null) {
+//         setState(() {
+//           profileList = result.data!;
+//         });
+//       } else {
+//         debugPrint('Fetch failed: ${result.error}');
+//       }
+//       // profileList = fetchedProfiles?.map((e) => AccountProfile(
+//       //   profileId: e.profileId,
+//       //   profileStatus: e.profileStatus,
+//       //   profileToken: e.profileToken,
+//       //   userId: e.userId// if needed
+//       // )).toList();
+//     } catch (e) {
+//       debugPrint('Error fetching profiles: $e');
+//     }finally{
+//       setState(() {
+//         isLoading = false;
+//       });
+//     }
+//   }
+//
+//   Future<void> _handleProfileSelection(AccountProfile profile) async {
+//     try {
+//       final result = await _authUseCase.loginWithProfile(profile.profileToken);
+//
+//       if (!mounted) return;
+//
+//       if (result.isSuccess) {
+//         // Proceed to main screen
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(builder: (_) => MainScreen()),
+//         );
+//       } else {
+//         debugPrint("Profile check failed: ${result.error}");
+//         // Optionally show error dialog/snackbar
+//       }
+//     } catch (e) {
+//       debugPrint("Error during profile check: $e");
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: Scaffold(
+//         body: LayoutBuilder(
+//           builder: (context, constraints) {
+//             if (isLoading) {
+//               return Center(
+//                 child: CircularProgressIndicator(
+//                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+//                 ),
+//               );
+//             }
+//
+//             return Container(
+//               decoration: BoxDecoration(
+//                 gradient: LinearGradient(
+//                   begin: Alignment.topCenter,
+//                   end: Alignment.bottomCenter,
+//                   stops: [0, 0.6],
+//                   colors: [Color(0xFFFFA450), Color(0x8CFF5C00)],
+//                 ),
+//               ),
+//               child: ConstrainedBox(
+//                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
+//                 child: Container(
+//                   width: double.infinity,
+//                   padding: const EdgeInsets.all(20),
+//                   child: Column(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     crossAxisAlignment: CrossAxisAlignment.center,
+//                     children: [
+//                       // App Logo
+//                       Padding(
+//                         padding: const EdgeInsets.symmetric(vertical: 30),
+//                         child: Image.asset(
+//                           'assets/images/[EXE101]_Logo_INNER_CHILD.png',
+//                           height: 100,
+//                         ),
+//                       ),
+//
+//                       // Who's Playing Text
+//                       Text(
+//                         "Who's Playing?",
+//                         style: TextStyle(
+//                           fontSize: 28,
+//                           fontWeight: FontWeight.bold,
+//                           color: Colors.white,
+//                           shadows: [
+//                             Shadow(
+//                               blurRadius: 5.0,
+//                               color: Colors.black26,
+//                               offset: Offset(0, 2),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//
+//                       // Profiles Grid
+//                       Expanded(
+//                         child: Padding(
+//                           padding: const EdgeInsets.symmetric(vertical: 30),
+//                           child: GridView.builder(
+//                             physics: NeverScrollableScrollPhysics(),
+//                             shrinkWrap: true,
+//                             gridDelegate:
+//                                 SliverGridDelegateWithFixedCrossAxisCount(
+//                                   crossAxisCount: 2,
+//                                   childAspectRatio: 0.9,
+//                                   crossAxisSpacing: 20,
+//                                   mainAxisSpacing: 30,
+//                                 ),
+//                             itemCount: profileList.length,
+//                             itemBuilder: (context, index) {
+//                               final selectedProfile = profileList[index];
+//                               return
+//                               // GestureDetector(
+//                               // onTap: () {
+//                               //   Navigator.push(
+//                               //     context,
+//                               //     MaterialPageRoute(
+//                               //       builder: (context) => MainScreen(),
+//                               //     ),
+//                               //   );
+//                               // },
+//                               // child:
+//                               ProfileAvatar(
+//                                 profile: selectedProfile,
+//                                 onTap:
+//                                     () => _handleProfileSelection(
+//                                       selectedProfile,
+//                                     ),
+//                               );
+//                               // );
+//                             },
+//                           ),
+//                         ),
+//                       ),
+//
+//                       // Edit Button
+//                       Align(
+//                         alignment: Alignment.centerRight,
+//                         child: TextButton(
+//                           onPressed: () {
+//                             // Handle edit action
+//                           },
+//                           style: TextButton.styleFrom(
+//                             foregroundColor: Colors.white,
+//                           ),
+//                           child: Text(
+//                             "Edit",
+//                             style: TextStyle(color: Colors.white, fontSize: 18),
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             );
+//           },
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class ProfileData {
   final String name;

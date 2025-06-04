@@ -23,6 +23,8 @@ class LoginPage extends ConsumerState<Login> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _isEmailLoginLoading = false;
+  bool _isGoogleLoginLoading = false;
 
   late final AuthUsecase _authUseCase;
 
@@ -34,10 +36,15 @@ class LoginPage extends ConsumerState<Login> {
   }
 
   Future<void> _handleLoginWithGoogle() async {
+    if (_isGoogleLoginLoading || _isEmailLoginLoading) return;
+
+    setState(() {
+      _isGoogleLoginLoading = true;
+    });
+
     try {
       var userCredential = await signInWithGoogle();
       final idToken = await userCredential.user?.getIdToken();
-      print(idToken);
       final result = await _authUseCase.loginWithGoogle(idToken!);
       if (result.isSuccess) {
         Notify.showFlushbar(
@@ -59,6 +66,12 @@ class LoginPage extends ConsumerState<Login> {
         e.toString() ?? 'Login google failed. Please check your credentials',
         isError: true,
       );
+    }finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoginLoading = false;
+        });
+      }
     }
   }
 
@@ -81,7 +94,11 @@ class LoginPage extends ConsumerState<Login> {
       return;
     }
 
-    final loginModel = UserLoginModel(email: email, password: password);
+    setState(() {
+      _isEmailLoginLoading = true;
+    });
+
+    try{final loginModel = UserLoginModel(email: email, password: password);
 
     final result = await _authUseCase.loginWithCredentials(loginModel);
 
@@ -95,6 +112,17 @@ class LoginPage extends ConsumerState<Login> {
         result.error ?? 'Login failed. Please check your credentials',
         isError: true,
       );
+    }}catch(e){
+      Notify.showFlushbar(
+        e.toString() ?? 'Login failed. Please check your credentials',
+        isError: true,
+      );
+    }finally {
+      if (mounted) {
+        setState(() {
+          _isEmailLoginLoading = false;
+        });
+      }
     }
   }
 
@@ -107,13 +135,13 @@ class LoginPage extends ConsumerState<Login> {
 
   @override
   Widget build(BuildContext context) {
-    final authUseCase = ref.read(authUseCaseProvider);
+    final bool isAnyLoading = _isEmailLoginLoading || _isGoogleLoginLoading;
 
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
         floatingActionButton: FloatingActionButton(
-          onPressed:
+          onPressed: isAnyLoading ? null :
               () =>
               Navigator.push(
                 context,
@@ -192,6 +220,7 @@ class LoginPage extends ConsumerState<Login> {
                           children: [
                             TextFormField(
                               controller: _emailController,
+                              enabled: !isAnyLoading,
                               decoration: InputDecoration(
                                 hintText: 'Enter your email',
                                 contentPadding: const EdgeInsets.symmetric(
@@ -203,13 +232,14 @@ class LoginPage extends ConsumerState<Login> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 filled: true,
-                                fillColor: Color(0xFFEBEBEB),
+                                fillColor:  isAnyLoading ? Colors.grey[300] : Color(0xFFEBEBEB),
                               ),
                             ),
                             const SizedBox(height: 20),
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
+                              enabled: !isAnyLoading,
                               decoration: InputDecoration(
                                 hintText: 'Enter your password',
                                 contentPadding: const EdgeInsets.symmetric(
@@ -221,14 +251,14 @@ class LoginPage extends ConsumerState<Login> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 filled: true,
-                                fillColor: Colors.grey[200],
+                                fillColor: isAnyLoading ? Colors.grey[300] : Colors.grey[200],
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_off
                                         : Icons.visibility,
                                   ),
-                                  onPressed: () {
+                                  onPressed:  isAnyLoading ? null :  () {
                                     setState(() {
                                       _obscurePassword = !_obscurePassword;
                                     });
@@ -240,7 +270,7 @@ class LoginPage extends ConsumerState<Login> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {
+                                onPressed:  isAnyLoading ? null : () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -248,11 +278,11 @@ class LoginPage extends ConsumerState<Login> {
                                     ),
                                   );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'FORGET PASSWORD?',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.black,
+                                    color:  isAnyLoading ? Colors.grey: Colors.black,
                                   ),
                                 ),
                               ),
@@ -268,22 +298,37 @@ class LoginPage extends ConsumerState<Login> {
                           children: [
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFFE37083),
+                                backgroundColor:  isAnyLoading ? Colors.grey : Color(0xFFE37083),
                                 minimumSize: const Size.fromHeight(50),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: _handleLogin,
-                              //     () {
-                              //   Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //       builder: (context) => const ProfileChoosingPage(),
-                              //     ),
-                              //   );
-                              // },
-                              child: const Text(
+                              onPressed:  isAnyLoading ? null : _handleLogin,
+                              child: _isEmailLoginLoading
+                                  ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'SIGNING IN...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              )
+                                  : const Text(
                                 'SIGN IN',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -298,9 +343,11 @@ class LoginPage extends ConsumerState<Login> {
                             Row(
                               children: [
                                 Expanded(child: Divider()),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text("Or continue with"),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text("Or continue with", style: TextStyle(
+                                    color: isAnyLoading ? Colors.grey : Colors.black,
+                                  ),),
                                 ),
                                 Expanded(child: Divider()),
                               ],
@@ -309,7 +356,7 @@ class LoginPage extends ConsumerState<Login> {
                             const SizedBox(height: 20),
 
                             GestureDetector(
-                              onTap: _handleLoginWithGoogle,
+                              onTap:  isAnyLoading ? null :  _handleLoginWithGoogle,
                               //     () async {
                               //   var user = await signInWithGoogle();
                               //
@@ -320,25 +367,57 @@ class LoginPage extends ConsumerState<Login> {
                                   horizontal: 20,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
+                                  color: isAnyLoading ? Colors.grey[300] : Colors.grey[200],
                                   borderRadius: BorderRadius.circular(40),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Image.asset(
-                                      'assets/images/googleIcon.png',
-                                      width: 24,
-                                      height: 24,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      'SIGN IN WITH GOOGLE',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black87,
+                                    if (_isGoogleLoginLoading) ...[
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'SIGNING IN...',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      Image.asset(
+                                        'assets/images/googleIcon.png',
+                                        width: 24,
+                                        height: 24,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'SIGN IN WITH GOOGLE',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isAnyLoading ? Colors.grey : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                    // Image.asset(
+                                    //   'assets/images/googleIcon.png',
+                                    //   width: 24,
+                                    //   height: 24,
+                                    // ),
+                                    // const SizedBox(width: 10),
+                                    // const Text(
+                                    //   'SIGN IN WITH GOOGLE',
+                                    //   style: TextStyle(
+                                    //     fontSize: 14,
+                                    //     color: Colors.black87,
+                                    //   ),
+                                    // ),
                                   ],
                                 ),
                               ),
@@ -360,14 +439,14 @@ class LoginPage extends ConsumerState<Login> {
                                       Text(
                                         "Don't have an account?",
                                         style: TextStyle(
-                                          color: Colors.black,
+                                          color: isAnyLoading ? Colors.grey : Colors.black,
                                           fontSize: 14,
                                         ),
                                       ),
                                       SizedBox(height: 4),
                                       // spacing between lines
                                       GestureDetector(
-                                        onTap: () {
+                                        onTap:  isAnyLoading ? null :  () {
                                           // Navigate to sign-up page
                                           Navigator.push(
                                             context,
@@ -383,6 +462,7 @@ class LoginPage extends ConsumerState<Login> {
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
+                                            color: isAnyLoading ? Colors.grey : Colors.black,
                                           ),
                                         ),
                                       ),
@@ -392,7 +472,7 @@ class LoginPage extends ConsumerState<Login> {
                                   Icon(
                                     Icons.arrow_right_alt,
                                     size: 28,
-                                    color: Colors.black,
+                                    color: isAnyLoading ? Colors.grey : Colors.black,
                                   ),
                                 ],
                               ),
