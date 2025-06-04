@@ -56,7 +56,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       await session.configure(AudioSessionConfiguration.music());
 
       // final url = 'https://thantrieu.com/resources/music/${_audio!.audioUrl}';
-      final url = 'https://thantrieu.com/resources/music/1130295695.mp3';
+      // final url = 'https://thantrieu.com/resources/music/1130295695.mp3';
+      final url = 'https://res.cloudinary.com/daxex7msa/video/upload/v1749047149/Audio/wobxsfuhkrymybtnlyqs.mp4';
       await _player.setUrl(url);
 
       _duration = _player.duration ?? Duration.zero;
