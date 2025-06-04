@@ -257,7 +257,7 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                                               GestureDetector(
                                                 onTap: () {
                                                   Navigator.push(context, MaterialPageRoute(
-                                                    builder: (_) => AudioPlayingPage(audioId: '',),
+                                                    builder: (_) => AudioPlayingPage(audioId: audio.audioId!,),
                                                   ));
                                                 },
                                                 child: Container(
@@ -587,7 +587,7 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AudioPlayingPage(audioId: '',)),
+                    MaterialPageRoute(builder: (_) => AudioPlayingPage(audioId: audio.audioId!,)),
                   );
                 },
                 // onTap: () {

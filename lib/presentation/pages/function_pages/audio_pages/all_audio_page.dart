@@ -867,7 +867,7 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AudioPlayingPage(audioId: '',)),
+                MaterialPageRoute(builder: (_) => AudioPlayingPage(audioId: audio.audioId!,)),
               );
             },
             child: Container(

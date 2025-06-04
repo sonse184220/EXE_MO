@@ -1,15 +1,10 @@
-import 'dart:math';
 import 'dart:ui';
-
-import 'package:audio_session/audio_session.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
-import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/audio/audio_model.dart';
 import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
-import 'package:just_audio/just_audio.dart';
 
 class AudioPlayingPage extends ConsumerStatefulWidget {
   final String audioId;
@@ -20,276 +15,699 @@ class AudioPlayingPage extends ConsumerStatefulWidget {
 }
 
 class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AudioUseCase _audioUseCase;
-  late final AudioPlayer _player;
-  AnimationController? _diskController;
 
-  AudioModel? _audio;
-  List<AudioModel> _audioList = [];
+  late AnimationController _rotationController;
+  late AudioPlayer _audioPlayer;
 
-  Duration _duration = Duration.zero;
-  Duration _position = Duration.zero;
+  // State variables
+  AudioModel? currentAudio;
+  List<AudioModel> audioList = [];
 
-  bool _isLoading = true;
-  bool _isSeeking = false;
+  bool isPlaying = false;
+  bool isLoading = false;
+  bool isInitialLoading = true;
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  bool isSetSourceError = false;
 
-    try {
-      // final audioDetailResult = await _audioUseCase.getAudioDetail(widget.audioId);
-      final audioDetailResult = Result.success('data');
-      final allAudiosResult = await _audioUseCase.getAllAudios();
-
-      if (audioDetailResult.isFailure || allAudiosResult.isFailure) {
-        return _handleError(audioDetailResult.error ?? allAudiosResult.error);
-      }
-
-      setState(() {
-        _audio = AudioModel(audioId: 'Id', audioCreatedAt: DateTime.now(), audioStatus: 'Active', audioIsPremium: false, audioThumbnail: '', audioTitle: 'Son', audioUrl: 'Url', subAudioCategoryId: 'SubAuId');
-        // _audio = audioDetailResult.data!;
-        _audioList = allAudiosResult.data!;
-      });
-
-      final session = await AudioSession.instance;
-      await session.configure(AudioSessionConfiguration.music());
-
-      // final url = 'https://thantrieu.com/resources/music/${_audio!.audioUrl}';
-      // final url = 'https://thantrieu.com/resources/music/1130295695.mp3';
-      final url = 'https://res.cloudinary.com/daxex7msa/video/upload/v1749047149/Audio/wobxsfuhkrymybtnlyqs.mp4';
-      await _player.setUrl(url);
-
-      _duration = _player.duration ?? Duration.zero;
-      _listenToPlayer();
-    } catch (e) {
-      _handleError(e.toString());
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _handleError(String? message) {
-    debugPrint('Error loading audio: $message');
-    // Optionally show Snackbar/toast/dialog here
-  }
-
-  void _listenToPlayer() {
-    _player.positionStream.listen((pos) {
-      if (!_isSeeking) setState(() => _position = pos);
-    });
-
-    _player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        _player.seek(Duration.zero);
-        _player.pause();
-        _diskController?.stop();
-      } else if (state.playing) {
-        _diskController?.repeat();
-      } else {
-        _diskController?.stop();
-      }
-    });
-  }
-
-  void _togglePlayPause() {
-    if (_player.playing) {
-      _player.pause();
-    } else {
-      _player.play();
-    }
-  }
-
-  void _seekRelative(int seconds) {
-    final newPosition = _player.position + Duration(seconds: seconds);
-    final clampedPosition = newPosition < Duration.zero
-        ? Duration.zero
-        : (newPosition > _duration ? _duration : newPosition);
-
-    _player.seek(clampedPosition);
-  }
-
-  String _formatDuration(Duration d) {
-    return d.toString().split('.').first.padLeft(8, "0").substring(3);
-  }
+  Duration currentPosition = Duration.zero;
+  Duration totalDuration = Duration.zero;
+  int currentAudioIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _audioUseCase = ref.read(audioUseCaseProvider);
-    _player = AudioPlayer();
-    _diskController = AnimationController(
+    _audioPlayer = AudioPlayer();
+    _rotationController = AnimationController(
+      duration: Duration(seconds: 10),
       vsync: this,
-      duration: const Duration(seconds: 20),
     );
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
-    // });
+    _setupAudioPlayer();
+    _loadAudioDetails();
+    _loadAudioList();
+  }
+
+  void _setupAudioPlayer() {
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      setState(() {
+        isPlaying = state == PlayerState.playing;
+      });
+
+      if (isPlaying) {
+        _rotationController.repeat();
+      } else {
+        _rotationController.stop();
+      }
+    });
+
+    _audioPlayer.onPositionChanged.listen((Duration position) {
+      setState(() {
+        currentPosition = position;
+      });
+    });
+
+    _audioPlayer.onDurationChanged.listen((Duration duration) {
+      setState(() {
+        totalDuration = duration;
+      });
+    });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      _onAudioComplete();
+    });
+  }
+
+  Future<void> _loadAudioDetails() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // throw Exception();
+      // Replace with your actual API endpoint
+      final result = await _audioUseCase.getAudioDetail(widget.audioId);
+
+      if (result.isSuccess) {
+        final data = result.data;
+        setState(() {
+          currentAudio = data;
+        });
+        await _loadAndPlayAudio();
+      }
+    } catch (e) {
+      print('Error loading audio details: $e');
+      // Fallback audio for demo
+      setState(() {
+        currentAudio = AudioModel(
+          audioId: widget.audioId,
+          audioTitle: "Evening Meditation to Relax",
+          audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
+          audioThumbnail: "",
+          audioCreatedAt: DateTime.now(),
+          audioIsPremium: false,
+          audioStatus: "Active",
+          subAudioCategoryId: "SAC001",
+          subAudioCategoryName: "Guided Meditation",
+        );
+      });
+      await _loadAndPlayAudio();
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadAudioList() async {
+    try {
+      // throw Exception();
+      // Replace with your actual API endpoint
+      final result = await _audioUseCase.getAllAudios();
+
+      if (result.isSuccess) {
+        final data = result.data!;
+        setState(() {
+          audioList = data;
+          currentAudioIndex = audioList.indexWhere((audio) => audio.audioId == widget.audioId);
+          if (currentAudioIndex == -1) currentAudioIndex = 0;
+        });
+      }
+    } catch (e) {
+      print('Error loading audio list: $e');
+      // Fallback list for demo
+      setState(() {
+        audioList = [
+          AudioModel(
+            audioId: "A001",
+            audioTitle: "Morning Meditation",
+            audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
+            audioThumbnail: "",
+            audioCreatedAt: DateTime.now(),
+            audioIsPremium: false,
+            audioStatus: "Active",
+            subAudioCategoryId: "SAC001",
+            subAudioCategoryName: "Guided Meditation",
+          ),
+          AudioModel(
+            audioId: "A002",
+            audioTitle: "Evening Relaxation",
+            audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
+            audioThumbnail: "",
+            audioCreatedAt: DateTime.now(),
+            audioIsPremium: false,
+            audioStatus: "Active",
+            subAudioCategoryId: "SAC002",
+            subAudioCategoryName: "Relaxation",
+          ),
+        ];
+        currentAudioIndex = 0;
+      });
+    }
+  }
+
+  Future<void> _loadAndPlayAudio() async {
+    if (currentAudio?.audioUrl != null) {
+      setState(() {
+        isLoading = true;
+        isSetSourceError = false;
+        currentPosition = Duration.zero;
+        totalDuration = Duration.zero;
+      });
+
+      try {
+        await _audioPlayer.stop();
+        await _audioPlayer.setSourceUrl(currentAudio!.audioUrl!);
+        await _audioPlayer.resume();
+        // setState(() {
+        //   isPlaying = true;
+        // });
+      } catch (e) {
+        print('Error loading audio: $e');
+        setState(() {
+          isSetSourceError = true;
+        });
+      } finally {
+        setState(() {
+          isLoading = false;
+          isInitialLoading = false;
+        });
+      }
+    }
+  }
+
+  // Fixed retry function that maintains correct state
+  Future<void> _retryLoadAudio() async {
+    if (currentAudio != null) {
+      await _loadAndPlayAudio();
+    } else {
+      await _loadAudioDetails();
+    }
+  }
+
+  void _playPause() async {
+    if (isSetSourceError || isLoading) return;
+
+    if (isPlaying) {
+      await _audioPlayer.pause();
+      setState(() {
+        isPlaying = false;
+      });
+    } else {
+      try {
+        await _audioPlayer.resume();
+        setState(() {
+          isPlaying = true;
+        });
+      } catch (e) {
+        print('Error resuming audio: $e');
+      }
+    }
+  }
+
+  // void _playPause() async {
+  //   if (isLoading || isInitialLoading) return;
+  //
+  //   if (isPlaying) {
+  //     await _audioPlayer.pause();
+  //   } else {
+  //     await _audioPlayer.resume();
+  //   }
+  // }
+
+  void _seekTo(Duration position) {
+    if (isLoading || isInitialLoading) return;
+
+    _audioPlayer.seek(position);
+  }
+
+  void _skipForward() {
+    if (isLoading || isInitialLoading) return;
+
+    final newPosition = currentPosition + Duration(seconds: 10);
+    if (newPosition < totalDuration) {
+      _seekTo(newPosition);
+    }
+  }
+
+  void _skipBackward() {
+    if (isLoading || isInitialLoading) return;
+
+    final newPosition = currentPosition - Duration(seconds: 10);
+    if (newPosition > Duration.zero) {
+      _seekTo(newPosition);
+    } else {
+      _seekTo(Duration.zero);
+    }
+  }
+
+  void _previousTrack() {
+    if (isLoading || isInitialLoading) return;
+
+    if (audioList.isNotEmpty && currentAudioIndex > 0) {
+      setState(() {
+        currentAudioIndex--;
+        currentAudio = audioList[currentAudioIndex];
+      });
+      _loadAndPlayAudio();
+    }
+  }
+
+  void _nextTrack() {
+    if (isLoading || isInitialLoading) return;
+
+    if (audioList.isNotEmpty && currentAudioIndex < audioList.length - 1) {
+      setState(() {
+        currentAudioIndex++;
+        currentAudio = audioList[currentAudioIndex];
+      });
+      _loadAndPlayAudio();
+    }
+  }
+
+  void _onAudioComplete() {
+    setState(() {
+      currentPosition = Duration.zero;
+      isPlaying = false;
+    });
+    _rotationController.reset();
+
+    // Auto play next track
+    if (currentAudioIndex < audioList.length - 1) {
+      _nextTrack();
+    }
+  }
+
+  void _showPlaylist() {
+    if (isLoading || isInitialLoading) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Color(0xFF4B3621),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Playlist',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: audioList.length,
+                  itemBuilder: (context, index) {
+                    final audio = audioList[index];
+                    final isCurrentTrack = index == currentAudioIndex;
+
+                    return ListTile(
+                      leading: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[300],
+                        ),
+                        child: audio.audioThumbnail!.isNotEmpty
+                            ? ClipOval(
+                          child: Image.network(
+                            audio.audioThumbnail!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons.music_note, color: Colors.grey);
+                            },
+                          ),
+                        )
+                            : Icon(Icons.music_note, color: Colors.grey),
+                      ),
+                      title: Text(
+                        audio.audioTitle ?? 'Unknown title',
+                        style: TextStyle(
+                          color: isCurrentTrack ? Colors.amber : Colors.white,
+                          fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        audio.subAudioCategoryName ?? 'Unknown category',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+                      trailing: isCurrentTrack
+                          ? Icon(Icons.play_arrow, color: Colors.amber)
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          currentAudioIndex = index;
+                          currentAudio = audio;
+                        });
+                        _loadAndPlayAudio();
+                        Navigator.pop(context);
+                        // Navigator.push(context, MaterialPageRoute(builder: (context)=> AudioPlayingPage(audioId: audio.audioId!)));
+                        // setState(() {
+                        //   currentAudioIndex = index;
+                        //   currentAudio = audio;
+                        // });
+                        // _loadAndPlayAudio();
+                        // Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes);
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   @override
   void dispose() {
-    _player.dispose();
-    _diskController?.dispose();
+    _audioPlayer.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final imgSize = MediaQuery.of(context).size.width - 20;
 
-    // final imgUrl = _audio?.audioThumbnail != null
-    //     ? 'https://thantrieu.com/resources/thumbnails/${_audio!.audioThumbnail}'
-    //     : null;
-    final imgUrl = 'https://thantrieu.com/resources/arts/1130295695.webp';
+    return SafeArea(
+      child:  Scaffold(
+      body: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: screenHeight * 0.75,
+                    child: Stack(
+                      children: [
+                        // Background Image with Blur
+                        Positioned.fill(
+                          child: ClipRect(
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 8,
+                                sigmaY: 8,
+                              ),
+                              child: Transform.scale(
+                                scale: 1.2,
+                                child: currentAudio?.audioThumbnail != null &&
+                                    currentAudio!.audioThumbnail!.isNotEmpty
+                                    ? Image.network(
+                                  currentAudio!.audioThumbnail!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/audio_playing.png',
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                                    : Image.asset(
+                                  'assets/images/audio_playing.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Stack(
-        children: [
-          // Blurred background
-          Positioned.fill(
-            child: ClipRect(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: imgUrl != null
-                    ? CachedNetworkImage(
-                  imageUrl: imgUrl,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => Image.asset(
-                    'assets/images/default_bg_blur.png',
-                    fit: BoxFit.cover,
-                  ),
-                )
-                    : Image.asset('assets/images/default_bg_blur.png'),
-              ),
+                        // Main Content with padding
+                        SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.pop(context),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.arrow_back_ios_new,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap:(isLoading || isInitialLoading) ? null : _showPlaylist,
+                                      child: Opacity(opacity:   (isLoading || isInitialLoading) ? 0.5 : 1.0,child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            shape: BoxShape.circle,
             ),
-          ),
+            child: Icon(
+            Icons.playlist_play,
+            color: Colors.white,
+            size: 18,
+            ),
+            ),),
+                                    ),
+                                  ],
+                                ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                // Back and menu
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _circleIcon(Icons.arrow_back_ios_new),
-                      _circleIcon(Icons.more_vert),
-                    ],
+                                // Meditation image and title
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      AnimatedBuilder(
+                                        animation: _rotationController,
+                                        builder: (context, child) {
+                                          return Transform.rotate(
+                                            angle: _rotationController.value * 2 * 3.14159,
+                                            child: Container(
+                                              width: imgSize,
+                                              height: imgSize,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.grey[300],
+                                              ),
+                                              child: isLoading
+                                                  ? Center(
+                                                child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                                  : currentAudio?.audioThumbnail != null &&
+                                                  currentAudio!.audioThumbnail!.isNotEmpty
+                                                  ? ClipOval(
+                                                child: Image.network(
+                                                  currentAudio!.audioThumbnail!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return Icon(
+                                                      Icons.music_note,
+                                                      color: Colors.grey,
+                                                      size: 100,
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                                  : Icon(
+                                                Icons.music_note,
+                                                color: Colors.grey,
+                                                size: 100,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      SizedBox(height: 20),
+                                      Text(
+                                        currentAudio?.audioTitle ?? 'Loading...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        currentAudio?.subAudioCategoryName ?? '',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatDuration(currentPosition),
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.7),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Slider(
+                                              value: totalDuration.inMilliseconds > 0
+                                                  ? currentPosition.inMilliseconds /
+                                                  totalDuration.inMilliseconds
+                                                  : 0.0,
+                                              onChanged: (value) {
+                                                final position = Duration(
+                                                  milliseconds: (value * totalDuration.inMilliseconds).round(),
+                                                );
+                                                _seekTo(position);
+                                              },
+                                              activeColor: Colors.white,
+                                              inactiveColor: Colors.white.withOpacity(0.3),
+                                            ),
+                                          ),
+                                          Text(
+                                            _formatDuration(totalDuration),
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.7),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 20),
-
-                // Spinning Disk
-                RotationTransition(
-                  turns: _diskController!,
-                  child: Container(
-                    width: screenWidth * 0.7,
-                    height: screenWidth * 0.7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: imgUrl != null
-                            ? CachedNetworkImageProvider(imgUrl)
-                            : AssetImage(
-                            'assets/images/audio_not_found_icon.png')
-                        as ImageProvider,
-                        fit: BoxFit.cover,
-                        onError: (_, __) => {},
+                  // Bottom controls
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(color: Color(0xFF4B3621)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          GestureDetector(
+                            onTap: (isLoading || isInitialLoading) ? null : _previousTrack,
+                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Icon(
+                              Icons.skip_previous,
+                              color: Colors.white,
+                              size: 30,
+                            ),)
+                          ),
+                          GestureDetector(
+                            onTap: (isLoading || isInitialLoading) ? null : _skipBackward,
+                            child: Opacity(  opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0,child:  Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.replay_10,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),)
+                          ),
+                          GestureDetector(
+                            onTap:  (isLoading || isInitialLoading) ? null :  isSetSourceError
+                                ? () => _retryLoadAudio() // Retry loading
+                                : _playPause,
+                            child: Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: (isLoading || isInitialLoading)
+                                  ? SizedBox(
+                                width: 30,
+                                height: 30,
+                                child: CircularProgressIndicator(
+                                  color: Colors.brown.shade700,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                                  : isSetSourceError
+                                  ? Icon(
+                                Icons.refresh,
+                                color: Colors.redAccent,
+                                size: 30,
+                              )
+                                  : Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.brown.shade700,
+                                size: 30,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: (isLoading || isInitialLoading) ? null :  _skipForward,
+                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.forward_10,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),),
+                          ),
+                          GestureDetector(
+                            onTap: (isLoading || isInitialLoading) ? null : _nextTrack,
+                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Icon(
+                              Icons.skip_next,
+                              color: Colors.white,
+                              size: 30,
+                            ),),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                Text(
-                  _audio?.audioTitle ?? "Unknown",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-                Text(
-                  _audio?.subAudioCategoryName ??
-                      "Unknown category type",
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
-                ),
-
-                // Progress Slider
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      Slider(
-                        value: _position.inSeconds.toDouble().clamp(0, _duration.inSeconds.toDouble()),
-                        max: _duration.inSeconds.toDouble(),
-                        onChanged: (value) {
-                          setState(() => _isSeeking = true);
-                          _player.seek(Duration(seconds: value.toInt()));
-                        },
-                        onChangeEnd: (_) => setState(() => _isSeeking = false),
-                        activeColor: Colors.white,
-                        inactiveColor: Colors.white30,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(_formatDuration(_position), style: TextStyle(color: Colors.white70)),
-                          Text(_formatDuration(_duration), style: TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Controls
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _circleIcon(Icons.fast_rewind, onTap: () => _seekRelative(-10)),
-                      _circleIcon(
-                        _player.playing ? Icons.pause : Icons.play_arrow,
-                        size: 40,
-                        color: Colors.brown.shade800,
-                        bgColor: Colors.white,
-                        onTap: _togglePlayPause,
-                      ),
-                      _circleIcon(Icons.fast_forward, onTap: () => _seekRelative(10)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleIcon(IconData icon, {double size = 24, Color? color, Color? bgColor, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: bgColor ?? Colors.black38,
-          shape: BoxShape.circle,
+                ],
+              ),
+            );
+          },
         ),
-        child: Icon(icon, color: color ?? Colors.white, size: size),
       ),
     );
   }
