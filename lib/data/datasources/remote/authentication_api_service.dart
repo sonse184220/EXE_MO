@@ -99,4 +99,8 @@ class AuthApiService {
     };
     return await _client.post('innerchild/auth/change-password', data: dataObject);
   }
+
+  Future<Response> getUserDetail(String userId) async {
+    return await _client.get('innerchild/auth/get-user-detail/$userId');
+  }
 }

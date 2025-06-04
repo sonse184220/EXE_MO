@@ -1,6 +1,9 @@
 android/key.properties
 android/release-key.jks
 
+android/customDebugKey.properties
+android/custom-debug-key.jks
+
 # Miscellaneous
 *.class
 *.lock

@@ -1,6 +1,7 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
+import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 
@@ -112,6 +113,23 @@ class CommunityRepository implements ICommunityRepository {
       return Result.failure('Fail to update post. Please try again');
     } catch (e) {
       return Result.failure('Update post error: $e');
+    }
+  }
+
+  @override
+  Future<Result<CommunityPostModel>> getCommunityPostDetail(String postId) async {
+    try {
+      final response = await _apiService.getCommunityPostDetail(postId);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final communityPostDetail = CommunityPostModel.fromJson(data);
+        return Result.success(communityPostDetail);
+      }
+      return Result.failure('Fail to get post detail. Please try again');
+    } catch (e) {
+      return Result.failure('Get post detail error: $e');
     }
   }
 }

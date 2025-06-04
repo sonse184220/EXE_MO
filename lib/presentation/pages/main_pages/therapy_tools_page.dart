@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/home_audio_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
@@ -109,13 +110,13 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                                 },
                               },
                               {
-                                'title': 'Meditation',
+                                'title': 'Audio Library',
                                 'imageAsset': 'assets/images/meditation.png',
                                 'navigate': () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MeditationPage(),
+                                      builder: (context) => HomeAudioPage(),
                                     ),
                                   );
                                 },

@@ -1,5 +1,6 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
+import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 
@@ -30,5 +31,9 @@ class CommunityUsecase {
 
   Future<Result<String>> updateCommunityPost(String postId, CreateCommunityPostModel post) {
     return iCommunityRepository.updateCommunityPost(postId, post);
+  }
+
+  Future<Result<CommunityPostModel>> getCommunityPostDetail(String postId) {
+    return iCommunityRepository.getCommunityPostDetail(postId);
   }
 }

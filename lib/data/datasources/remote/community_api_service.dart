@@ -37,4 +37,8 @@ class CommunityApiService {
     final formdata = await post.toFormData();
     return await _client.put('innerchild/community/update-post/$postId', data: formdata);
   }
+
+  Future<Response> getCommunityPostDetail(String postId) async {
+    return await _client.get('innerchild/community/post-detail/$postId');
+  }
 }

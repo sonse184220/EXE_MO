@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
@@ -8,6 +9,8 @@ import 'package:inner_child_app/domain/entities/quiz_attemp/quiz_question_attemp
 import 'package:inner_child_app/domain/usecases/quiz_attempt_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../main.dart';
 
 enum FilterBy { all, thisWeek, thisMonth, earlier }
 
@@ -25,6 +28,7 @@ class _QuizAttemptHistoryPageState
 
   List<QuizAttemptModel> _quizAttempts = [];
   late QuizAttemptDetailModel? _currentAttemptDetail;
+
   // Map<String, List<QuizAttemptDetailModel>> _expandedAttempts = {};
   final Set<String> _expandedQuizzes = {};
 
@@ -69,27 +73,33 @@ class _QuizAttemptHistoryPageState
 
     try {
       final result = await _attemptUsecase.getQuizAttemptDetail(quizAttemptId);
-      if(result.isSuccess) {
+      if (result.isSuccess) {
         setState(() {
           _currentAttemptDetail = result.data!;
           // _expandedAttempts[quizId] = result.data!.;
           _isLoadingDetail = false;
         });
-      }else{
+      } else {
         setState(() {
           _currentAttemptDetail = null;
           // _expandedAttempts[quizId] = result.data!.;
           _isLoadingDetail = false;
         });
-        Notify.showFlushbar('Fetch attempt detail fail. Please try again!', isError: true);
+        // Notify.showFlushbar(
+        //   'Fetch attempt detail fail. Please try again!',
+        //   isError: true,
+        // );
       }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
+        _currentAttemptDetail = null;
         _isLoadingDetail = false;
       });
-      Notify.showFlushbar('Error while fetcj attempt detail: $e', isError: true);
-
+      // Notify.showFlushbar(
+      //   'Error while fetcj attempt detail: $e',
+      //   isError: true,
+      // );
     }
   }
 
@@ -176,8 +186,8 @@ class _QuizAttemptHistoryPageState
   }
 
   List<MapEntry<String, List<QuizAttemptModel>>> _filterGroups(
-      List<MapEntry<String, List<QuizAttemptModel>>> groups,
-      ) {
+    List<MapEntry<String, List<QuizAttemptModel>>> groups,
+  ) {
     if (_currentFilter == FilterBy.all) {
       return groups;
     }
@@ -225,16 +235,98 @@ class _QuizAttemptHistoryPageState
   }
 
   void _showAttemptDetail(QuizAttemptDetailModel attempt) async {
-    await _fetchQuizAttemptDetail(attempt.quizUserAttemptId!);
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
 
-    if(_currentAttemptDetail == null) return;
-    showModalBottomSheet(
+    // Show loading dialog
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _QuizAttemptDetailModal(attempt: _currentAttemptDetail!),
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      await _fetchQuizAttemptDetail(attempt.quizUserAttemptId!);
+      // await Future.delayed(const Duration(milliseconds: 2000));
+      //
+      // _currentAttemptDetail = null;
+
+      // Close loading
+      Navigator.of(context).pop();
+
+      if (_currentAttemptDetail == null) throw Exception("Attempt not found");
+
+      // Show detail modal
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) =>
+            _QuizAttemptDetailModal(attempt: _currentAttemptDetail!),
+      );
+    } catch (e) {
+      // Close loading
+      // Navigator.of(context).pop();
+
+      // Show error dialog
+      Notify.showAwesomeDialog(
+        title: 'Error',
+        message: 'Failed to load quiz attempt. Please try again.',
+        dialogType: DialogType.error,
+        btnOkText: 'Retry',
+        btnCancelText: 'Close',
+        onOkPress: () {
+          _showAttemptDetail(attempt); // Retry
+        },
+        onCancelPress: () {
+          // Optional: do something when closing
+        },
+      );
+    }
   }
+
+
+//   void _showAttemptDetail(QuizAttemptDetailModel attempt) async {
+//     // Show loading dialog
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder:
+//           (_) => const Center(
+//             child: CircularProgressIndicator(color: Colors.orangeAccent),
+//           ),
+//     );
+//
+//     // await _fetchQuizAttemptDetail(attempt.quizUserAttemptId!);
+// _currentAttemptDetail =null;
+//     // Dismiss loading dialog
+//     Navigator.of(context).pop();
+//
+//     if (_currentAttemptDetail == null) {
+//       Notify.showAwesomeDialog(
+//         title: 'Error',
+//         message: 'Failed to load quiz attempt. Please try again.',
+//         dialogType: DialogType.error,
+//         btnOkText: 'Retry',
+//         btnCancelText: 'Close',
+//         onOkPress: () {
+//           _showAttemptDetail(attempt); // Retry
+//         },
+//         onCancelPress: () {
+//           // Optional: do something when closing
+//         },
+//       );
+//       // Notify.showAwesomeDialog(title: 'Fail to get attempt detail', message: 'The error occur while getting attempt detail. Please try again later', dialogType: DialogType.error);
+//       return;
+//     }
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       backgroundColor: Colors.transparent,
+//       builder:
+//           (context) => _QuizAttemptDetailModal(attempt: _currentAttemptDetail!),
+//     );
+//   }
 
   @override
   Widget build(BuildContext context) {
@@ -286,15 +378,16 @@ class _QuizAttemptHistoryPageState
                         child: DropdownButton<FilterBy>(
                           value: _currentFilter,
                           onChanged: _onFilterChanged,
-                          items: FilterBy.values.map((FilterBy filter) {
-                            return DropdownMenuItem<FilterBy>(
-                              value: filter,
-                              child: Text(
-                                _getFilterDisplayName(filter),
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            );
-                          }).toList(),
+                          items:
+                              FilterBy.values.map((FilterBy filter) {
+                                return DropdownMenuItem<FilterBy>(
+                                  value: filter,
+                                  child: Text(
+                                    _getFilterDisplayName(filter),
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                );
+                              }).toList(),
                         ),
                       ),
                     ),
@@ -448,7 +541,7 @@ class _QuizAttemptHistoryPageState
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius:  BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(isExpanded ? 0 : 16),
@@ -522,15 +615,12 @@ class _QuizAttemptHistoryPageState
             //     ),
             //   )
             // else
-              if (quiz.attempts!.isEmpty)
+            if (quiz.attempts!.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'No attempt details available',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
               )
@@ -541,7 +631,8 @@ class _QuizAttemptHistoryPageState
                   shrinkWrap: true,
                   padding: const EdgeInsets.all(8),
                   itemCount: quiz.attempts!.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder:
+                      (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final attempt = quiz.attempts![index];
                     return _buildAttemptItem(attempt);
@@ -559,9 +650,10 @@ class _QuizAttemptHistoryPageState
     //     ? (attempt.quizzFinalScore / attempt.quizMaxScore * 100).round()
     //     : 0;
 
-    final scorePercentage = (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
-        ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
-        : 0;
+    final scorePercentage =
+        (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
+            ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
+            : 0;
 
     return Material(
       color: Colors.transparent,
@@ -590,7 +682,9 @@ class _QuizAttemptHistoryPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Attempt Id: ${attempt.quizUserAttemptId}',
+                      'Attempt Date: ${attempt.quizUserAnswerCreatedAt != null
+                          ? DateFormat('dd/MM/yy - HH:mm:ss').format(attempt.quizUserAnswerCreatedAt!)
+                          : '-'}',
                       // 'Score: ${attempt.quizzFinalScore}/${attempt.quizMaxScore}',
                       style: const TextStyle(
                         fontSize: 14,
@@ -600,7 +694,7 @@ class _QuizAttemptHistoryPageState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$scorePercentage%',
+                      'Attempt Id: ${attempt.quizUserAttemptId}',
                       style: TextStyle(
                         fontSize: 12,
                         color: _getScoreColor(scorePercentage),
@@ -612,13 +706,12 @@ class _QuizAttemptHistoryPageState
               ),
               Text(
                 attempt.quizUserAnswerCreatedAt != null
-                    ? DateFormat('dd MMM\nHH:mm').format(attempt.quizUserAnswerCreatedAt!)
+                    ? DateFormat(
+                      'dd MMM\nHH:mm',
+                    ).format(attempt.quizUserAnswerCreatedAt!)
                     : '-',
                 // DateFormat('dd MMM\nHH:mm').format(attempt.quizUserAnswerCreatedAt),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 textAlign: TextAlign.right,
               ),
             ],
@@ -642,9 +735,10 @@ class _QuizAttemptDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scorePercentage = (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
-        ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
-        : 0;
+    final scorePercentage =
+        (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
+            ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
+            : 0;
     // final scorePercentage = attempt.quizMaxScore > 0
     //     ? (attempt.quizzFinalScore / attempt.quizMaxScore * 100).round()
     //     : 0;
@@ -706,11 +800,20 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Quiz info
-                  _buildDetailRow('Quiz', attempt.quizTitle ?? 'Unknown attempt title'),
+                  _buildDetailRow(
+                    'Quiz',
+                    attempt.quizTitle ?? 'Unknown attempt title',
+                  ),
                   const SizedBox(height: 12),
-                  _buildDetailRow('Description', attempt.quizDescription ?? 'Unknown attempt description'),
+                  _buildDetailRow(
+                    'Description',
+                    attempt.quizDescription ?? 'Unknown attempt description',
+                  ),
                   const SizedBox(height: 12),
-                  _buildDetailRow('Status', attempt.quizStatus ?? 'Unknown attempt status'),
+                  _buildDetailRow(
+                    'Status',
+                    attempt.quizStatus ?? 'Unknown attempt status',
+                  ),
                   const SizedBox(height: 12),
                   _buildDetailRow(
                     'Score',
@@ -720,9 +823,11 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                   _buildDetailRow(
                     'Date',
                     // DateFormat('dd MMM yyyy HH:mm a').format(attempt.quizUserAnswerCreatedAt),
-                      attempt.quizUserAnswerCreatedAt != null
-                          ? DateFormat('dd MMM yyyy HH:mm a').format(attempt.quizUserAnswerCreatedAt!)
-                          : '-'
+                    attempt.quizUserAnswerCreatedAt != null
+                        ? DateFormat(
+                          'dd MMM yyyy HH:mm a',
+                        ).format(attempt.quizUserAnswerCreatedAt!)
+                        : '-',
                   ),
                   const SizedBox(height: 20),
 
@@ -739,7 +844,8 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                   Expanded(
                     child: ListView.separated(
                       itemCount: attempt.questions!.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      separatorBuilder:
+                          (context, index) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final question = attempt.questions?[index];
                         return _buildQuestionCard(question!);
@@ -781,15 +887,20 @@ class _QuizAttemptDetailModal extends StatelessWidget {
   }
 
   Widget _buildQuestionCard(QuizQuestionAttemptModel question) {
-    final correctOption = question.options?.firstWhere(
-          (option) => option.quizScoreValue == 1,
-      orElse: () => question.options!.first,
-    );
+    // final correctOption = question.options?.firstWhere(
+    //   (option) => option.quizScoreValue == 1,
+    //   orElse: () => question.options!.first,
+    // );
     final userSelectedOption = question.options?.firstWhere(
-          (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
+      (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
       orElse: () => question.options!.first,
     );
-    final isCorrect = userSelectedOption?.quizScoreValue == 1;
+    // final isCorrect = userSelectedOption?.quizScoreValue == 1;
+
+    // final userSelectedOption = question.options?.firstWhere(
+    //       (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
+    //   orElse: () => null,
+    // );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -797,7 +908,11 @@ class _QuizAttemptDetailModal extends StatelessWidget {
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isCorrect ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+color: Colors.blueGrey.withOpacity(0.3),
+          // color:
+          //     isCorrect
+          //         ? Colors.green.withOpacity(0.3)
+          //         : Colors.red.withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -806,19 +921,7 @@ class _QuizAttemptDetailModal extends StatelessWidget {
           // Question header
           Row(
             children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: isCorrect ? Colors.green : Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isCorrect ? Icons.check : Icons.close,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
+              const Icon(Icons.question_answer, color: Colors.blueAccent, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -832,6 +935,35 @@ class _QuizAttemptDetailModal extends StatelessWidget {
               ),
             ],
           ),
+          // // Question header
+          // Row(
+          //   children: [
+          //     Container(
+          //       width: 24,
+          //       height: 24,
+          //       decoration: BoxDecoration(
+          //         color: isCorrect ? Colors.green : Colors.red,
+          //         shape: BoxShape.circle,
+          //       ),
+          //       child: Icon(
+          //         isCorrect ? Icons.check : Icons.close,
+          //         color: Colors.white,
+          //         size: 16,
+          //       ),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     Expanded(
+          //       child: Text(
+          //         'Question ${question.quizQuestionOrder}',
+          //         style: const TextStyle(
+          //           fontSize: 14,
+          //           fontWeight: FontWeight.w600,
+          //           color: Colors.black87,
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
           const SizedBox(height: 12),
 
           // Question content
@@ -846,76 +978,27 @@ class _QuizAttemptDetailModal extends StatelessWidget {
           const SizedBox(height: 12),
 
           // User's answer
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isCorrect
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isCorrect ? Colors.green : Colors.red,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isCorrect ? Icons.check_circle : Icons.cancel,
-                  color: isCorrect ? Colors.green : Colors.red,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Your Answer:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(
-                        question.userSelectedAnswerText ?? 'Unknown answer',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Correct answer (if user was wrong)
-          if (!isCorrect) ...[
-            const SizedBox(height: 8),
+          if (userSelectedOption != null)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.blueAccent.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green, width: 1),
+                border: Border.all(
+                  color: Colors.blueAccent.withOpacity(0.3),
+                ),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.lightbulb,
-                    color: Colors.green,
-                    size: 20,
-                  ),
+                  const Icon(Icons.check_circle, color: Colors.blueAccent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Correct Answer:',
+                          'Your Answer:',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -923,19 +1006,117 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          correctOption?.quizContent ?? 'Unknown correct content',
+                          userSelectedOption.quizContent ?? 'Unknown answer',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[800],
                           ),
                         ),
+                        if (userSelectedOption.quizScoreValue != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Score: ${userSelectedOption.quizScoreValue}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+
+          // // User's answer
+          // Container(
+          //   padding: const EdgeInsets.all(12),
+          //   decoration: BoxDecoration(
+          //     color:
+          //         isCorrect
+          //             ? Colors.green.withOpacity(0.1)
+          //             : Colors.red.withOpacity(0.1),
+          //     borderRadius: BorderRadius.circular(8),
+          //     border: Border.all(
+          //       color: isCorrect ? Colors.green : Colors.red,
+          //       width: 1,
+          //     ),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       Icon(
+          //         isCorrect ? Icons.check_circle : Icons.cancel,
+          //         color: isCorrect ? Colors.green : Colors.red,
+          //         size: 20,
+          //       ),
+          //       const SizedBox(width: 8),
+          //       Expanded(
+          //         child: Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Text(
+          //               'Your Answer:',
+          //               style: TextStyle(
+          //                 fontSize: 12,
+          //                 fontWeight: FontWeight.w500,
+          //                 color: Colors.grey[600],
+          //               ),
+          //             ),
+          //             Text(
+          //               question.userSelectedAnswerText ?? 'Unknown answer',
+          //               style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          //
+          // // Correct answer (if user was wrong)
+          // if (!isCorrect) ...[
+          //   const SizedBox(height: 8),
+          //   Container(
+          //     padding: const EdgeInsets.all(12),
+          //     decoration: BoxDecoration(
+          //       color: Colors.green.withOpacity(0.1),
+          //       borderRadius: BorderRadius.circular(8),
+          //       border: Border.all(color: Colors.green, width: 1),
+          //     ),
+          //     child: Row(
+          //       children: [
+          //         const Icon(Icons.lightbulb, color: Colors.green, size: 20),
+          //         const SizedBox(width: 8),
+          //         Expanded(
+          //           child: Column(
+          //             crossAxisAlignment: CrossAxisAlignment.start,
+          //             children: [
+          //               Text(
+          //                 'Correct Answer:',
+          //                 style: TextStyle(
+          //                   fontSize: 12,
+          //                   fontWeight: FontWeight.w500,
+          //                   color: Colors.grey[600],
+          //                 ),
+          //               ),
+          //               Text(
+          //                 correctOption?.quizContent ??
+          //                     'Unknown correct content',
+          //                 style: TextStyle(
+          //                   fontSize: 14,
+          //                   color: Colors.grey[800],
+          //                 ),
+          //               ),
+          //             ],
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );

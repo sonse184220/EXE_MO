@@ -1,5 +1,6 @@
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
+import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_login_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_register_model.dart';
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
@@ -57,5 +58,9 @@ class AuthUsecase {
 
   Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword){
     return repository.changePassword(currentPassword, newPassword, confirmPassword);
+  }
+
+  Future<Result<UserDetailModel>> getUserDetail(String userId){
+    return repository.getUserDetail(userId);
   }
 }

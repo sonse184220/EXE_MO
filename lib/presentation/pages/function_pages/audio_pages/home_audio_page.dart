@@ -16,10 +16,15 @@ class HomeAudioPage extends ConsumerStatefulWidget {
 class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
   late final AudioUseCase _audioUseCase;
 
-  List<AudioModel> audioList = [];
-  bool isLoading = true;
+  TextEditingController searchController = TextEditingController();
 
+  List<AudioModel> audioList = [];
+  List<AudioModel> featuredAudios = [];
   late final List<Widget> featureList;
+
+  String searchQuery = '';
+
+  bool isLoading = true;
 
   // You may extract duration from metadata in the future; for now it's a placeholder
   String _formatDuration(String? url) {
@@ -33,6 +38,7 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
               .getAllAudios(); // assuming this returns List<AudioModel>
       setState(() {
         audioList = result.data!;
+        featuredAudios = _getRandomFeaturedAudios(result.data!);
         isLoading = false;
       });
     } catch (e) {
@@ -43,6 +49,11 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
     }
   }
 
+  List<AudioModel> _getRandomFeaturedAudios(List<AudioModel> source) {
+    final random = source.toList()..shuffle();
+    return random.take(2).toList();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -51,65 +62,15 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
     _audioUseCase = ref.read(audioUseCaseProvider);
 
     _loadAudioList();
-
-    // featureList = [
-    //   _buildSessionCard(
-    //     title: 'Affirmations to close your day',
-    //     duration: '15 min',
-    //     tags: ['Evening', 'Relax'],
-    //     play: () {
-    //       Navigator.push(
-    //         context,
-    //         MaterialPageRoute(builder: (context) => AudioPlayingPage()),
-    //       );
-    //     },
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'Meditation for deep sleep',
-    //     duration: '10 min',
-    //     tags: ['Sleep', 'Evening'],
-    //     play: null,
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'A daily mindfulness practice',
-    //     duration: '10 min',
-    //     tags: ['Daily', 'Relax'],
-    //     play: null,
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'A daily mindfulness practice',
-    //     duration: '10 min',
-    //     tags: ['Daily', 'Relax'],
-    //     play: null,
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'A daily mindfulness practice',
-    //     duration: '10 min',
-    //     tags: ['Daily', 'Relax'],
-    //     play: null,
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'A daily mindfulness practice',
-    //     duration: '10 min',
-    //     tags: ['Daily', 'Relax'],
-    //     play: null,
-    //   ),
-    //   _buildSessionCard(
-    //     title: 'A daily mindfulness practice',
-    //     duration: '10 min',
-    //     tags: ['Daily', 'Relax'],
-    //     play: null,
-    //   ),
-    // ];
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return SafeArea(
+      child: Scaffold(
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -197,167 +158,251 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
 
                               // Search bar
                               SizedBox(height: 16),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withAlpha(
-                                    (0.2 * 255).round(),
+                              TextField(
+                                controller: searchController,
+                                style: TextStyle(color: Colors.white),
+                                onChanged: (value) {
+                                  setState(() {
+                                    searchQuery = value;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white.withAlpha((0.2 * 255).round()),
+                                  prefixIcon: Icon(Icons.search, color: Colors.white.withAlpha(180)),
+                                  hintText: 'Search',
+                                  hintStyle: TextStyle(color: Colors.white.withAlpha(180)),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide.none,
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.search,
-                                      color: Colors.white.withAlpha(
-                                        (0.7 * 255).round(),
-                                      ),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Search',
-                                      style: TextStyle(
-                                        color: Colors.white.withAlpha(
-                                          (0.7 * 255).round(),
-                                        ),
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
 
+                              // Container(
+                              //   padding: EdgeInsets.symmetric(
+                              //     horizontal: 12,
+                              //     vertical: 8,
+                              //   ),
+                              //   decoration: BoxDecoration(
+                              //     color: Colors.white.withAlpha(
+                              //       (0.2 * 255).round(),
+                              //     ),
+                              //     borderRadius: BorderRadius.circular(20),
+                              //   ),
+                              //   child: Row(
+                              //     children: [
+                              //       Icon(
+                              //         Icons.search,
+                              //         color: Colors.white.withAlpha(
+                              //           (0.7 * 255).round(),
+                              //         ),
+                              //         size: 20,
+                              //       ),
+                              //       SizedBox(width: 8),
+                              //       Text(
+                              //         'Search',
+                              //         style: TextStyle(
+                              //           color: Colors.white.withAlpha(
+                              //             (0.7 * 255).round(),
+                              //           ),
+                              //           fontSize: 16,
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
+
                               // Featured meditations
                               SizedBox(height: 24),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
+                              SizedBox(
+                                height: 120,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: featuredAudios.length,
+                                  separatorBuilder: (_, __) => SizedBox(width: 12),
+                                  itemBuilder: (context, index) {
+                                    final audio = featuredAudios[index];
+                                    return Container(
+                                      width: 180,
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.orange,
-                                        borderRadius: BorderRadius.circular(10),
+                                        color: Color.fromRGBO(255, 171, 64, 0.8),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Evening Meditation',
+                                            audio.audioTitle ?? 'Untitled',
                                             style: TextStyle(
                                               color: Colors.white,
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
                                             ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          Text(
-                                            'to Relax',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          SizedBox(height: 8),
+                                          const Spacer(),
                                           Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                '5 min',
+                                                _formatDuration(audio.audioUrl),
                                                 style: TextStyle(
-                                                  color: Colors.white.withAlpha(
-                                                    (0.8 * 255).round(),
-                                                  ),
+                                                  color: Colors.white.withAlpha(200),
                                                   fontSize: 12,
                                                 ),
                                               ),
-                                              Container(
-                                                padding: EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(
-                                                  Icons.play_arrow,
-                                                  color: Colors.orange,
-                                                  size: 18,
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Navigator.push(context, MaterialPageRoute(
+                                                    builder: (_) => AudioPlayingPage(audioId: '',),
+                                                  ));
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(Icons.play_arrow, size: 16, color: Colors.orangeAccent),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.deepPurple.withAlpha(
-                                          (0.8 * 255).round(),
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Get Back',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          Text(
-                                            'to Sleep',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '8 min',
-                                                style: TextStyle(
-                                                  color: Colors.white.withAlpha(
-                                                    (0.8 * 255).round(),
-                                                  ),
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                              Container(
-                                                padding: EdgeInsets.all(6),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(
-                                                  Icons.play_arrow,
-                                                  color: Colors.deepPurple,
-                                                  size: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                    );
+                                  },
+                                ),
                               ),
+
+                              // Row(
+                              //   children: [
+                              //     Expanded(
+                              //       child: Container(
+                              //         padding: EdgeInsets.all(12),
+                              //         decoration: BoxDecoration(
+                              //           color: Colors.orange,
+                              //           borderRadius: BorderRadius.circular(10),
+                              //         ),
+                              //         child: Column(
+                              //           crossAxisAlignment:
+                              //               CrossAxisAlignment.start,
+                              //           children: [
+                              //             Text(
+                              //               'Evening Meditation',
+                              //               style: TextStyle(
+                              //                 color: Colors.white,
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //               ),
+                              //             ),
+                              //             Text(
+                              //               'to Relax',
+                              //               style: TextStyle(
+                              //                 color: Colors.white,
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //               ),
+                              //             ),
+                              //             SizedBox(height: 8),
+                              //             Row(
+                              //               mainAxisAlignment:
+                              //                   MainAxisAlignment.spaceBetween,
+                              //               children: [
+                              //                 Text(
+                              //                   '5 min',
+                              //                   style: TextStyle(
+                              //                     color: Colors.white.withAlpha(
+                              //                       (0.8 * 255).round(),
+                              //                     ),
+                              //                     fontSize: 12,
+                              //                   ),
+                              //                 ),
+                              //                 Container(
+                              //                   padding: EdgeInsets.all(4),
+                              //                   decoration: BoxDecoration(
+                              //                     color: Colors.white,
+                              //                     shape: BoxShape.circle,
+                              //                   ),
+                              //                   child: Icon(
+                              //                     Icons.play_arrow,
+                              //                     color: Colors.orange,
+                              //                     size: 18,
+                              //                   ),
+                              //                 ),
+                              //               ],
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ),
+                              //     SizedBox(width: 12),
+                              //     Expanded(
+                              //       child: Container(
+                              //         padding: EdgeInsets.all(12),
+                              //         decoration: BoxDecoration(
+                              //           color: Colors.deepPurple.withAlpha(
+                              //             (0.8 * 255).round(),
+                              //           ),
+                              //           borderRadius: BorderRadius.circular(10),
+                              //         ),
+                              //         child: Column(
+                              //           crossAxisAlignment:
+                              //               CrossAxisAlignment.start,
+                              //           children: [
+                              //             Text(
+                              //               'Get Back',
+                              //               style: TextStyle(
+                              //                 color: Colors.white,
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //               ),
+                              //             ),
+                              //             Text(
+                              //               'to Sleep',
+                              //               style: TextStyle(
+                              //                 color: Colors.white,
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //               ),
+                              //             ),
+                              //             SizedBox(height: 8),
+                              //             Row(
+                              //               mainAxisAlignment:
+                              //                   MainAxisAlignment.spaceBetween,
+                              //               children: [
+                              //                 Text(
+                              //                   '8 min',
+                              //                   style: TextStyle(
+                              //                     color: Colors.white.withAlpha(
+                              //                       (0.8 * 255).round(),
+                              //                     ),
+                              //                     fontSize: 12,
+                              //                   ),
+                              //                 ),
+                              //                 Container(
+                              //                   padding: EdgeInsets.all(6),
+                              //                   decoration: BoxDecoration(
+                              //                     color: Colors.white,
+                              //                     shape: BoxShape.circle,
+                              //                   ),
+                              //                   child: Icon(
+                              //                     Icons.play_arrow,
+                              //                     color: Colors.deepPurple,
+                              //                     size: 16,
+                              //                   ),
+                              //                 ),
+                              //               ],
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
 
                               // Featured for you section
                               SizedBox(height: 24),
@@ -378,19 +423,22 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => AllAudioPage(), // <-- Your target page
+                                          builder:
+                                              (context) =>
+                                                  AllAudioPage(), // <-- Your target page
                                         ),
                                       );
-                                    },child:
-                                  Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(
-                                        (0.7 * 255).round(),
+                                    },
+                                    child: Text(
+                                      'See all',
+                                      style: TextStyle(
+                                        color: Colors.white.withAlpha(
+                                          (0.7 * 255).round(),
+                                        ),
+                                        fontSize: 14,
                                       ),
-                                      fontSize: 14,
                                     ),
-                                  ),)
+                                  ),
                                 ],
                               ),
                             ],
@@ -408,16 +456,25 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                                 ),
                               )
                               : Expanded(
-                                child: ListView.separated(
-                                  itemCount: audioList.length,
-                                  itemBuilder: (context, index) {
-                                    final audio = audioList[index];
-                                    return _buildSessionCard(audio: audio);
-                                  },
-                                  separatorBuilder:
-                                      (context, index) =>
-                                          const SizedBox(height: 16),
-                                ),
+                                child: Builder(builder: (_) {
+                                  final filteredList = audioList.where((audio) =>
+                                      (audio.audioTitle ?? '')
+                                          .toLowerCase()
+                                          .contains(searchQuery.toLowerCase())).toList();
+                                  return ListView.separated(
+                                    // itemCount: audioList.length,
+                                    // itemBuilder: (context, index) {
+                                    //   final audio = audioList[index];
+                                    itemCount: filteredList.length,
+                                    itemBuilder: (context, index) {
+                                      final audio = filteredList[index];
+                                      return _buildSessionCard(audio: audio);
+                                    },
+                                    separatorBuilder:
+                                        (context, index) =>
+                                    const SizedBox(height: 16),
+                                  );
+                                }),
                               ),
 
                           // Expanded(
@@ -530,7 +587,7 @@ class _HomeAudioPageState extends ConsumerState<HomeAudioPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AudioPlayingPage()),
+                    MaterialPageRoute(builder: (_) => AudioPlayingPage(audioId: '',)),
                   );
                 },
                 // onTap: () {

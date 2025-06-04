@@ -7,6 +7,7 @@ class AudioModel {
   final bool? audioIsPremium;
   final String? audioStatus;
   final String? subAudioCategoryId;
+  final String? subAudioCategoryName;
 
   AudioModel({
     this.audioId,
@@ -17,6 +18,7 @@ class AudioModel {
     this.audioIsPremium,
     this.audioStatus,
     this.subAudioCategoryId,
+    this.subAudioCategoryName,
   });
 
   factory AudioModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class AudioModel {
       audioIsPremium: json['audioIsPremium'] as bool?,
       audioStatus: json['audioStatus'] as String?,
       subAudioCategoryId: json['subAudioCategoryId'] as String?,
+      subAudioCategoryName: json['subAudioCategoryName'] as String?,
     );
   }
 
