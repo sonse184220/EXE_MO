@@ -5,6 +5,7 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/article/article_model.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/articles/article_detail.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/home_audio_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
@@ -276,6 +277,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   title: 'Audio Library',
                                   subtitle: 'Find your own peace',
                                   icon: Icons.audio_file_outlined,
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> HomeAudioPage()))
+
                                 ),
                                 _buildHealingSessionCard(
                                   image:

@@ -41,7 +41,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // If stored as JSON string, parse it
       final Map<String, dynamic> jsonMap = json.decode(tokenModelJson);
       tokenModelObject = TokenModel.fromJson(jsonMap);
-      print(tokenModelObject.accessToken);
+      if (kDebugMode) {
+        print(tokenModelObject.accessToken);
+      }
 
       final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
 
@@ -70,7 +72,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Use the utility method for JWT decoding
       final payloadMap = AuthUtilMethods.decodeJwtPayload(token);
 
-      print(token);
+      if (kDebugMode) {
+        print(token);
+      }
 
       // Create UserInfo from payload
       return FromTokenUserInfo.fromJwtPayload(payloadMap);
