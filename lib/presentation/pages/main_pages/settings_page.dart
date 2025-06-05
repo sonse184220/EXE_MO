@@ -5,6 +5,7 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
 import 'package:inner_child_app/presentation/pages/customer_services_page/help_screen_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/payment_transaction_pages/payment_transaction_history.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/user_information/profile_edit_page.dart';
 import 'package:inner_child_app/presentation/pages/subscription_pages/subscription_page.dart';
 
@@ -37,23 +38,26 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           );
         },
       ),
-      _buildSettingItem(
-        icon: Icons.star,
-        color: Colors.amber,
-        title: 'Family Moment Premium',
-        tap: null,
-      ),
-      _buildSettingItem(
-        icon: Icons.photo_album,
-        color: Colors.red.shade300,
-        title: 'Album Settings',
-        tap: null,
-      ),
+      // _buildSettingItem(
+      //   icon: Icons.star,
+      //   color: Colors.amber,
+      //   title: 'Family Moment Premium',
+      //   tap: null,
+      // ),
+      // _buildSettingItem(
+      //   icon: Icons.photo_album,
+      //   color: Colors.red.shade300,
+      //   title: 'Album Settings',
+      //   tap: null,
+      // ),
       _buildSettingItem(
         icon: Icons.settings,
         color: Colors.red.shade300,
-        title: 'App Settings',
-        tap: null,
+        title: 'Your payment transactions',
+        tap: () { Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PaymentTransactionHistory()),
+        );}
       ),
       _buildSettingItem(
         icon: Icons.help_outline,

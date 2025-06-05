@@ -13,9 +13,11 @@ import 'package:inner_child_app/data/datasources/remote/help_category_api_servic
 import 'package:inner_child_app/data/datasources/remote/mood_journal_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/mood_journal_type_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/notification_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/payment_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_attempt_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/quiz_category_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/subscription_api_service.dart';
 import 'package:inner_child_app/data/repositories/audio_category_repository.dart';
 import 'package:inner_child_app/data/repositories/audio_repository.dart';
 import 'package:inner_child_app/data/repositories/article_repository.dart';
@@ -28,9 +30,11 @@ import 'package:inner_child_app/data/repositories/help_category_repository.dart'
 import 'package:inner_child_app/data/repositories/mood_journal_repository.dart';
 import 'package:inner_child_app/data/repositories/mood_journal_type_repository.dart';
 import 'package:inner_child_app/data/repositories/notification_repository.dart';
+import 'package:inner_child_app/data/repositories/payment_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_attempt_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_category_repository.dart';
 import 'package:inner_child_app/data/repositories/quiz_repository.dart';
+import 'package:inner_child_app/data/repositories/subscription_repository.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
 import 'package:inner_child_app/domain/repositories/i_article_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_audio_category_repository.dart';
@@ -44,9 +48,11 @@ import 'package:inner_child_app/domain/repositories/i_help_category_repository.d
 import 'package:inner_child_app/domain/repositories/i_mood_journal_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_mood_journal_type_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_notification_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_payment_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_attempt_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_category_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_quiz_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_subscription_repository.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/domain/usecases/audio_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/audio_subcategory_usecase.dart';
@@ -59,9 +65,11 @@ import 'package:inner_child_app/domain/usecases/help_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
+import 'package:inner_child_app/domain/usecases/payment_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_attempt_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
+import 'package:inner_child_app/domain/usecases/subscription_usecase.dart';
 import '../../../data/datasources/remote/authentication_api_service.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -141,6 +149,15 @@ final quizAttemptApiServiceProvider = Provider(
 final helpCategoryApiServiceProvider = Provider(
   (ref) => HelpCategoryApiService(ref.read(dioClientProvider)),
 );
+
+final subscriptionApiServiceProvider = Provider(
+      (ref) => SubscriptionApiService(ref.read(dioClientProvider)),
+);
+
+final paymentApiServiceProvider = Provider(
+      (ref) => PaymentApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -212,6 +229,15 @@ final quizAttemptRepositoryProvider = Provider<IQuizAttemptRepository>(
 final helpCategoryRepositoryProvider = Provider<IHelpCategoryRepository>(
     (ref)=> HelpCategoryRepository(ref.read(helpCategoryApiServiceProvider)),
 );
+
+final subscriptionRepositoryProvider = Provider<ISubscriptionRepository>(
+      (ref)=> SubscriptionRepository(ref.read(subscriptionApiServiceProvider)),
+);
+
+final paymentRepositoryProvider = Provider<IPaymentRepository>(
+      (ref)=> PaymentRepository(ref.read(paymentApiServiceProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // ⚙️ Use Cases
 // ─────────────────────────────────────────────────────────────
@@ -272,8 +298,17 @@ final quizCategoryUseCaseProvider = Provider(
 final quizAttemptUseCaseProvider = Provider(
   (ref) => QuizAttemptUsecase(ref.read(quizAttemptRepositoryProvider)),
 );
+
 final helpCategoryUseCaseProvider = Provider(
     (ref)=>HelpCategoryUseCase(ref.read(helpCategoryRepositoryProvider))
+);
+
+final subscriptionUseCaseProvider = Provider(
+        (ref)=>SubscriptionUsecase(ref.read(subscriptionRepositoryProvider))
+);
+
+final paymentUseCaseProvider = Provider(
+        (ref)=>PaymentUsecase(ref.read(paymentRepositoryProvider))
 );
 
 // ─────────────────────────────────────────────────────────────
