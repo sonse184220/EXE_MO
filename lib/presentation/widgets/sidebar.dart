@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
 
 class CustomSideBar extends StatefulWidget {
   final int currentIndex;
@@ -21,25 +22,26 @@ class _CustomSideBarState extends State<CustomSideBar> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.brown.shade700,
+                color: Color(0xFFA8BF8A),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
                     child: Icon(
                       Icons.admin_panel_settings,
                       size: 30,
-                      color: Colors.brown,
+                      color: Color(0xFFE37083),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     'Admin Panel',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.brown.shade600,
+                      // color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -47,7 +49,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
                   Text(
                     'Manage your application',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: Colors.brown.shade400,
                       fontSize: 12,
                     ),
                   ),
@@ -68,22 +70,28 @@ class _CustomSideBarState extends State<CustomSideBar> {
             ),
             _buildDrawerItem(
               icon: Icons.analytics,
-              title: 'Analytics',
+              title: 'Audio Category Manage',
               index: 2,
               selected: widget.currentIndex == 2,
             ),
             _buildDrawerItem(
               icon: Icons.content_paste,
-              title: 'Content Management',
+              title: 'Audio Manage',
               index: 3,
               selected: widget.currentIndex == 3,
             ),
-            const Divider(),
+            // const Divider(),
             _buildDrawerItem(
               icon: Icons.settings,
-              title: 'Admin Settings',
+              title: 'Mood Journal Type Manage',
               index: 4,
               selected: widget.currentIndex == 4,
+            ),
+            _buildDrawerItem(
+              icon: Icons.settings,
+              title: 'Transaction Manage',
+              index: 5,
+              selected: widget.currentIndex == 5,
             ),
             const Divider(),
             ListTile(
@@ -94,7 +102,11 @@ class _CustomSideBarState extends State<CustomSideBar> {
               ),
               onTap: () {
                 // Implement logic to exit admin mode
-                Navigator.pop(context);
+                // Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Login()),
+                );
                 // You might want to navigate to a different screen or reset state
                 // For example: Navigator.pushReplacementNamed(context, '/user-mode');
               },

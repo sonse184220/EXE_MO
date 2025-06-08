@@ -70,10 +70,10 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
       if (!mounted) return;
 
       if (result.isSuccess) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => MainScreen()),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (_) => MainScreen()),
+        // );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result.error ?? "Login failed")),

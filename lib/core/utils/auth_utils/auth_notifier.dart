@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_util_methods.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
+import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
 import 'package:inner_child_app/domain/entities/auth/from_token_user_info.dart';
@@ -13,19 +16,86 @@ import 'package:inner_child_app/domain/entities/auth/token_model.dart';
 /// Auth notifier for authentication state management
 class AuthNotifier extends StateNotifier<AuthState> {
   final SecureStorageUtils _storage;
+  final Dio _refreshDio;
+
+  Timer? _countdownTimer;
+  int _remainingSeconds = 0;
+
   final tokenModel = AppConstants.tokenModel;
 
   AuthNotifier(this._storage)
-    : super(const AuthState(status: AuthStatus.loading)) {
+    : _refreshDio = Dio(BaseOptions(
+    baseUrl: AppConstants.baseURL, // Replace with your base URL
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
+  )), super(const AuthState(status: AuthStatus.loading)) {
     _initialize();
   }
 
-  /// Initialize auth state by checking for stored token
-  // Future<void> _initialize() async {
-  //   final token = await _storage.read(tokenModel);
-  //   state = token != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
-  // }
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
 
+  /// Start countdown timer for token expiry
+  void _startTokenExpiryCountdown() {
+    _countdownTimer?.cancel();
+
+    if (state.userInfo == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    _remainingSeconds = state.userInfo!.expiration - now;
+
+    if (_remainingSeconds <= 0) {
+      // Token already expired, refresh immediately
+      _handleTokenExpiry();
+      return;
+    }
+
+    if (kDebugMode) {
+      print('🕐 Token expires in $_remainingSeconds seconds');
+    }
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _remainingSeconds--;
+
+      if (_remainingSeconds % 60 == 0) {
+        if (kDebugMode) {
+          print('🕐 Token expires in ${_remainingSeconds ~/ 60} minutes');
+        }
+      }
+
+      if (_remainingSeconds <= 0) {
+        timer.cancel();
+        _handleTokenExpiry();
+      }
+    });
+  }
+
+  /// Handle token expiry by attempting to refresh
+  Future<void> _handleTokenExpiry() async {
+    if (kDebugMode) {
+      print('⏰ Token expired, attempting refresh...');
+    }
+
+    // state = state.copyWith(status: AuthStatus.loading);
+
+    final refreshed = await _refreshToken();
+    if (refreshed) {
+      await _updateStateWithNewToken();
+      _startTokenExpiryCountdown(); // Restart countdown with new token
+    } else {
+      // Refresh failed, logout user
+      await _storage.delete(tokenModel);
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      if (kDebugMode) {
+        print('❌ Token refresh failed, user logged out');
+      }
+    }
+  }
+
+  /// Initialize auth state by checking for stored token
   Future<void> _initialize() async {
     try {
       final tokenModelJson = await _storage.read(tokenModel);
@@ -47,18 +117,62 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
 
-      // Check if token is expired
-      if (userInfo != null && !userInfo.isExpired) {
-        state = AuthState(
-          status: AuthStatus.authenticated,
-          userInfo: userInfo,
-          token: tokenModelObject.accessToken,
-        );
+      // Check if token is expired or close to expiry
+      if (userInfo != null) {
+        if (userInfo.isExpired) {
+          // Try to refresh token first
+          final refreshed = await _refreshToken();
+          if (refreshed) {
+            // Re-read the new token and update state
+            await _updateStateWithNewToken();
+            _startTokenExpiryCountdown();
+            state = AuthState(
+              status: AuthStatus.authenticated,
+              userInfo: userInfo,
+              token: tokenModelObject.accessToken,
+            );
+          } else {
+            // Refresh failed, remove token
+            await _storage.delete(tokenModel);
+            state = const AuthState(status: AuthStatus.unauthenticated);
+          }
+        } else if (shouldRefreshToken) {
+          // Token is close to expiry, proactively refresh
+          await _refreshToken();
+          await _updateStateWithNewToken();
+          _startTokenExpiryCountdown();
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            userInfo: userInfo,
+            token: tokenModelObject.accessToken,
+          );
+        } else {
+          // Token is valid
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            userInfo: userInfo,
+            token: tokenModelObject.accessToken,
+          );
+          _startTokenExpiryCountdown();
+        }
       } else {
-        // Token is expired, remove it
+        // Invalid token format, remove it
         await _storage.delete(tokenModel);
         state = const AuthState(status: AuthStatus.unauthenticated);
       }
+
+      // // Check if token is expired
+      // if (userInfo != null && !userInfo.isExpired) {
+      //   state = AuthState(
+      //     status: AuthStatus.authenticated,
+      //     userInfo: userInfo,
+      //     token: tokenModelObject.accessToken,
+      //   );
+      // } else {
+      //   // Token is expired, remove it
+      //   await _storage.delete(tokenModel);
+      //   state = const AuthState(status: AuthStatus.unauthenticated);
+      // }
     } catch (e) {
       debugPrint('Error initializing auth state: $e');
       // Clean up invalid token data
@@ -66,6 +180,73 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
+
+  Future<void> _updateStateWithNewToken() async {
+    try {
+      final tokenModelJson = await _storage.read(tokenModel);
+      if (tokenModelJson != null) {
+        final tokenModelObject = TokenModel.fromJson(json.decode(tokenModelJson));
+        final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
+
+        if (userInfo != null && !userInfo.isExpired) {
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            userInfo: userInfo,
+            token: tokenModelObject.accessToken,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating state with new token: $e');
+    }
+  }
+
+  Future<bool> _refreshToken() async {
+    try {
+      final tokenModelJson = await _storage.read(tokenModel);
+      if (tokenModelJson == null) return false;
+
+      final tokenModelObject = TokenModel.fromJson(json.decode(tokenModelJson));
+
+      // Call refresh token API
+      final response = await _refreshDio.post(
+        'innerchild/auth/refresh-token', // Replace with your actual refresh endpoint
+        data: {'refreshToken': tokenModelObject.refreshToken},
+      );
+
+      if (response.statusCode == 200) {
+        final newTokenModel = TokenModel.fromJson(response.data);
+        final newTokenJson = jsonEncode(newTokenModel.toJson());
+        await _storage.write(tokenModel, newTokenJson);
+
+        if (kDebugMode) {
+          print('✅ Token refreshed successfully in AuthNotifier');
+        }
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ Token refresh error in AuthNotifier: $e');
+      return false;
+    }
+  }
+
+  // Public method to handle token refresh from UI
+  Future<bool> refreshTokenIfNeeded() async {
+    if (shouldRefreshToken || (state.userInfo?.isExpired ?? true)) {
+      // state = state.copyWith(status: AuthStatus.loading);
+
+      final refreshed = await _refreshToken();
+      if (refreshed) {
+        await _updateStateWithNewToken();
+        _startTokenExpiryCountdown();
+      }
+      return refreshed;
+    }
+    return true; // Token is still valid
+  }
+
 
   FromTokenUserInfo? _extractUserInfoFromToken(String token) {
     try {
@@ -82,27 +263,53 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('Error extracting user info from token: $e');
       return null;
     }
-    // try {
-    //   // Split the token into parts
-    //   final parts = token.split('.');
-    //   if (parts.length != 3) return null;
-    //
-    //   // Decode the payload (second part)
-    //   final payload = parts[1];
-    //
-    //   // Add padding if necessary
-    //   final normalizedPayload = base64Url.normalize(payload);
-    //   final decoded = utf8.decode(base64Url.decode(normalizedPayload));
-    //
-    //   // Parse JSON
-    //   final Map<String, dynamic> payloadMap = json.decode(decoded);
-    //
-    //   // Create UserInfo from payload
-    //   return FromTokenUserInfo.fromJwtPayload(payloadMap);
-    // } catch (e) {
-    //   debugPrint('Error extracting user info from token: $e');
-    //   return null;
-    // }
+  }
+
+  Future<void> loginWithProfileToken(List<AccountProfile> profiles) async {
+    try {
+      state = state.copyWith(status: AuthStatus.loading);
+
+      if (profiles.isEmpty) {
+          throw Exception('Invalid profiles format');
+        }
+
+      final profilesJson = jsonEncode(
+        profiles.map((p) => p.toJson()).toList(),
+      );
+      String profilesKey = AppConstants.profiles;
+      await _storage.write(profilesKey, profilesJson);
+
+      // final userInfo = _extractUserInfoFromToken(tokenModel.accessToken);
+
+      // if (userInfo == null) {
+      //   throw Exception('Invalid token format');
+      // }
+      //
+      // if (userInfo.isExpired) {
+      //   throw Exception('Token is expired');
+      // }
+
+      // final tokenModelToJson = jsonEncode(tokenModel.toJson());
+      // String tokenModelString = AppConstants.tokenModel;
+      //
+      // await _storage.write(tokenModelString, tokenModelToJson);
+
+      // Set to profileSelection status instead of authenticated
+      state = AuthState(
+        status: AuthStatus.profileSelection,
+        userInfo: null,
+        token: null,
+      );
+      if (kDebugMode) {
+        print('setState profileSelection: ${state.status}');
+      }
+    } catch (e) {
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      if (kDebugMode) {
+        print('Error setState profileSelection: $e');
+      }
+      rethrow;
+    }
   }
 
   /// Login user and update auth state
@@ -130,22 +337,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         userInfo: userInfo,
         token: tokenModel.accessToken,
       );
+
+      _startTokenExpiryCountdown();
+
+      if (kDebugMode) {
+        print('setState authenticated: ${state.status}');
+      }
     } catch (e) {
       state = const AuthState(status: AuthStatus.unauthenticated);
       rethrow;
     }
   }
-
-  // Future<void> login(String token) async {
-  //   try {
-  //     state = AuthStatus.loading;
-  //     await _storage.write(tokenModel, token);
-  //     state = AuthStatus.authenticated;
-  //   } catch (e) {
-  //     state = AuthStatus.unauthenticated;
-  //     rethrow;
-  //   }
-  // }
 
   /// Logout user and update auth state
   Future<void> logout() async {
@@ -153,24 +355,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.loading);
       await _storage.delete(tokenModel);
       state = const AuthState(status: AuthStatus.unauthenticated);
+      if (kDebugMode) {
+        print('setState unauthenticated: ${state.status}');
+      }
     } catch (e) {
       // Revert to previous authenticated state if logout fails
       state = state.copyWith(status: AuthStatus.authenticated);
       rethrow;
     }
   }
-
-  // Future<void> logout() async {
-  //   try {
-  //     state = AuthStatus.loading;
-  //     await _storage.delete(tokenModel);
-  //     state = AuthStatus.unauthenticated;
-  //   } catch (e) {
-  //     // Revert to previous authenticated state if logout fails
-  //     state = AuthStatus.authenticated;
-  //     rethrow;
-  //   }
-  // }
 
   /// Verify if token is still valid
   Future<void> checkAuthStatus() async {
@@ -201,11 +394,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
         if (state != newState) {
           state = newState;
+          _startTokenExpiryCountdown();
         }
       } else {
-        // Token is expired or invalid, remove it
-        await _storage.delete(tokenModel);
-        state = const AuthState(status: AuthStatus.unauthenticated);
+        // Token is expired, try to refresh
+        final refreshed = await _refreshToken();
+        if (refreshed) {
+          await _updateStateWithNewToken();
+          _startTokenExpiryCountdown();
+        } else {
+          // Refresh failed, remove token
+          await _storage.delete(tokenModel);
+          state = const AuthState(status: AuthStatus.unauthenticated);
+        }
+        // // Token is expired or invalid, remove it
+        // await _storage.delete(tokenModel);
+        // state = const AuthState(status: AuthStatus.unauthenticated);
       }
     } catch (e) {
       debugPrint('Error checking auth status: $e');
@@ -214,20 +418,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Future<void> checkAuthStatus() async {
-  //   final token = await _storage.read(tokenModel);
-  //   final newState = token != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
-  //
-  //   if (state != newState) {
-  //     state = newState;
-  //   }
-  // }
-
   bool get shouldRefreshToken {
     if (state.userInfo == null) return false;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final timeUntilExpiry = state.userInfo!.expiration - now;
-    return timeUntilExpiry <= 300; // 5 minutes
+    return timeUntilExpiry <= 60; // 5 minutes
   }
 
   // Public getters for accessing user information safely

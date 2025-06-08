@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
@@ -102,11 +104,14 @@ class LoginPage extends ConsumerState<Login> {
 
     final result = await _authUseCase.loginWithCredentials(loginModel);
 
+    if (!mounted) return;
+
     if (result.isSuccess) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileChoosingPage()),
-      );
+      // context.go('/user${AppRoute.profileChoosing}');
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const ProfileChoosingPage()),
+      // );
     } else {
       Notify.showFlushbar(
         result.error ?? 'Login failed. Please check your credentials',

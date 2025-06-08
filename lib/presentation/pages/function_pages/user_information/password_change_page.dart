@@ -167,14 +167,14 @@ class _PasswordChangePageState extends ConsumerState<PasswordChangePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return  SafeArea(
+      child:  Scaffold(
       body: GestureDetector(
         // Dismiss keyboard when tapping outside of text fields
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: SafeArea(
-          child: LayoutBuilder(
+        child:LayoutBuilder(
             builder: (context, constraints) {
               return ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),

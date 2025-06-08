@@ -282,14 +282,14 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+      child:  Scaffold(
       body: GestureDetector(
         // Dismiss keyboard when tapping outside of text fields
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: SafeArea(
-          child: LayoutBuilder(
+        child: LayoutBuilder(
             builder: (context, constraints) {
               return
               // SingleChildScrollView(

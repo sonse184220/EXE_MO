@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
@@ -32,10 +34,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         color: Colors.grey,
         title: 'Profile',
         tap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ProfileEditPage()),
-          );
+          context.go('usercailon/${AppRoute.profileEdit}');
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => ProfileEditPage()),
+          // );
         },
       ),
       // _buildSettingItem(
@@ -88,10 +91,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         tap: () async {
           final result = await _authUsecase.logout();
           if(result.isSuccess) {
-            Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Login()),
-                  );
+            // Navigator.push(
+            //         context,
+            //         MaterialPageRoute(builder: (context) => Login()),
+            //       );
           }else{
             Notify.showFlushbar('Logout fail');
           }
