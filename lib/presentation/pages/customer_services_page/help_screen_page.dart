@@ -25,7 +25,7 @@ class _HelpScreenPageState extends State<HelpScreenPage> {
   int selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       appBar: AppBar(
         title: const Text(
           'Help Center',
@@ -51,15 +51,15 @@ class _HelpScreenPageState extends State<HelpScreenPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-               Expanded(child: _buildTabSelector('FAQ', 0)) ,
-                 Expanded(child: _buildTabSelector('Contact us', 1))
+                Expanded(child: _buildTabSelector('FAQ', 0)) ,
+                Expanded(child: _buildTabSelector('Contact us', 1))
               ],
             ),
             Expanded(child: helpSection[selectedIndex]),
           ],
         ),
       ),
-    );
+    ));
   }
   Widget _buildTabSelector(String title, int index) {
     bool isSelected = selectedIndex == index;

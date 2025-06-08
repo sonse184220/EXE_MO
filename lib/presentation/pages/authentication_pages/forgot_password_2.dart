@@ -158,10 +158,10 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
       onTap: () {
         FocusScope.of(context).unfocus();
       },
-      child: Scaffold(
+      child: SafeArea(
+        child:  Scaffold(
         resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          child: Padding(
+        body: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

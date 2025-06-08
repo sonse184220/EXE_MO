@@ -54,8 +54,14 @@ dependencies:
   url_launcher: ^6.3.1
   audioplayers: ^6.4.0
   http: ^1.4.0
+  #  flutter_launcher_icons: ^0.14.3
+  loading_animation_widget: ^1.3.0
+#  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.6
+
   flutter_test:
     sdk: flutter
 
@@ -67,6 +73,24 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.15
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/appLogo.png"
+
+flutter_native_splash:
+  color: "#89B7C2"  # SPRING SKY
+  image: assets/images/appLogo.png
+  color_dark: "#89B7C2"
+  image_dark: assets/images/appLogo.png
+
+  android_12:
+    image: assets/images/appLogo.png
+    color: "#89B7C2"
+
+  ios: true
+  android: true
+  web: false
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -85,9 +109,9 @@ flutter:
   assets:
     - assets/images/
     - assets/lotties/
-#    - assets/images/appLogo.png
-#    - assets/images/googleIcon.png
-#    - assets/images/moodTrackerHomeCard.png
+  #    - assets/images/appLogo.png
+  #    - assets/images/googleIcon.png
+  #    - assets/images/moodTrackerHomeCard.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

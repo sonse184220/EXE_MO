@@ -247,9 +247,9 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return  SafeArea(
+      child:  Scaffold(
+      body:LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),

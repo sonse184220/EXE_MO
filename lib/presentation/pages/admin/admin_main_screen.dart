@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:inner_child_app/presentation/pages/admin/admin_home_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/audio_category_manage_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/audio_manage_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/mood_journal_type_manage_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/transaction_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/user_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/goals_page.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/notification.dart';
@@ -23,9 +27,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     // const AdminSettingsPage(),
     const AdminHomePage(),
     const UserManagePage(),
-    const GoalsPage(),
-    const SettingsPage(),
-    const NotificationPage(),
+    const AudioCategoryManagePage(),
+    const AudioManagePage(),
+    const MoodJournalTypeManagePage(),
+    const TransactionManagePage(),
   ];
 
   void _onAdminItemTapped(int index) {
@@ -47,7 +52,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         ),
         appBar: AppBar(
           title: const Text('Admin Dashboard'),
-          backgroundColor: Colors.brown.shade700,
+          backgroundColor: Color(0xFFA8BF8A),
           elevation: 0,
         ),
         body: currentPage,

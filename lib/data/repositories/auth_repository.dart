@@ -54,11 +54,13 @@ class AuthRepository implements IAuthRepository {
             (data as List<dynamic>)
                 .map((e) => AccountProfile.fromJson(e))
                 .toList();
-        final profilesJson = jsonEncode(
-          profiles.map((p) => p.toJson()).toList(),
-        );
-        String profilesKey = AppConstants.profiles;
-        await _secureStorageUtils.write(profilesKey, profilesJson);
+
+        await _authNotifier.loginWithProfileToken(profiles);
+        // final profilesJson = jsonEncode(
+        //   profiles.map((p) => p.toJson()).toList(),
+        // );
+        // String profilesKey = AppConstants.profiles;
+        // await _secureStorageUtils.write(profilesKey, profilesJson);
       } else {
         throw Exception('Login failed: ${response.statusCode}');
       }
@@ -92,11 +94,13 @@ class AuthRepository implements IAuthRepository {
         (data as List<dynamic>)
             .map((e) => AccountProfile.fromJson(e))
             .toList();
-        final profilesJson = jsonEncode(
-          profiles.map((p) => p.toJson()).toList(),
-        );
-        String profilesKey = AppConstants.profiles;
-        await _secureStorageUtils.write(profilesKey, profilesJson);
+
+        await _authNotifier.loginWithProfileToken(profiles);
+        // final profilesJson = jsonEncode(
+        //   profiles.map((p) => p.toJson()).toList(),
+        // );
+        // String profilesKey = AppConstants.profiles;
+        // await _secureStorageUtils.write(profilesKey, profilesJson);
       } else {
         throw Exception('Login with Google failed: ${response.statusCode}');
       }
@@ -169,18 +173,6 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String>> editProfile(ProfileEditModel profile) async {
     try {
-      // final jsonString  = await _secureStorageUtils.read(AppConstants.profiles);
-      //
-      // if (jsonString  == null || jsonString .isEmpty) {
-      //   return Result.failure('No profiles found in your login session.');
-      // }
-
-      // final List<dynamic> jsonList = jsonDecode(jsonString);
-      // final List<AccountProfile> profiles = jsonList
-      //     .map(
-      //       (json) => AccountProfile.fromJson(json as Map<String, dynamic>),
-      // )
-      //     .toList();
       final response = await _apiService.editProfile(profile);
       return Result.success('okla update profile');
     } on DioException catch (e) {

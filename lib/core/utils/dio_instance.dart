@@ -1,19 +1,27 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
 import 'package:inner_child_app/domain/entities/auth/token_model.dart';
 import '../utils/secure_storage_utils.dart';
 
 class DioClient {
   final Dio dio;
+  final SecureStorageUtils _storage;
+  final Dio _refreshDio;
 
   DioClient(SecureStorageUtils storage)
-    : dio = Dio(
+    :_storage = storage, dio = Dio(
         BaseOptions(
-          // baseUrl: 'http://178.128.218.214:5000/',
-          baseUrl: 'http://127.0.0.1:5000/',
-          // baseUrl: 'http://10.0.2.2:5000/',
+          baseUrl: AppConstants.baseURL,
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+      ),
+      _refreshDio = Dio(
+        BaseOptions(
+          baseUrl: AppConstants.baseURL,
           connectTimeout: const Duration(seconds: 60),
           receiveTimeout: const Duration(seconds: 60),
         ),
@@ -31,59 +39,147 @@ class DioClient {
             if (token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
             }
-
           }
 
           // 🔍 Debug logging
-          print('📤 [REQUEST]');
-          print('➡️ URL: ${options.uri}');
-          print('➡️ Method: ${options.method}');
-          print('➡️ Headers: ${options.headers}');
-          print('➡️ Data: ${options.data}');
+          if (kDebugMode) {
+            print('📤 [REQUEST]');
+            print('➡️ URL: ${options.uri}');
+            print('➡️ Method: ${options.method}');
+            print('➡️ Headers: ${options.headers}');
+            print('➡️ Data: ${options.data}');
+          }
 
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print('✅ [RESPONSE]');
-          print('⬅️ URL: ${response.requestOptions.uri}');
-          print('⬅️ Status Code: ${response.statusCode}');
-          print('⬅️ Headers: ${response.headers}');
-          print('⬅️ Data: ${response.data}');
+          if (kDebugMode) {
+            print('✅ [RESPONSE]');
+            print('⬅️ URL: ${response.requestOptions.uri}');
+            print('⬅️ Status Code: ${response.statusCode}');
+            print('⬅️ Headers: ${response.headers}');
+            print('⬅️ Data: ${response.data}');
+          }
           return handler.next(response);
         },
-        onError: (e, handler) {
-          print('''❌ ⛔️ [ERROR]
+        onError: (e, handler) async {
+          if (kDebugMode) {
+            print('''❌ ⛔️ [ERROR]
 [URL]     ${e.requestOptions.uri}
 [Message] ${e.message}
 [Status]  ${e.response?.statusCode}
 [Data]    ${e.response?.data}
 [Headers] ${e.response?.headers}
 ''');
+          }
+
+          if (e.response?.statusCode == 401) {
+            try {
+              final refreshed = await _refreshToken();
+              if (refreshed) {
+                // Retry the original request with new token
+                final retryResponse = await _retryRequest(e.requestOptions);
+                return handler.resolve(retryResponse);
+              }
+            } catch (refreshError) {
+              if (kDebugMode) {
+                print('Token refresh failed: $refreshError');
+              }
+              // Let the original error continue
+            }
+          }
+
           return handler.next(e);
         },
       ),
     );
   }
 
+  Future<bool> _refreshToken() async {
+    try {
+      final jsonString = await _storage.read(AppConstants.tokenModel);
+      if (jsonString == null) return false;
+
+      final tokenModel = TokenModel.fromJson(jsonDecode(jsonString));
+      print('refreshtoken: ${tokenModel.refreshToken}');
+
+      // Call refresh token API
+      final response = await _refreshDio.post(
+        'innerchild/auth/refresh-token', // Replace with your actual refresh endpoint
+        data: {'refreshToken': tokenModel.refreshToken},
+      );
+
+      if (response.statusCode == 200) {
+        final newTokenModel = TokenModel.fromJson(response.data);
+        final newTokenJson = jsonEncode(newTokenModel.toJson());
+        await _storage.write(AppConstants.tokenModel, newTokenJson);
+
+        if (kDebugMode) {
+          print('✅ Token refreshed successfully');
+        }
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Token refresh error: $e');
+      }
+      return false;
+    }
+  }
+
+  Future<Response> _retryRequest(RequestOptions requestOptions) async {
+    // Get the new token
+    final jsonString = await _storage.read(AppConstants.tokenModel);
+    if (jsonString != null) {
+      final tokenModel = TokenModel.fromJson(jsonDecode(jsonString));
+      requestOptions.headers['Authorization'] = 'Bearer ${tokenModel.accessToken}';
+    }
+
+    // Retry the request
+    return dio.request(
+      requestOptions.path,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+      options: Options(
+        method: requestOptions.method,
+        headers: requestOptions.headers,
+      ),
+    );
+  }
+
   /// GET request
   Future<Response> get(String path, {Map<String, dynamic>? queryParams}) {
-    print('📡 GET → $path');
+    if (kDebugMode) {
+      print('📡 GET → $path');
+    }
     return dio.get(path, queryParameters: queryParams);
   }
 
   /// POST request
   Future<Response> post(String path, {dynamic data}) {
-    print('📡 POST → $path');
+    if (kDebugMode) {
+      print('📡 POST → $path');
+    }
     return dio.post(path, data: data);
   }
 
   Future<Response> put(String path, {dynamic data}) {
-    print('📡 PUT → $path');
+    if (kDebugMode) {
+      print('📡 PUT → $path');
+    }
     return dio.put(path, data: data);
   }
 
-  Future<Response> delete(String path, {Map<String, dynamic>? queryParams, dynamic data}) {
-    print('📡 DELETE → $path');
+  Future<Response> delete(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    dynamic data,
+  }) {
+    if (kDebugMode) {
+      print('📡 DELETE → $path');
+    }
     return dio.delete(path, queryParameters: queryParams, data: data);
   }
 }

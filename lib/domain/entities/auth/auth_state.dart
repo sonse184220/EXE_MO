@@ -25,6 +25,10 @@ class AuthState {
     );
   }
 
+  // Add this getter to check if user can access profile choosing
+  bool get canAccessProfileChoosing =>
+      status == AuthStatus.profileSelection || status == AuthStatus.authenticated;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
