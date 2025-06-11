@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/auth_utils/auth_notifier.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
 
-class CustomSideBar extends StatefulWidget {
+class CustomSideBar extends ConsumerStatefulWidget {
   final int currentIndex;
   final Function(int) onIndexChanged;
   const CustomSideBar({super.key, required this.currentIndex, required this.onIndexChanged});
 
   @override
-  State<CustomSideBar> createState() => _CustomSideBarState();
+  ConsumerState<CustomSideBar> createState() => _CustomSideBarState();
 }
 
-class _CustomSideBarState extends State<CustomSideBar> {
+class _CustomSideBarState extends ConsumerState<CustomSideBar> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+
     return SafeArea(
         child: Drawer(
       child: Container(
@@ -100,13 +111,14 @@ class _CustomSideBarState extends State<CustomSideBar> {
                 'Exit Admin Mode',
                 style: TextStyle(color: Colors.red),
               ),
-              onTap: () {
+              onTap: () async {
+                await ref.read(authNotifierProvider.notifier).logout();
                 // Implement logic to exit admin mode
                 // Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Login()),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => Login()),
+                // );
                 // You might want to navigate to a different screen or reset state
                 // For example: Navigator.pushReplacementNamed(context, '/user-mode');
               },

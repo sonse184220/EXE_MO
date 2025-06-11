@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
-import 'package:inner_child_app/presentation/widgets/reusable_crud_base_page/entity_list_screen.dart';
 
 class UserManagePage extends ConsumerStatefulWidget {
   const UserManagePage({super.key});
@@ -320,7 +319,7 @@ class _UserManagePageState extends ConsumerState<UserManagePage> {
                   ),
                   if (_searchQuery.isNotEmpty) ...[
                     Text(
-                      ' for "${_searchQuery}"',
+                      ' for "$_searchQuery"',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],

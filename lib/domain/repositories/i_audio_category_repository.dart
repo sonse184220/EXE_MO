@@ -3,4 +3,6 @@ import 'package:inner_child_app/domain/entities/audio_category/audio_category.da
 
 abstract class IAudioCategoryRepository {
   Future<Result<List<AudioCategory>>> getAllAudioCategories();
+  Future<Result<String>> createAudioCategory(String name);
+  Future<Result<String>> updateAudioCategory(String id, String name);
 }

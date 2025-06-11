@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/mood_journal_type/mood_journal_type_model.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
+import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
 
 class MoodJournalTypeManagePage extends ConsumerStatefulWidget {
   const MoodJournalTypeManagePage({super.key});
@@ -9,114 +13,109 @@ class MoodJournalTypeManagePage extends ConsumerStatefulWidget {
 }
 
 class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManagePage> {
-  late final AuthUsecase _authUsecase;
+  late final MoodJournalTypeUsecase _moodJournalTypeUsecase;
+
+  List<MoodJournalTypeModel> moodJournalTypes = [];
+
+  bool isLoadType = false;
+  bool isTypeListError = false;
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  List<MoodJournalTypeModel> moodJournalTypes = [
-    MoodJournalTypeModel(
-      moodJournalTypeId: '1',
-      moodJournalTypeName: 'Daily Reflection',
-    ),
-    MoodJournalTypeModel(
-      moodJournalTypeId: '2',
-      moodJournalTypeName: 'Gratitude Journal',
-    ),
-    MoodJournalTypeModel(
-      moodJournalTypeId: '3',
-      moodJournalTypeName: 'Anxiety Tracker',
-    ),
-    MoodJournalTypeModel(
-      moodJournalTypeId: '4',
-      moodJournalTypeName: 'Mood Log',
-    ),
-    MoodJournalTypeModel(
-      moodJournalTypeId: '5',
-      moodJournalTypeName: 'Sleep Journal',
-    ),
-  ];
+  Future<void> _fetchMoodJournalTypes() async {
+    setState(() {
+      isLoadType = true;
+      isTypeListError = false;
+    });
 
-  // Get filtered mood journal types based on search query
-  List<MoodJournalTypeModel> get filteredMoodJournalTypes {
-    if (_searchQuery.isEmpty) {
-      return moodJournalTypes;
+    try {
+      final result = await _moodJournalTypeUsecase.getAllTypes();
+      if (result.isSuccess) {
+        setState(() {
+          moodJournalTypes = result.data!;
+          isLoadType = false;
+        });
+      } else {
+        throw Exception('Fail to fetch types');
+      }
+    } catch (_) {
+      setState(() {
+        isLoadType = false;
+        isTypeListError = true;
+      });
     }
-    return moodJournalTypes.where((type) => _moodJournalTypeSearchFilter(type, _searchQuery)).toList();
   }
 
   void _createMoodJournalType() async {
-    final newType = await showDialog<MoodJournalTypeModel>(
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: MoodJournalTypeForm(
-          onSave: (newType) => Navigator.pop(context, newType),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: MoodJournalTypeForm(
+            onSave: (newType) async {
+              try {
+                final result = await _moodJournalTypeUsecase.createType(newType.moodJournalTypeName);
+                return result.isSuccess;
+                // Navigator.pop(context, result.isSuccess);
+              } catch (_) {
+                // Navigator.pop(context, false);
+                return false;
+              } finally {
+                _fetchMoodJournalTypes();
+              }
+            },
+          ),
         ),
       ),
     );
-    if (newType != null) {
-      setState(() => moodJournalTypes.add(newType));
+
+    if (success ?? false) {
+      Notify.showFlushbar('Mood Type created successfully');
+    } else {
+      Notify.showFlushbar('Failed to create Mood Type', isError: true);
     }
   }
 
   void _updateMoodJournalType(MoodJournalTypeModel type) async {
-    final updatedType = await showDialog<MoodJournalTypeModel>(
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: MoodJournalTypeForm(
-          moodJournalType: type,
-          onSave: (updated) => Navigator.of(context).pop(updated),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: MoodJournalTypeForm(
+            moodJournalType: type,
+            onSave: (updated) async {
+              try {
+                final result = await _moodJournalTypeUsecase.updateType(
+                  updated.moodJournalTypeId,
+                  updated.moodJournalTypeName,
+                );
+                return result.isSuccess;
+              } catch (_) {
+                return false;
+              } finally {
+                _fetchMoodJournalTypes();
+              }
+            },
+          ),
         ),
       ),
     );
-    if (updatedType != null) {
-      setState(() {
-        final index = moodJournalTypes.indexWhere((t) => t.moodJournalTypeId == type.moodJournalTypeId);
-        if (index != -1) {
-          moodJournalTypes[index] = updatedType;
-        }
-      });
+
+    if (success ?? false) {
+      Notify.showFlushbar('Type updated successfully');
+    } else {
+      Notify.showFlushbar('Failed to update type', isError: true);
     }
   }
 
-  void _deleteMoodJournalType(MoodJournalTypeModel type) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete "${type.moodJournalTypeName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFFF49AA2).withOpacity(0.1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFE37083))),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      setState(() {
-        moodJournalTypes.removeWhere((t) => t.moodJournalTypeId == type.moodJournalTypeId);
-      });
-    }
-  }
-
-  bool _moodJournalTypeSearchFilter(MoodJournalTypeModel type, String query) {
-    final searchQuery = query.toLowerCase();
-    return type.moodJournalTypeName.toLowerCase().contains(searchQuery) ||
-        type.moodJournalTypeId.toLowerCase().contains(searchQuery);
+  List<MoodJournalTypeModel> get filteredMoodJournalTypes {
+    if (_searchQuery.isEmpty) return moodJournalTypes;
+    return moodJournalTypes.where((type) => type.moodJournalTypeName.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
   }
 
   void _onSearchChanged(String query) {
@@ -130,6 +129,16 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
       _searchQuery = '';
       _searchController.clear();
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _moodJournalTypeUsecase = ref.read(moodJournalTypeUseCaseProvider);
+
+    _fetchMoodJournalTypes();
   }
 
   @override
@@ -147,10 +156,10 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: const Text(
           'Mood Journal Type Management',
           style: TextStyle(
@@ -230,7 +239,7 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Search by type name or ID...',
+                hintText: 'Search by type name',
                 hintStyle: TextStyle(
                   color: Colors.grey[500],
                   fontSize: 14,
@@ -287,7 +296,7 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
                   ),
                   if (_searchQuery.isNotEmpty) ...[
                     Text(
-                      ' for "${_searchQuery}"',
+                      ' for "$_searchQuery"',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],
@@ -381,7 +390,7 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
                   return MoodJournalTypeListItem(
                     moodJournalType: type,
                     onEdit: () => _updateMoodJournalType(type),
-                    onDelete: () => _deleteMoodJournalType(type),
+                    // onDelete: () => _deleteMoodJournalType(type),
                     searchQuery: _searchQuery,
                   );
                 },
@@ -394,34 +403,17 @@ class _MoodJournalTypeManagePageState extends ConsumerState<MoodJournalTypeManag
   }
 }
 
-class MoodJournalTypeModel {
-  final String moodJournalTypeId;
-  final String moodJournalTypeName;
-
-  MoodJournalTypeModel({
-    required this.moodJournalTypeId,
-    required this.moodJournalTypeName,
-  });
-
-  factory MoodJournalTypeModel.fromJson(Map<String, dynamic> json) {
-    return MoodJournalTypeModel(
-      moodJournalTypeId: json['moodJournalTypeId'],
-      moodJournalTypeName: json['moodJournalTypeName'],
-    );
-  }
-}
-
 class MoodJournalTypeListItem extends StatelessWidget {
   final MoodJournalTypeModel moodJournalType;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  // final VoidCallback onDelete;
   final String searchQuery;
 
   const MoodJournalTypeListItem({
     super.key,
     required this.moodJournalType,
     required this.onEdit,
-    required this.onDelete,
+    // required this.onDelete,
     this.searchQuery = '',
   });
 
@@ -489,7 +481,7 @@ class MoodJournalTypeListItem extends StatelessWidget {
       [const Color(0xFFF49AA2), const Color(0xFFA8BF8A)], // Ice Cream to Meadow
     ];
 
-    final colorIndex = int.parse(moodJournalType.moodJournalTypeId) % typeColors.length;
+    final colorIndex = moodJournalType.moodJournalTypeId.hashCode.abs() % typeColors.length;
     final gradientColors = typeColors[colorIndex];
 
     return Container(
@@ -576,17 +568,17 @@ class MoodJournalTypeListItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE37083).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFE37083), size: 20),
-                  onPressed: onDelete,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-              ),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: const Color(0xFFE37083).withOpacity(0.15),
+              //     borderRadius: BorderRadius.circular(10),
+              //   ),
+              //   child: IconButton(
+              //     icon: const Icon(Icons.delete_outline, color: Color(0xFFE37083), size: 20),
+              //     // onPressed: onDelete,
+              //     constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              //   ),
+              // ),
             ],
           ),
         ],
@@ -595,196 +587,218 @@ class MoodJournalTypeListItem extends StatelessWidget {
   }
 }
 
-class MoodJournalTypeForm extends StatefulWidget {
-  final MoodJournalTypeModel? moodJournalType;
-  final Function(MoodJournalTypeModel) onSave;
+  class MoodJournalTypeForm extends StatefulWidget {
+    final MoodJournalTypeModel? moodJournalType;
+    final Future<bool> Function(MoodJournalTypeModel) onSave;
 
-  const MoodJournalTypeForm({
-    super.key,
-    this.moodJournalType,
-    required this.onSave,
-  });
+    const MoodJournalTypeForm({
+      super.key,
+      this.moodJournalType,
+      required this.onSave,
+    });
 
-  @override
-  State<MoodJournalTypeForm> createState() => _MoodJournalTypeFormState();
-}
-
-class _MoodJournalTypeFormState extends State<MoodJournalTypeForm> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _typeNameController;
-
-  @override
-  void initState() {
-    super.initState();
-    final type = widget.moodJournalType;
-    _typeNameController = TextEditingController(text: type?.moodJournalTypeName ?? '');
+    @override
+    State<MoodJournalTypeForm> createState() => _MoodJournalTypeFormState();
   }
 
-  void _saveForm() {
-    if (_formKey.currentState!.validate()) {
-      final type = MoodJournalTypeModel(
-        moodJournalTypeId: widget.moodJournalType?.moodJournalTypeId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        moodJournalTypeName: _typeNameController.text.trim(),
+  class _MoodJournalTypeFormState extends State<MoodJournalTypeForm> {
+    final _formKey = GlobalKey<FormState>();
+    late final TextEditingController _typeNameController;
+
+    bool _isLoading = false;
+
+    @override
+    void initState() {
+      super.initState();
+      final type = widget.moodJournalType;
+      _typeNameController = TextEditingController(text: type?.moodJournalTypeName ?? '');
+    }
+
+    void _saveForm() async {
+      if (_formKey.currentState!.validate()) {
+        setState(() => _isLoading = true);
+
+        final type = MoodJournalTypeModel(
+          moodJournalTypeId: widget.moodJournalType?.moodJournalTypeId ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+          moodJournalTypeName: _typeNameController.text.trim(),
+        );
+
+        try {
+          final success = await widget.onSave(type);
+          if (success && mounted) {
+            Navigator.pop(context, true);
+          }
+        } finally {
+          if (mounted) setState(() => _isLoading = false);
+        }
+      }
+    }
+
+    Widget _buildFormField({
+      required String label,
+      required TextEditingController controller,
+      required String hint,
+      String? Function(String?)? validator,
+      Widget? prefixIcon,
+      bool isRequired = true,
+      String? helpText,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              text: label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C3E50),
+              ),
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: '*',
+                    style: TextStyle(color: Colors.red),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: prefixIcon,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF89B7C2), width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+            ),
+            validator: validator,
+          ),
+          if (helpText != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              helpText,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ],
       );
-      widget.onSave(type);
+    }
+
+    @override
+    Widget build(BuildContext context) {
+      return Container(
+        constraints: const BoxConstraints(maxHeight: 400),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.moodJournalType == null ? 'Add New Journal Type' : 'Edit Journal Type',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildFormField(
+                  label: 'Journal Type Name',
+                  controller: _typeNameController,
+                  hint: 'Enter journal type name',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a journal type name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isLoading ? null : () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: Color(0xFFBDC3C7)),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveForm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFB876),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 3,
+                          shadowColor: const Color(0xFFFFB876).withOpacity(0.4),
+                        ),
+                        child:  _isLoading
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : Text(
+                          widget.moodJournalType == null ? 'Save' : 'Update',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    @override
+    void dispose() {
+      _typeNameController.dispose();
+      super.dispose();
     }
   }
-
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    String? Function(String?)? validator,
-    Widget? prefixIcon,
-    bool isRequired = true,
-    String? helpText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
-            ),
-            children: [
-              if (isRequired)
-                const TextSpan(
-                  text: '*',
-                  style: TextStyle(color: Colors.red),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: prefixIcon,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF89B7C2), width: 2),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
-          validator: validator,
-        ),
-        if (helpText != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            helpText,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 400),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.moodJournalType == null ? 'Add New Journal Type' : 'Edit Journal Type',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildFormField(
-                label: 'Journal Type Name',
-                controller: _typeNameController,
-                hint: 'Enter journal type name',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a journal type name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: Color(0xFFBDC3C7)),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFB876),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 3,
-                        shadowColor: const Color(0xFFFFB876).withOpacity(0.4),
-                      ),
-                      child: Text(
-                        widget.moodJournalType == null ? 'Save' : 'Update',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _typeNameController.dispose();
-    super.dispose();
-  }
-}

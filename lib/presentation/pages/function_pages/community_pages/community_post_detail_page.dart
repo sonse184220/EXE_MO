@@ -158,7 +158,7 @@ class _CommunityPostDetailPageState
   // }
 
   bool get canEditOrDelete {
-    return currentProfileId == postDetail?.profileId;
+    return currentProfileId == postDetail?.userId;
   }
 
   @override

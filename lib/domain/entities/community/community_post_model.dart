@@ -6,7 +6,7 @@ class CommunityPostModel {
   final String? communityPostStatus;
   final DateTime? communityPostCreatedAt;
   final String? communityGroupId;
-  final String? profileId;
+  // final String? profileId;
   final String? userId;
   final String? userName;
   final String? profilePicture;
@@ -19,7 +19,7 @@ class CommunityPostModel {
     this.communityPostStatus,
     this.communityPostCreatedAt,
     this.communityGroupId,
-    this.profileId,
+    // this.profileId,
     this.userId,
     this.userName,
     this.profilePicture,
@@ -36,7 +36,7 @@ class CommunityPostModel {
           ? DateTime.parse(json['communityPostCreatedAt'])
           : null,
       communityGroupId: json['communityGroupId'],
-      profileId: json['profileId'],
+      // profileId: json['profileId'],
       userId: json['userId'],
       userName: json['userName'],
       profilePicture: json['profilePicture'],
@@ -52,7 +52,7 @@ class CommunityPostModel {
       'communityPostStatus': communityPostStatus,
       'communityPostCreatedAt': communityPostCreatedAt?.toIso8601String(),
       'communityGroupId': communityGroupId,
-      'profileId': profileId,
+      // 'profileId': profileId,
       'userId': userId,
       'userName': userName,
       'profilePicture': profilePicture,

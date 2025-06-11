@@ -132,4 +132,38 @@ class CommunityRepository implements ICommunityRepository {
       return Result.failure('Get post detail error: $e');
     }
   }
+
+  @override
+  Future<Result<String>> createCommunityGroup(String name, String description, String status) async {
+    try {
+      final response = await _apiService.createCommunityGroup(name, description, status);
+
+      if (response.statusCode == 201) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Group created succesfully');
+      }
+      return Result.failure('Fail to create community group. Please try again');
+    } catch (e) {
+      return Result.failure('Create community group error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> updateCommunityGroup(String groupId, String name, String description, String status) async {
+    try {
+      final response = await _apiService.updateCommunityGroup(groupId, name, description, status);
+
+      if (response.statusCode == 201) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Group updated succesfully');
+      }
+      return Result.failure('Fail to update community group. Please try again');
+    } catch (e) {
+      return Result.failure('Update community group error: $e');
+    }
+  }
 }

@@ -31,5 +31,37 @@ class AudioCategoryRepository implements IAudioCategoryRepository {
     }
   }
 
+  @override
+  Future<Result<String>> createAudioCategory(String name) async {
+    try {
+      final response = await _audioCategoryApiService.createAudioCategory(name);
 
+      if (response.statusCode == 201) {
+        return Result.success('Audio Category created successfully');
+      }
+
+      return Result.failure(
+        'Failed to create audio category: ${response.statusCode}',
+      );
+    } catch (e) {
+      return Result.failure('Create audio category error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> updateAudioCategory(String id, String name) async {
+    try {
+      final response = await _audioCategoryApiService.updateAudioCategory(id, name);
+
+      if (response.statusCode == 204) {
+        return Result.success('Audio Category updated successfully');
+      }
+
+      return Result.failure(
+        'Failed to update audio category: ${response.statusCode}',
+      );
+    } catch (e) {
+      return Result.failure('Update audio category error: $e');
+    }
+  }
 }

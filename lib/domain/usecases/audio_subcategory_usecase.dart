@@ -10,4 +10,23 @@ class AudioSubcategoryUsecase {
   Future<Result<List<SubAudioCategoryModel>>> getAllSubAudioCategories() {
     return _audioSubcategoryRepository.getAllSubAudioCategories();
   }
+
+  Future<Result<String>> createAudioSubCategory(
+    String categoryId,
+    String name,
+  ) {
+    return _audioSubcategoryRepository.createAudioSubCategory(categoryId, name);
+  }
+
+  Future<Result<String>> updateAudioSubCategory(
+    String id,
+    String categoryId,
+    String name,
+  ) {
+    return _audioSubcategoryRepository.updateAudioSubCategory(
+      id,
+      categoryId,
+      name,
+    );
+  }
 }

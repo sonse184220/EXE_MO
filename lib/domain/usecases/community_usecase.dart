@@ -36,4 +36,12 @@ class CommunityUsecase {
   Future<Result<CommunityPostModel>> getCommunityPostDetail(String postId) {
     return iCommunityRepository.getCommunityPostDetail(postId);
   }
+
+  Future<Result<String>> createCommunityGroup(String name, String description, String status) {
+    return iCommunityRepository.createCommunityGroup(name, description, status);
+  }
+
+  Future<Result<String>> updateCommunityGroup(String groupId, String name, String description, String status) {
+    return iCommunityRepository.updateCommunityGroup(groupId, name, description, status);
+  }
 }

@@ -1,78 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:inner_child_app/presentation/widgets/reusable_crud_base_page/entity_list_screen.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/audio_category/audio_category.dart';
+import 'package:inner_child_app/domain/entities/audio_subcategory/audio_subcategory_model.dart';
+import 'package:inner_child_app/domain/usecases/audio_category_usecase.dart';
+import 'package:inner_child_app/domain/usecases/audio_subcategory_usecase.dart';
 
 class AudioCategoryManagePage extends ConsumerStatefulWidget {
   const AudioCategoryManagePage({super.key});
 
   @override
-  ConsumerState<AudioCategoryManagePage> createState() => _AudioCategoryManagePageState();
+  ConsumerState<AudioCategoryManagePage> createState() =>
+      _AudioCategoryManagePageState();
 }
 
-class _AudioCategoryManagePageState extends ConsumerState<AudioCategoryManagePage>
+class _AudioCategoryManagePageState
+    extends ConsumerState<AudioCategoryManagePage>
     with SingleTickerProviderStateMixin {
+  late final AudioCategoryUsecase _audioCategoryUsecase;
+  late final AudioSubcategoryUsecase _audioSubcategoryUsecase;
+
   late TabController _tabController;
 
-  // Sample data - replace with actual data from your API
-  List<AudioCategory> audioCategories = [
-    AudioCategory(
-      audioCategoryId: '1',
-      audioCategoryName: 'Meditation & Mindfulness',
-      subAudioCategories: [],
-    ),
-    AudioCategory(
-      audioCategoryId: '2',
-      audioCategoryName: 'Sleep Stories',
-      subAudioCategories: [],
-    ),
-    AudioCategory(
-      audioCategoryId: '3',
-      audioCategoryName: 'Anxiety Relief',
-      subAudioCategories: [],
-    ),
-    AudioCategory(
-      audioCategoryId: '4',
-      audioCategoryName: 'Focus & Concentration',
-      subAudioCategories: [],
-    ),
-    AudioCategory(
-      audioCategoryId: '5',
-      audioCategoryName: 'Emotional Healing',
-      subAudioCategories: [],
-    ),
-  ];
+  bool isLoadCategory = false;
+  bool isLoadSubCategory = false;
 
-  List<SubAudioCategoryModel> subAudioCategories = [
-    SubAudioCategoryModel(
-      subAudioCategoryId: '1',
-      subAudioCategoryName: 'Guided Meditation',
-      audioCategoryId: '1',
-      audioCategoryName: 'Meditation & Mindfulness',
-    ),
-    SubAudioCategoryModel(
-      subAudioCategoryId: '2',
-      subAudioCategoryName: 'Breathing Exercises',
-      audioCategoryId: '1',
-      audioCategoryName: 'Meditation & Mindfulness',
-    ),
-    SubAudioCategoryModel(
-      subAudioCategoryId: '3',
-      subAudioCategoryName: 'Bedtime Stories',
-      audioCategoryId: '2',
-      audioCategoryName: 'Sleep Stories',
-    ),
-    SubAudioCategoryModel(
-      subAudioCategoryId: '4',
-      subAudioCategoryName: 'Nature Sounds',
-      audioCategoryId: '2',
-      audioCategoryName: 'Sleep Stories',
-    ),
-  ];
+  bool isCategoryListError = false;
+  bool isSubCategoryListError = false;
+
+  List<AudioCategory> audioCategories = [];
+  List<SubAudioCategoryModel> audioSubCategories = [];
+
+  final TextEditingController _categorySearchController =
+      TextEditingController();
+  String _categorySearchQuery = '';
+
+  final TextEditingController _subCategorySearchController =
+      TextEditingController();
+  String _subCategorySearchQuery = '';
 
   @override
   void initState() {
     super.initState();
+
+    _audioCategoryUsecase = ref.read(audioCategoryUseCaseProvider);
+    _audioSubcategoryUsecase = ref.read(audioSubcategoryUseCaseProvider);
+
     _tabController = TabController(length: 2, vsync: this);
+
+    _fetchCategories();
+    _fetchSubCategories();
   }
 
   @override
@@ -81,221 +59,701 @@ class _AudioCategoryManagePageState extends ConsumerState<AudioCategoryManagePag
     super.dispose();
   }
 
+  Future<void> _fetchCategories() async {
+    setState(() {
+      isLoadCategory = true;
+      isCategoryListError = false;
+    });
+
+    try {
+      final result = await _audioCategoryUsecase.getAllAudioCategories();
+      if (result.isSuccess) {
+        setState(() {
+          audioCategories = result.data!;
+          isLoadCategory = false;
+        });
+      } else {
+        throw Exception('Fetch audio categories fail');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadCategory = false;
+        isCategoryListError = true;
+      });
+    }
+  }
+
+  Future<void> _fetchSubCategories() async {
+    setState(() {
+      isLoadSubCategory = true;
+      isSubCategoryListError = false;
+    });
+
+    try {
+      final result = await _audioSubcategoryUsecase.getAllSubAudioCategories();
+      if (result.isSuccess) {
+        setState(() {
+          audioSubCategories = result.data!;
+          isLoadSubCategory = false;
+        });
+      } else {
+        throw Exception('Fetch audio subcatgories fail');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadSubCategory = false;
+        isSubCategoryListError = true;
+      });
+    }
+  }
+
   // AudioCategory CRUD methods
   void _createAudioCategory() async {
-    final newAudioCategory = await showDialog<AudioCategory>(
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        child: AudioCategoryForm(
-          onSave: (newAudioCategory) => Navigator.pop(context, newAudioCategory),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: AudioCategoryForm(
+            onSave: (newAudioCategory) async {
+              try {
+                final result = await _audioCategoryUsecase.createAudioCategory(
+                  newAudioCategory.audioCategoryName,
+                );
+                Navigator.pop(context, result.isSuccess);
+              } catch (_) {
+                Navigator.pop(context, false);
+              } finally {
+                _fetchCategories();
+              }
+            },
+          ),
         ),
       ),
     );
 
-    if (newAudioCategory != null) {
-      setState(() => audioCategories.add(newAudioCategory));
+    if (success ?? false) {
+      Notify.showFlushbar('Audio Category created successfully');
+    } else {
+      Notify.showFlushbar('Fail to create Audio Category', isError: true);
     }
   }
 
-  void _updateAudioCategory(AudioCategory audioCategory) async {
-    final updatedAudioCategory = await showDialog<AudioCategory>(
+  void _updateAudioCategory(AudioCategory category) async {
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        child: AudioCategoryForm(
-          audioCategory: audioCategory,
-          onSave: (updated) => Navigator.of(context).pop(updated),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: AudioCategoryForm(
+            audioCategory: category,
+            onSave: (updated) async {
+              try {
+                final result = await _audioCategoryUsecase.updateAudioCategory(
+                  updated.audioCategoryId,
+                  updated.audioCategoryName,
+                );
+                Navigator.pop(context, result.isSuccess);
+              } catch (_) {
+                Navigator.pop(context, false);
+              } finally {
+                _fetchCategories();
+              }
+            },
+          ),
         ),
       ),
     );
 
-    if (updatedAudioCategory != null) {
-      setState(() {
-        final index = audioCategories.indexWhere((c) => c.audioCategoryId == audioCategory.audioCategoryId);
-        if (index != -1) {
-          audioCategories[index] = updatedAudioCategory;
-        }
-      });
+    if (success ?? false) {
+      Notify.showFlushbar('Audio Category updated successfully');
+    } else {
+      Notify.showFlushbar('Failed to update Audio Category', isError: true);
     }
   }
 
-  void _deleteAudioCategory(AudioCategory audioCategory) async {
+
+
+  void _deleteAudioCategory(AudioCategory category) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete "${audioCategory.audioCategoryName}"?\n\nThis will also delete all associated subcategories.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text('Confirm Delete'),
+            content: Text(
+              'Are you sure you want to delete "${category.audioCategoryName}"?\n\nThis will also delete all associated subcategories.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFF49AA2).withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Color(0xFFE37083)),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
       setState(() {
-        // Remove the category
-        audioCategories.removeWhere((c) => c.audioCategoryId == audioCategory.audioCategoryId);
-        // Remove all subcategories belonging to this category
-        subAudioCategories.removeWhere((sub) => sub.audioCategoryId == audioCategory.audioCategoryId);
+        audioCategories.removeWhere(
+          (c) => c.audioCategoryId == category.audioCategoryId,
+        );
+        audioSubCategories.removeWhere(
+          (s) => s.audioCategoryId == category.audioCategoryId,
+        );
       });
     }
   }
 
-  // SubAudioCategory CRUD methods
+  // // SubAudioCategory CRUD methods
   void _createSubAudioCategory() async {
-    final newSubAudioCategory = await showDialog<SubAudioCategoryModel>(
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        child: SubAudioCategoryForm(
-          audioCategories: audioCategories,
-          onSave: (newSubAudioCategory) => Navigator.pop(context, newSubAudioCategory),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: SubAudioCategoryForm(
+            audioCategories: audioCategories,
+            onSave: (sub) async {
+              try {
+                final result = await _audioSubcategoryUsecase.createAudioSubCategory(
+                  sub.audioCategoryId,
+                  sub.subAudioCategoryName,
+                );
+                Navigator.pop(context, result.isSuccess);
+              } catch (_) {
+                Navigator.pop(context, false);
+              } finally {
+                _fetchSubCategories();
+              }
+            },
+          ),
         ),
       ),
     );
 
-    if (newSubAudioCategory != null) {
-      setState(() => subAudioCategories.add(newSubAudioCategory));
+    if (success ?? false) {
+      Notify.showFlushbar('Sub Category created successfully');
+    } else {
+      Notify.showFlushbar('Failed to create Sub Category', isError: true);
     }
   }
 
-  void _updateSubAudioCategory(SubAudioCategoryModel subAudioCategory) async {
-    final updatedSubAudioCategory = await showDialog<SubAudioCategoryModel>(
+  void _updateSubAudioCategory(SubAudioCategoryModel subCategory) async {
+    final success = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        child: SubAudioCategoryForm(
-          subAudioCategory: subAudioCategory,
-          audioCategories: audioCategories,
-          onSave: (updated) => Navigator.of(context).pop(updated),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: SubAudioCategoryForm(
+            subAudioCategory: subCategory,
+            audioCategories: audioCategories,
+            onSave: (updated) async {
+              try {
+                final result = await _audioSubcategoryUsecase.updateAudioSubCategory(
+                  updated.subAudioCategoryId,
+                  updated.audioCategoryId,
+                  updated.subAudioCategoryName,
+                );
+                Navigator.pop(context, result.isSuccess);
+              } catch (_) {
+                Navigator.pop(context, false);
+              } finally {
+                _fetchSubCategories();
+              }
+            },
+          ),
         ),
       ),
     );
 
-    if (updatedSubAudioCategory != null) {
-      setState(() {
-        final index = subAudioCategories.indexWhere((c) => c.subAudioCategoryId == subAudioCategory.subAudioCategoryId);
-        if (index != -1) {
-          subAudioCategories[index] = updatedSubAudioCategory;
-        }
-      });
+    if (success ?? false) {
+      Notify.showFlushbar('Sub Category updated successfully');
+    } else {
+      Notify.showFlushbar('Failed to update Sub Category', isError: true);
     }
   }
 
-  void _deleteSubAudioCategory(SubAudioCategoryModel subAudioCategory) async {
+
+
+  void _deleteSubAudioCategory(SubAudioCategoryModel subCategory) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete "${subAudioCategory.subAudioCategoryName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text('Confirm Delete'),
+            content: Text(
+              'Are you sure you want to delete "${subCategory.subAudioCategoryName}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFF49AA2).withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Color(0xFFE37083)),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
       setState(() {
-        subAudioCategories.removeWhere((c) => c.subAudioCategoryId == subAudioCategory.subAudioCategoryId);
+        audioSubCategories.removeWhere(
+          (s) => s.subAudioCategoryId == subCategory.subAudioCategoryId,
+        );
       });
     }
   }
 
   // Search filters
-  bool _audioCategorySearchFilter(AudioCategory audioCategory, String query) {
-    return audioCategory.audioCategoryName.toLowerCase().contains(query.toLowerCase()) ||
-        audioCategory.audioCategoryId.toLowerCase().contains(query.toLowerCase());
+  List<AudioCategory> get filteredCategories {
+    if (_categorySearchQuery.isEmpty) return audioCategories;
+    return audioCategories
+        .where((cat) => _categorySearchFilter(cat, _categorySearchQuery))
+        .toList();
   }
 
-  bool _subAudioCategorySearchFilter(SubAudioCategoryModel subAudioCategory, String query) {
-    return subAudioCategory.subAudioCategoryName.toLowerCase().contains(query.toLowerCase()) ||
-        subAudioCategory.audioCategoryName.toLowerCase().contains(query.toLowerCase()) ||
-        subAudioCategory.subAudioCategoryId.toLowerCase().contains(query.toLowerCase());
+  List<SubAudioCategoryModel> get filteredSubCategories {
+    if (_subCategorySearchQuery.isEmpty) return audioSubCategories;
+    return audioSubCategories
+        .where((sub) => _subCategorySearchFilter(sub, _subCategorySearchQuery))
+        .toList();
+  }
+
+  bool _categorySearchFilter(AudioCategory category, String query) {
+    final q = query.toLowerCase();
+    return category.audioCategoryName.toLowerCase().contains(q);
+  }
+
+  bool _subCategorySearchFilter(
+    SubAudioCategoryModel subCategory,
+    String query,
+  ) {
+    final q = query.toLowerCase();
+    return subCategory.subAudioCategoryName.toLowerCase().contains(q);
+  }
+
+  void _onCategorySearchChanged(String query) {
+    setState(() {
+      _categorySearchQuery = query;
+    });
+  }
+
+  void _clearCategorySearch() {
+    setState(() {
+      _categorySearchQuery = '';
+      _categorySearchController.clear();
+    });
+  }
+
+  void _onSubCategorySearchChanged(String query) {
+    setState(() {
+      _subCategorySearchQuery = query;
+    });
+  }
+
+  void _clearSubCategorySearch() {
+    setState(() {
+      _subCategorySearchQuery = '';
+      _subCategorySearchController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Category Management'),
-        // backgroundColor: Colors.teal[700],
-        // foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          // indicatorColor: Colors.white,
-          // labelColor: Colors.white,
-          // unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.category),
-              text: 'Categories',
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFCFBF9),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
+          title: const Text(
+            'Audio Category Management',
+            style: TextStyle(
+              color: Color(0xFF2C3E50),
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
-            Tab(
-              icon: Icon(Icons.subdirectory_arrow_right),
-              text: 'Subcategories',
+          ),
+          centerTitle: true,
+          bottom: TabBar(
+            indicatorColor: const Color(0xFF89B7C2),
+            labelColor: const Color(0xFF2C3E50),
+            unselectedLabelColor: Colors.grey,
+            tabs: const [
+              Tab(icon: Icon(Icons.category), text: 'Categories'),
+              Tab(
+                icon: Icon(Icons.subdirectory_arrow_right),
+                text: 'Subcategories',
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // Categories Tab
+            _buildCategoryTab(),
+
+            // Subcategories Tab
+            _buildSubCategoryTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // These should be separate Widget-returning methods or widgets:
+  Widget _buildCategoryTab() {
+    return Column(
+      children: [
+        _buildStatsBox(
+          '${filteredCategories.length}',
+          'Total Categories',
+          Icons.category,
+        ),
+        _buildSearchBar(
+          controller: _categorySearchController,
+          onChanged: _onCategorySearchChanged,
+          query: _categorySearchQuery,
+          onClear: _clearCategorySearch,
+          hintText: 'Search categories by name...',
+        ),
+        _buildCreateButton('Add Category', _createAudioCategory),
+        _buildCategoryList(),
+      ],
+    );
+  }
+
+  Widget _buildSubCategoryTab() {
+    return Column(
+      children: [
+        _buildStatsBox(
+          '${filteredSubCategories.length}',
+          'Total Subcategories',
+          Icons.subdirectory_arrow_right,
+        ),
+        _buildSearchBar(
+          controller: _subCategorySearchController,
+          onChanged: _onSubCategorySearchChanged,
+          query: _subCategorySearchQuery,
+          onClear: _clearSubCategorySearch,
+          hintText: 'Search subcategories by name...',
+        ),
+        _buildCreateButton('Add Subcategory', _createSubAudioCategory),
+        _buildSubCategoryList(),
+      ],
+    );
+  }
+
+  Widget _buildCategoryList() {
+    return Expanded(
+      child:
+          isLoadCategory
+              ? const Center(child: CircularProgressIndicator())
+              : isCategoryListError
+              ? _buildRetryBox('Failed to load categories.', _fetchCategories)
+              : filteredCategories.isEmpty
+              ? _buildEmptyBox(
+                _categorySearchQuery,
+                emptyMessage: 'No categories yet',
+                searchMessage: 'No categories found',
+                hintMessage: 'Add your first category to get started',
+                searchHint: 'Try adjusting your search terms',
+              )
+              : ListView.builder(
+                itemCount: filteredCategories.length,
+                itemBuilder: (context, index) {
+                  final category = filteredCategories[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: AudioCategoryListItem(
+                      audioCategory: category,
+                      onEdit: () => _updateAudioCategory(category),
+                      onDelete:
+                          () => _deleteAudioCategory(
+                            category,
+                          ), // Uncomment if needed
+                    ),
+                  );
+                },
+              ),
+    );
+  }
+
+  Widget _buildSubCategoryList() {
+    return Expanded(
+      child:
+          isLoadSubCategory
+              ? const Center(child: CircularProgressIndicator())
+              : isSubCategoryListError
+              ? _buildRetryBox(
+                'Failed to load subcategories.',
+                _fetchSubCategories,
+              )
+              : filteredSubCategories.isEmpty
+              ? _buildEmptyBox(
+                _subCategorySearchQuery,
+                emptyMessage: 'No subcategories yet',
+                searchMessage: 'No subcategories found',
+                hintMessage: 'Add your first subcategory to get started',
+                searchHint: 'Try adjusting your search terms',
+              )
+              : ListView.builder(
+                itemCount: filteredSubCategories.length,
+                itemBuilder: (context, index) {
+                  final sub = filteredSubCategories[index];
+
+                  // Find the parent category for display
+                  final category = audioCategories.firstWhere(
+                    (cat) => cat.audioCategoryId == sub.audioCategoryId,
+                    orElse:
+                        () => AudioCategory(
+                          audioCategoryId: '',
+                          audioCategoryName: 'Unknown',
+                          subAudioCategories: [],
+                        ),
+                  );
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SubAudioCategoryListItem(
+                      subAudioCategory: SubAudioCategoryModel(
+                        subAudioCategoryId: sub.subAudioCategoryId,
+                        subAudioCategoryName: sub.subAudioCategoryName,
+                        audioCategoryId: sub.audioCategoryId,
+                        audioCategoryName: category.audioCategoryName,
+                      ),
+                      onEdit: () => _updateSubAudioCategory(sub),
+                      onDelete: () => _deleteSubAudioCategory(sub),
+                      searchQuery: _subCategorySearchQuery,
+                    ),
+                  );
+                },
+              ),
+    );
+  }
+
+  Widget _buildStatsBox(String count, String label, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF89B7C2), Color(0xFFA8BF8A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF89B7C2).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar({
+    required TextEditingController controller,
+    required ValueChanged<String> onChanged,
+    required String query,
+    required VoidCallback onClear,
+    required String hintText,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: hintText,
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+          suffixIcon:
+              query.isNotEmpty
+                  ? IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[500]),
+                    onPressed: onClear,
+                  )
+                  : null,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF89B7C2), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreateButton(String label, VoidCallback onPressed) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFFB876),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 4,
+          shadowColor: const Color(0xFFFFB876).withOpacity(0.4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+    );
+  }
+
+  Widget _buildRetryBox(String message, VoidCallback onRetry) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Audio Categories Tab
-          EntityListScreen<AudioCategory>(
-            title: 'Audio Categories',
-            entities: audioCategories,
-            onCreateEntity: (audioCategory) => _createAudioCategory(),
-            onUpdateEntity: (audioCategory) => _updateAudioCategory(audioCategory),
-            onDeleteEntity: (audioCategory) => _deleteAudioCategory(audioCategory),
-            searchFilter: _audioCategorySearchFilter,
-            itemBuilder: (context, audioCategory, onEdit, onDelete) {
-              return AudioCategoryListItem(
-                audioCategory: audioCategory,
-                subCategoriesCount: subAudioCategories.where((sub) => sub.audioCategoryId == audioCategory.audioCategoryId).length,
-                onEdit: onEdit,
-                onDelete: onDelete,
-              );
-            },
-            formBuilder: (context, audioCategory, onSave) {
-              return AudioCategoryForm(
-                audioCategory: audioCategory,
-                onSave: onSave,
-              );
-            },
+          Text(message),
+          const SizedBox(height: 8),
+          ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyBox(
+    String query, {
+    required String emptyMessage,
+    required String searchMessage,
+    required String hintMessage,
+    required String searchHint,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            query.isEmpty ? Icons.folder_open : Icons.search_off,
+            size: 64,
+            color: Colors.grey[400],
           ),
-          // Sub Audio Categories Tab
-          EntityListScreen<SubAudioCategoryModel>(
-            title: 'Sub Audio Categories',
-            entities: subAudioCategories,
-            onCreateEntity: (subAudioCategory) => _createSubAudioCategory(),
-            onUpdateEntity: (subAudioCategory) => _updateSubAudioCategory(subAudioCategory),
-            onDeleteEntity: (subAudioCategory) => _deleteSubAudioCategory(subAudioCategory),
-            searchFilter: _subAudioCategorySearchFilter,
-            itemBuilder: (context, subAudioCategory, onEdit, onDelete) {
-              return SubAudioCategoryListItem(
-                subAudioCategory: subAudioCategory,
-                onEdit: onEdit,
-                onDelete: onDelete,
-              );
-            },
-            formBuilder: (context, subAudioCategory, onSave) {
-              return SubAudioCategoryForm(
-                subAudioCategory: subAudioCategory,
-                audioCategories: audioCategories,
-                onSave: onSave,
-              );
-            },
+          const SizedBox(height: 16),
+          Text(
+            query.isEmpty ? emptyMessage : searchMessage,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            query.isEmpty ? hintMessage : searchHint,
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -303,77 +761,144 @@ class _AudioCategoryManagePageState extends ConsumerState<AudioCategoryManagePag
   }
 }
 
-// AudioCategory List Item Widget
 class AudioCategoryListItem extends StatelessWidget {
   final AudioCategory audioCategory;
-  final int subCategoriesCount;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final String searchQuery;
 
   const AudioCategoryListItem({
     super.key,
     required this.audioCategory,
-    required this.subCategoriesCount,
     required this.onEdit,
     required this.onDelete,
+    this.searchQuery = '',
   });
+
+  Widget _buildHighlightedText(String text, String query) {
+    if (query.isEmpty || !text.toLowerCase().contains(query.toLowerCase())) {
+      return Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+      );
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final startIndex = lowerText.indexOf(lowerQuery);
+    final endIndex = startIndex + query.length;
+
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+        children: [
+          TextSpan(text: text.substring(0, startIndex)),
+          TextSpan(
+            text: text.substring(startIndex, endIndex),
+            style: const TextStyle(
+              backgroundColor: Color(0xFFFFB876),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: text.substring(endIndex)),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colorIndex = audioCategory.audioCategoryName.length % 5;
+    final List<List<Color>> colors = [
+      [Color(0xFFE37083), Color(0xFFF49AA2)],
+      [Color(0xFFFFB876), Color(0xFFFFCB7C)],
+      [Color(0xFFA8BF8A), Color(0xFF89B7C2)],
+      [Color(0xFF89B7C2), Color(0xFFE37083)],
+      [Color(0xFFF49AA2), Color(0xFFA8BF8A)],
+    ];
+
+    final gradient = colors[colorIndex];
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0F0F0)),
+        boxShadow: [
+          BoxShadow(
+            color: gradient[0].withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: Colors.teal[100],
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(25),
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-            child: Icon(
-              Icons.audiotrack,
-              color: Colors.teal[700],
-              size: 24,
-            ),
+            child: const Icon(Icons.category, color: Colors.white),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  audioCategory.audioCategoryName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ID: ${audioCategory.audioCategoryId}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  '$subCategoriesCount subcategories',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
+            child: _buildHighlightedText(
+              audioCategory.audioCategoryName,
+              searchQuery,
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-            onPressed: onDelete,
-          ),
-          IconButton(
-            icon: Icon(Icons.edit, color: Colors.grey[600]),
-            onPressed: onEdit,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89B7C2).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: Color(0xFF89B7C2),
+                    size: 20,
+                  ),
+                  onPressed: onEdit,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: const Color(0xFFE37083).withOpacity(0.15),
+              //     borderRadius: BorderRadius.circular(10),
+              //   ),
+              //   child: IconButton(
+              //     icon: const Icon(Icons.delete_outline, color: Color(0xFFE37083), size: 20),
+              //     onPressed: onDelete,
+              //     constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              //   ),
+              // ),
+            ],
           ),
         ],
       ),
@@ -381,86 +906,9 @@ class AudioCategoryListItem extends StatelessWidget {
   }
 }
 
-// SubAudioCategory List Item Widget
-class SubAudioCategoryListItem extends StatelessWidget {
-  final SubAudioCategoryModel subAudioCategory;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const SubAudioCategoryListItem({
-    super.key,
-    required this.subAudioCategory,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.orange[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.subdirectory_arrow_right,
-              color: Colors.orange[700],
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subAudioCategory.subAudioCategoryName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Category: ${subAudioCategory.audioCategoryName}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  'ID: ${subAudioCategory.subAudioCategoryId}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-            onPressed: onDelete,
-          ),
-          IconButton(
-            icon: Icon(Icons.edit, color: Colors.grey[600]),
-            onPressed: onEdit,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// AudioCategory Form Widget
 class AudioCategoryForm extends StatefulWidget {
   final AudioCategory? audioCategory;
-  final Function(AudioCategory) onSave;
+  final Future<void> Function(AudioCategory newCategory) onSave;
 
   const AudioCategoryForm({
     super.key,
@@ -474,139 +922,114 @@ class AudioCategoryForm extends StatefulWidget {
 
 class _AudioCategoryFormState extends State<AudioCategoryForm> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _categoryNameController;
+  late TextEditingController _nameController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController(
+      text: widget.audioCategory?.audioCategoryName ?? '',
+    );
+  }
 
-    final audioCategory = widget.audioCategory;
-
-    if (audioCategory != null) {
-      _categoryNameController = TextEditingController(text: audioCategory.audioCategoryName);
-    } else {
-      _categoryNameController = TextEditingController();
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    final newCategory = AudioCategory(
+      audioCategoryId: widget.audioCategory?.audioCategoryId ?? '',
+      audioCategoryName: _nameController.text.trim(),
+      subAudioCategories: [],
+    );
+    try {
+      await widget.onSave(newCategory);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _saveForm() {
-    if (_formKey.currentState!.validate()) {
-      final audioCategory = AudioCategory(
-        audioCategoryId: widget.audioCategory?.audioCategoryId ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
-        audioCategoryName: _categoryNameController.text.trim(),
-        subAudioCategories: widget.audioCategory?.subAudioCategories ?? [],
-      );
-
-      widget.onSave(audioCategory);
-    }
+  Widget _buildFormField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2C3E50)),
+            children: const [TextSpan(text: ' *', style: TextStyle(color: Colors.red))],
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          enabled: !_isLoading,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12)), borderSide: BorderSide(color: Color(0xFF89B7C2), width: 2)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+          validator: validator,
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 400),
+      padding: const EdgeInsets.all(24),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.audioCategory == null ? 'Create Audio Category' : 'Update Audio Category',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
+            Text(
+              widget.audioCategory == null ? 'Add Category' : 'Edit Category',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)),
             ),
             const SizedBox(height: 24),
-
-            const Text(
-              'Category Name*',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+            _buildFormField(
+              label: 'Category Name',
+              controller: _nameController,
+              hint: 'Enter category name',
+              validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a name' : null,
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _categoryNameController,
-              decoration: InputDecoration(
-                hintText: 'Enter category name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                prefixIcon: const Icon(Icons.audiotrack),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a category name';
-                }
-                if (value.trim().length < 2) {
-                  return 'Category name must be at least 2 characters';
-                }
-                return null;
-              },
-            ),
-
-            if (widget.audioCategory != null) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Category ID',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  widget.audioCategory!.audioCategoryId,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-              ),
-            ],
-
             const SizedBox(height: 24),
-
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: Color(0xFFBDC3C7)),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
-                  child: const Text('Cancel'),
                 ),
-                ElevatedButton(
-                  onPressed: _saveForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFB876),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(widget.audioCategory == null ? 'Save' : 'Update', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
-                  child: Text(widget.audioCategory == null ? 'Create' : 'Update'),
                 ),
               ],
             ),
@@ -618,8 +1041,176 @@ class _AudioCategoryFormState extends State<AudioCategoryForm> {
 
   @override
   void dispose() {
-    _categoryNameController.dispose();
+    _nameController.dispose();
     super.dispose();
+  }
+}
+
+
+// SubAudioCategory List Item Widget
+class SubAudioCategoryListItem extends StatelessWidget {
+  final SubAudioCategoryModel subAudioCategory;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final String searchQuery;
+
+  const SubAudioCategoryListItem({
+    super.key,
+    required this.subAudioCategory,
+    required this.onEdit,
+    required this.onDelete,
+    this.searchQuery = '',
+  });
+
+  Widget _buildHighlightedText(String text, String query) {
+    if (query.isEmpty || !text.toLowerCase().contains(query.toLowerCase())) {
+      return Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+      );
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final startIndex = lowerText.indexOf(lowerQuery);
+    final endIndex = startIndex + query.length;
+
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+        children: [
+          TextSpan(text: text.substring(0, startIndex)),
+          TextSpan(
+            text: text.substring(startIndex, endIndex),
+            style: const TextStyle(
+              backgroundColor: Color(0xFFFFB876),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: text.substring(endIndex)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Color> gradient = [Color(0xFFFFB876), Color(0xFFFFCB7C)];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0F0F0)),
+        boxShadow: [
+          BoxShadow(
+            color: gradient[0].withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: const Icon(
+              Icons.subdirectory_arrow_right,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHighlightedText(
+                  subAudioCategory.subAudioCategoryName,
+                  searchQuery,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Category: ${subAudioCategory.audioCategoryName}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF7F8C8D),
+                  ),
+                ),
+                Text(
+                  'ID: ${subAudioCategory.subAudioCategoryId}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFBDC3C7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89B7C2).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: Color(0xFF89B7C2),
+                    size: 20,
+                  ),
+                  onPressed: onEdit,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: const Color(0xFFE37083).withOpacity(0.15),
+              //     borderRadius: BorderRadius.circular(10),
+              //   ),
+              //   child: IconButton(
+              //     icon: const Icon(
+              //       Icons.delete_outline,
+              //       color: Color(0xFFE37083),
+              //       size: 20,
+              //     ),
+              //     onPressed: onDelete,
+              //     constraints: const BoxConstraints(
+              //       minWidth: 36,
+              //       minHeight: 36,
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -627,7 +1218,7 @@ class _AudioCategoryFormState extends State<AudioCategoryForm> {
 class SubAudioCategoryForm extends StatefulWidget {
   final SubAudioCategoryModel? subAudioCategory;
   final List<AudioCategory> audioCategories;
-  final Function(SubAudioCategoryModel) onSave;
+  final Future<void> Function(SubAudioCategoryModel) onSave;
 
   const SubAudioCategoryForm({
     super.key,
@@ -644,188 +1235,247 @@ class _SubAudioCategoryFormState extends State<SubAudioCategoryForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _subCategoryNameController;
   String? _selectedAudioCategoryId;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
 
-    final subAudioCategory = widget.subAudioCategory;
-
-    if (subAudioCategory != null) {
-      _subCategoryNameController = TextEditingController(text: subAudioCategory.subAudioCategoryName);
-      _selectedAudioCategoryId = subAudioCategory.audioCategoryId;
-    } else {
-      _subCategoryNameController = TextEditingController();
-      _selectedAudioCategoryId = widget.audioCategories.isNotEmpty ? widget.audioCategories.first.audioCategoryId : null;
-    }
+    final sub = widget.subAudioCategory;
+    _subCategoryNameController = TextEditingController(
+      text: sub?.subAudioCategoryName ?? '',
+    );
+    _selectedAudioCategoryId = sub?.audioCategoryId ??
+        (widget.audioCategories.isNotEmpty ? widget.audioCategories.first.audioCategoryId : null);
   }
 
-  void _saveForm() {
-    if (_formKey.currentState!.validate()) {
-      final selectedCategory = widget.audioCategories.firstWhere(
-            (category) => category.audioCategoryId == _selectedAudioCategoryId,
-      );
+  Future<void> _saveForm() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      final subAudioCategory = SubAudioCategoryModel(
-        subAudioCategoryId: widget.subAudioCategory?.subAudioCategoryId ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
-        subAudioCategoryName: _subCategoryNameController.text.trim(),
-        audioCategoryId: _selectedAudioCategoryId!,
-        audioCategoryName: selectedCategory.audioCategoryName,
-      );
+    final selectedCategory = widget.audioCategories.firstWhere(
+          (c) => c.audioCategoryId == _selectedAudioCategoryId,
+    );
 
-      widget.onSave(subAudioCategory);
+    final sub = SubAudioCategoryModel(
+      subAudioCategoryId: widget.subAudioCategory?.subAudioCategoryId ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      subAudioCategoryName: _subCategoryNameController.text.trim(),
+      audioCategoryId: selectedCategory.audioCategoryId,
+      audioCategoryName: selectedCategory.audioCategoryName,
+    );
+
+    setState(() => _isLoading = true);
+    try {
+      await widget.onSave(sub);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.subAudioCategory == null ? 'Create Sub Category' : 'Update Sub Category',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.subAudioCategory == null ? 'Add Sub Category' : 'Edit Sub Category',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)),
+              ),
+              const SizedBox(height: 24),
+
+              // Sub Category Name
+              _buildFormField(
+                label: 'Sub Category Name',
+                field: TextFormField(
+                  controller: _subCategoryNameController,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    hintText: 'Enter sub category name',
+                    prefixIcon: const Icon(Icons.subdirectory_arrow_right),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                    focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12)), borderSide: BorderSide(color: Color(0xFF89B7C2), width: 2)),
                   ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'Please enter a sub category name';
+                    if (value.trim().length < 2) return 'Must be at least 2 characters';
+                    return null;
+                  },
                 ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+              ),
+              const SizedBox(height: 24),
 
-            const Text(
-              'Sub Category Name*',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _subCategoryNameController,
-              decoration: InputDecoration(
-                hintText: 'Enter sub category name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                prefixIcon: const Icon(Icons.subdirectory_arrow_right),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a sub category name';
-                }
-                if (value.trim().length < 2) {
-                  return 'Sub category name must be at least 2 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            const Text(
-              'Parent Category*',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedAudioCategoryId,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                prefixIcon: const Icon(Icons.category),
-              ),
-              items: widget.audioCategories.map((category) {
-                return DropdownMenuItem<String>(
-                  value: category.audioCategoryId,
-                  child: Text(category.audioCategoryName),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedAudioCategoryId = value;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select a parent category';
-                }
-                return null;
-              },
-            ),
-
-            if (widget.subAudioCategory != null) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Sub Category ID',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  widget.subAudioCategory!.subAudioCategoryId,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
+              // Parent Category Dropdown
+              _buildFormField(
+                label: 'Parent Category',
+                field: DropdownButtonFormField<String>(
+                  value: _selectedAudioCategoryId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.category),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                    focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12)), borderSide: BorderSide(color: Color(0xFF89B7C2), width: 2)),
                   ),
+                  items: widget.audioCategories.map((cat) {
+                    return DropdownMenuItem(
+                      value: cat.audioCategoryId,
+                      child: Text(cat.audioCategoryName, overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: _isLoading ? null : (value) => setState(() => _selectedAudioCategoryId = value),
+                  validator: (value) => (value == null || value.isEmpty) ? 'Please select a parent category' : null,
                 ),
+              ),
+              const SizedBox(height: 24),
+
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator()),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: Color(0xFFBDC3C7)),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFB876),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(widget.subAudioCategory == null ? 'Create' : 'Update', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
               ),
             ],
-
-            const SizedBox(height: 24),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  ),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: _saveForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  ),
-                  child: Text(widget.subAudioCategory == null ? 'Create' : 'Update'),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+  // Widget build(BuildContext context) {
+  //   return SafeArea(
+  //     child: SingleChildScrollView(
+  //       child: Form(
+  //         key: _formKey,
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           crossAxisAlignment: CrossAxisAlignment.stretch,
+  //           children: [
+  //             Text(
+  //               widget.subAudioCategory == null ? 'Add Sub Category' : 'Edit Sub Category',
+  //               style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+  //             ),
+  //             const SizedBox(height: 16),
+  //
+  //             // Sub Category Name
+  //             TextFormField(
+  //               controller: _subCategoryNameController,
+  //               enabled: !_isLoading,
+  //               decoration: const InputDecoration(
+  //                 labelText: 'Sub Category Name',
+  //                 prefixIcon: Icon(Icons.subdirectory_arrow_right),
+  //                 border: OutlineInputBorder(),
+  //               ),
+  //               validator: (value) {
+  //                 if (value == null || value.trim().isEmpty) return 'Please enter a sub category name';
+  //                 if (value.trim().length < 2) return 'Must be at least 2 characters';
+  //                 return null;
+  //               },
+  //             ),
+  //             const SizedBox(height: 16),
+  //
+  //             // Parent Category Dropdown
+  //             DropdownButtonFormField<String>(
+  //               value: _selectedAudioCategoryId,
+  //               isExpanded: true,
+  //               decoration: const InputDecoration(
+  //                 labelText: 'Parent Category',
+  //                 prefixIcon: Icon(Icons.category),
+  //                 border: OutlineInputBorder(),
+  //               ),
+  //               items: widget.audioCategories.map((cat) {
+  //                 return DropdownMenuItem(
+  //                   value: cat.audioCategoryId,
+  //                   child: Text(cat.audioCategoryName, overflow: TextOverflow.ellipsis),
+  //                 );
+  //               }).toList(),
+  //               onChanged: _isLoading
+  //                   ? null
+  //                   : (value) => setState(() => _selectedAudioCategoryId = value),
+  //               validator: (value) =>
+  //               (value == null || value.isEmpty) ? 'Please select a parent category' : null,
+  //             ),
+  //             const SizedBox(height: 16),
+  //
+  //             if (_isLoading)
+  //               const Padding(
+  //                 padding: EdgeInsets.only(bottom: 20),
+  //                 child: Center(child: CircularProgressIndicator()),
+  //               ),
+  //
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.end,
+  //               children: [
+  //                 TextButton(
+  //                   onPressed: () => Navigator.pop(context),
+  //                   child: const Text('Cancel'),
+  //                 ),
+  //                 ElevatedButton(
+  //                   onPressed: _isLoading ? null : _saveForm,
+  //                   child: Text(widget.subAudioCategory == null ? 'Create' : 'Update'),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildFormField({
+    required String label,
+    required Widget field,
+    bool isRequired = true,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2C3E50)),
+            children: isRequired ? [const TextSpan(text: ' *', style: TextStyle(color: Colors.red))] : [],
+          ),
+        ),
+        const SizedBox(height: 8),
+        field,
+      ],
     );
   }
 
@@ -833,68 +1483,5 @@ class _SubAudioCategoryFormState extends State<SubAudioCategoryForm> {
   void dispose() {
     _subCategoryNameController.dispose();
     super.dispose();
-  }
-}
-
-// AudioCategory and SubAudioCategory models
-class AudioCategory {
-  final String audioCategoryId;
-  final String audioCategoryName;
-  final List<SubAudioCategoryModel> subAudioCategories;
-
-  AudioCategory({
-    required this.audioCategoryId,
-    required this.audioCategoryName,
-    required this.subAudioCategories,
-  });
-
-  factory AudioCategory.fromJson(Map<String, dynamic> json) {
-    return AudioCategory(
-      audioCategoryId: json['audioCategoryId'] as String,
-      audioCategoryName: json['audioCategoryName'] as String,
-      subAudioCategories: (json['subAudioCategories'] as List)
-          .map((e) => SubAudioCategoryModel.fromJson(e))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'audioCategoryId': audioCategoryId,
-      'audioCategoryName': audioCategoryName,
-      'subAudioCategories': subAudioCategories.map((e) => e.toJson()).toList(),
-    };
-  }
-}
-
-class SubAudioCategoryModel {
-  final String subAudioCategoryId;
-  final String subAudioCategoryName;
-  final String audioCategoryId;
-  final String audioCategoryName;
-
-  SubAudioCategoryModel({
-    required this.subAudioCategoryId,
-    required this.subAudioCategoryName,
-    required this.audioCategoryId,
-    required this.audioCategoryName,
-  });
-
-  factory SubAudioCategoryModel.fromJson(Map<String, dynamic> json) {
-    return SubAudioCategoryModel(
-      subAudioCategoryId: json['subAudioCategoryId'] as String,
-      subAudioCategoryName: json['subAudioCategoryName'] as String,
-      audioCategoryId: json['audioCategoryId'] as String,
-      audioCategoryName: json['audioCategoryName'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'subAudioCategoryId': subAudioCategoryId,
-      'subAudioCategoryName': subAudioCategoryName,
-      'audioCategoryId': audioCategoryId,
-      'audioCategoryName': audioCategoryName,
-    };
   }
 }

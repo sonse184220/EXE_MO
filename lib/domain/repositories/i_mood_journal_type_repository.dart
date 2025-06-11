@@ -3,4 +3,6 @@ import 'package:inner_child_app/domain/entities/mood_journal_type/mood_journal_t
 
 abstract class IMoodJournalTypeRepository {
   Future<Result<List<MoodJournalTypeModel>>> getAllTypes();
+  Future<Result<String>> createType(String typeName);
+  Future<Result<String>> updateType(String id, String typeName);
 }
