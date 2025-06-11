@@ -97,11 +97,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Initialize auth state by checking for stored token
   Future<void> _initialize() async {
+    if (kDebugMode) {
+      print('🚀 AuthNotifier: Starting initialization...');
+    }
     try {
       final tokenModelJson = await _storage.read(tokenModel);
 
       // Check if token data exists
       if (tokenModelJson == null) {
+        if (kDebugMode) {
+          print('🚀 AuthNotifier: Token null in secure storage initialization...');
+        }
         state = const AuthState(status: AuthStatus.unauthenticated);
         return;
       }
@@ -159,6 +165,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         // Invalid token format, remove it
         await _storage.delete(tokenModel);
         state = const AuthState(status: AuthStatus.unauthenticated);
+      }
+
+      if (kDebugMode) {
+        print('✅ AuthNotifier: Initialization completed with status: ${state.status}');
       }
 
       // // Check if token is expired

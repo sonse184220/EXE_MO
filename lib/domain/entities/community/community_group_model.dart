@@ -6,6 +6,7 @@ class CommunityGroupModel {
   final String? communityName;
   final String? communityDescription;
   final DateTime? communityCreatedAt;
+  final String? createdBy;
   final String? communityStatus;
   final List<CommunityMemberModel>? communityMembersDetail;
   final List<CommunityPostModel>? communityPostsDetail;
@@ -16,6 +17,7 @@ class CommunityGroupModel {
     this.communityDescription,
     this.communityCreatedAt,
     this.communityStatus,
+    this.createdBy,
     this.communityMembersDetail,
     this.communityPostsDetail,
   });
@@ -29,6 +31,7 @@ class CommunityGroupModel {
           ? DateTime.parse(json['communityCreatedAt'])
           : null,
       communityStatus: json['communityStatus'],
+      createdBy: json['createdBy'],
       communityMembersDetail: (json['communityMembersDetail'] as List?)
           ?.map((e) => CommunityMemberModel.fromJson(e))
           .toList(),
@@ -45,6 +48,7 @@ class CommunityGroupModel {
       'communityDescription': communityDescription,
       'communityCreatedAt': communityCreatedAt?.toIso8601String(),
       'communityStatus': communityStatus,
+      'createdBy': createdBy,
       'communityMembersDetail':
       communityMembersDetail?.map((e) => e.toJson()).toList(),
       'communityPostsDetail':

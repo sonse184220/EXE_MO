@@ -29,4 +29,32 @@ class MoodJournalTypeRepository implements IMoodJournalTypeRepository {
       return Result.failure('Get all types error: $e');
     }
   }
+
+  @override
+  Future<Result<String>> createType(String typeName) async {
+    try {
+      final response = await _apiService.createType(typeName);
+
+      if (response.statusCode == 201) {
+        return Result.success('Type created successfully');
+      }
+      return Result.failure('Fail to create type. Please try again');
+    } catch (e) {
+      return Result.failure('Create type error');
+    }
+  }
+
+  @override
+  Future<Result<String>> updateType(String id, String typeName) async {
+    try {
+      final response = await _apiService.updateType(id, typeName);
+
+      if (response.statusCode == 204) {
+        return Result.success('Type updated successfully');
+      }
+      return Result.failure('Fail to update type. Please try again');
+    } catch (e) {
+      return Result.failure('Update type error');
+    }
+  }
 }

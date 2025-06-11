@@ -11,4 +11,12 @@ class MoodJournalTypeUsecase {
   Future<Result<List<MoodJournalTypeModel>>> getAllTypes() {
     return _iMoodJournalTypeRepository.getAllTypes();
   }
+
+  Future<Result<String>> createType(String typeName) {
+    return _iMoodJournalTypeRepository.createType(typeName);
+  }
+
+  Future<Result<String>> updateType(String id, String typeName) {
+    return _iMoodJournalTypeRepository.updateType(id, typeName);
+  }
 }

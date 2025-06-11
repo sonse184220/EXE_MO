@@ -112,7 +112,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       switch (authState.status) {
         case AuthStatus.unauthenticated:
         // Redirect to login if not on auth pages
-          if (!isOnAuthPage && !isOnLoadingPage) {
+          if (!isOnAuthPage) {
             if (kDebugMode) {
               print(' Redirect to login if not on auth pages');
             }
@@ -145,14 +145,42 @@ final routerProvider = Provider<GoRouter>((ref) {
             if (kDebugMode) {
               print(' Redirect away from auth pages and profile choosing');
             }
-            return AppRoute.mainScreen;
+            final role = authChangeNotifier.userInfo?.role;
+            if (kDebugMode) {
+              print(role);
+            }
+
+            if (role == 'User') {
+              return AppRoute.mainScreen;
+            } else if (role == 'Admin') {
+              return '/admin${AppRoute.adminMainScreen}';
+            } else {
+              // Role is invalid → force logout
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(authNotifierProvider.notifier).logout();
+              });
+              return AppRoute.login;
+            }
           }
 
           if (isOnAuthPage) {
             if (kDebugMode) {
               print(' Allow access to main screen page, redirect from auth pages after refresh token');
             }
-            return AppRoute.mainScreen;
+            final role = authChangeNotifier.userInfo?.role;
+
+            if (role == 'User') {
+              return AppRoute.mainScreen;
+            } else if (role == 'Admin') {
+              return '/admin${AppRoute.adminMainScreen}';
+            } else {
+              // Role is invalid → force logout
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(authNotifierProvider.notifier).logout();
+              });
+              return AppRoute.login;
+            }
+            // return AppRoute.mainScreen;
           }
           // else{
           //   return AppRoute.login;
@@ -223,11 +251,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(
           path: AppRoute.userBase,
           name: 'userBase',
-          builder: (context, state) => const Scaffold(
-            body: Center(child: Text("Select a user function")),
-          ), //
+          // builder: (context, state) => const Scaffold(
+          //   body: Center(child: Text("Select a user function")),
+          // ), //
           // builder: (context, state) => const Scaffold(body: Center(child: Text("User Base"))),
-          // redirect: (context, state) => '/user/profile-edit', // optional default redirect
+          redirect: (context, state) => '/user/profile-choosing', // optional default redirect
           routes: [
             GoRoute(
               path: AppRoute.profileChoosing,
@@ -356,13 +384,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(
           path: AppRoute.adminBase,
           name: 'adminBase',
-          builder: (context, state) => const Scaffold(
-            body: Center(child: Text("Select a admin function")),
-          ),
-          // redirect: (context, state) => '/admin/adminMainScreen', // optional
+          // builder: (context, state) => const Scaffold(
+          //   body: Center(child: Text("Select a admin function")),
+          // ),
+          redirect: (context, state) => '/admin${AppRoute.adminMainScreen}', // optional
           routes: [
             GoRoute(
-              path: AppRoute.adminMainScreen, // becomes /admin/user
+              path: AppRoute.adminMainScreen, //
               name: 'adminMainScreen',
               builder: (context, state) => const AdminMainScreen(),
             ),

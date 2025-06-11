@@ -7,6 +7,8 @@ class FromTokenUserInfo {
   final int expiration;
   final String issuer;
   final String audience;
+  final String role;          // ✅ Added
+  final String purchasePlan;  // ✅ Added
 
   const FromTokenUserInfo({
     required this.userId,
@@ -17,15 +19,15 @@ class FromTokenUserInfo {
     required this.expiration,
     required this.issuer,
     required this.audience,
+    required this.role,
+    required this.purchasePlan,
   });
 
-  /// Check if token is expired
   bool get isExpired {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     return now >= expiration;
   }
 
-  /// Get expiration date
   DateTime get expirationDate {
     return DateTime.fromMillisecondsSinceEpoch(expiration * 1000);
   }
@@ -40,6 +42,8 @@ class FromTokenUserInfo {
       expiration: payload['exp'] ?? 0,
       issuer: payload['iss']?.toString() ?? '',
       audience: payload['aud']?.toString() ?? '',
+      role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']?.toString() ?? '',
+      purchasePlan: payload['PurchasePlan']?.toString() ?? '',
     );
   }
 
@@ -52,6 +56,8 @@ class FromTokenUserInfo {
     int? expiration,
     String? issuer,
     String? audience,
+    String? role,
+    String? purchasePlan,
   }) {
     return FromTokenUserInfo(
       userId: userId ?? this.userId,
@@ -62,12 +68,14 @@ class FromTokenUserInfo {
       expiration: expiration ?? this.expiration,
       issuer: issuer ?? this.issuer,
       audience: audience ?? this.audience,
+      role: role ?? this.role,
+      purchasePlan: purchasePlan ?? this.purchasePlan,
     );
   }
 
   @override
   String toString() {
-    return 'UserInfo(userId: $userId, email: $email, profileId: $profileId, sessionId: $sessionId, tokenType: $tokenType, expiration: $expiration, issuer: $issuer, audience: $audience)';
+    return 'UserInfo(userId: $userId, email: $email, profileId: $profileId, sessionId: $sessionId, tokenType: $tokenType, expiration: $expiration, issuer: $issuer, audience: $audience, role: $role, purchasePlan: $purchasePlan)';
   }
 
   @override
@@ -81,7 +89,9 @@ class FromTokenUserInfo {
         other.tokenType == tokenType &&
         other.expiration == expiration &&
         other.issuer == issuer &&
-        other.audience == audience;
+        other.audience == audience &&
+        other.role == role &&
+        other.purchasePlan == purchasePlan;
   }
 
   @override
@@ -93,6 +103,8 @@ class FromTokenUserInfo {
     tokenType.hashCode ^
     expiration.hashCode ^
     issuer.hashCode ^
-    audience.hashCode;
+    audience.hashCode ^
+    role.hashCode ^
+    purchasePlan.hashCode;
   }
 }

@@ -10,4 +10,12 @@ class AudioCategoryUsecase {
   Future<Result<List<AudioCategory>>> getAllAudioCategories() {
     return _audioCategoryRepository.getAllAudioCategories();
   }
+
+  Future<Result<String>> createAudioCategory(String name) {
+    return _audioCategoryRepository.createAudioCategory(name);
+  }
+
+  Future<Result<String>> updateAudioCategory(String id, String name) {
+    return _audioCategoryRepository.updateAudioCategory(id, name);
+  }
 }

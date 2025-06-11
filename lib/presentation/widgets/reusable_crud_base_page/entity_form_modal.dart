@@ -63,7 +63,7 @@ class _EntityFormModalState<T> extends State<EntityFormModal<T>> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isUpdate ? 'Update Customer' : 'Create New',
+                  isUpdate ? 'Update' : 'Create New',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

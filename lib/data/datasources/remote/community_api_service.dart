@@ -41,4 +41,22 @@ class CommunityApiService {
   Future<Response> getCommunityPostDetail(String postId) async {
     return await _client.get('innerchild/community/post-detail/$postId');
   }
+
+  Future<Response> createCommunityGroup(String name, String description, String status) async {
+    final formData = FormData.fromMap({
+      'communityName': name,
+      'communityDescription': description,
+      'communityStatus': status,
+    });
+    return await _client.post('innerchild/community/create-community', data: formData);
+  }
+
+  Future<Response> updateCommunityGroup(String groupId, String name, String description, String status) async {
+    final formData = FormData.fromMap({
+      'communityName': name,
+      'communityDescription': description,
+      'communityStatus': status,
+    });
+    return await _client.put('innerchild/community/update-community/$groupId', data: formData);
+  }
 }
