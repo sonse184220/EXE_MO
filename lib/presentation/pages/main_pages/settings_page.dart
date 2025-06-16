@@ -34,11 +34,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         color: Colors.grey,
         title: 'Profile',
         tap: () {
-          context.go('usercailon/${AppRoute.profileEdit}');
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => ProfileEditPage()),
-          // );
+          // context.go('usercailon/${AppRoute.profileEdit}');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileEditPage()),
+          );
         },
       ),
       // _buildSettingItem(

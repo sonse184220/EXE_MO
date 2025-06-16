@@ -32,17 +32,17 @@ class _HelpScreenPageState extends State<HelpScreenPage> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {Navigator.of(context).pop();},
           icon: Icon(Icons.arrow_back),
           color: Colors.black,
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.more_vert_rounded),
-            color: Colors.black,
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {},
+        //     icon: Icon(Icons.more_vert_rounded),
+        //     color: Colors.black,
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

@@ -1,21 +1,21 @@
 class AudioCategory {
   final String audioCategoryId;
   final String audioCategoryName;
-  final List<SubAudioCategory> subAudioCategories;
+  // final List<SubAudioCategory> subAudioCategories;
 
   AudioCategory({
     required this.audioCategoryId,
     required this.audioCategoryName,
-    required this.subAudioCategories,
+    // required this.subAudioCategories,
   });
 
   factory AudioCategory.fromJson(Map<String, dynamic> json) {
     return AudioCategory(
       audioCategoryId: json['audioCategoryId'] as String,
       audioCategoryName: json['audioCategoryName'] as String,
-      subAudioCategories: (json['subAudioCategories'] as List)
-          .map((e) => SubAudioCategory.fromJson(e))
-          .toList(),
+      // subAudioCategories: (json['subAudioCategories'] as List)
+      //     .map((e) => SubAudioCategory.fromJson(e))
+      //     .toList(),
     );
   }
 
@@ -23,7 +23,7 @@ class AudioCategory {
     return {
       'audioCategoryId': audioCategoryId,
       'audioCategoryName': audioCategoryName,
-      'subAudioCategories': subAudioCategories.map((e) => e.toJson()).toList(),
+      // 'subAudioCategories': subAudioCategories.map((e) => e.toJson()).toList(),
     };
   }
 }

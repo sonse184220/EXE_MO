@@ -221,9 +221,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(
           path: AppRoute.mainScreen,
           name: 'mainScreen',
-          builder: (context, state) => const
-          // _AuthenticatedPageWrapper(child:
-          MainScreen(),
+          builder: (context, state) => MainScreen(key: mainScreenKey,),
           // )
         ),
         GoRoute(

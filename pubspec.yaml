@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.7.2
@@ -57,6 +57,13 @@ dependencies:
   #  flutter_launcher_icons: ^0.14.3
   loading_animation_widget: ^1.3.0
   mime: ^2.0.0
+  file_picker: ^10.1.9
+  http_parser: ^4.1.2
+  permission_handler: ^12.0.0+1
+  device_info_plus: ^11.4.0
+  package_info_plus: ^8.3.0
+  path_provider: ^2.1.5
+  open_filex: ^4.7.0
 #  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
@@ -78,15 +85,17 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/appLogo.png"
+  adaptive_icon_background: "#FFFFFF" # or your preferred background color
+  adaptive_icon_foreground: "assets/images/appLogo.png"
 
 flutter_native_splash:
   color: "#89B7C2"  # SPRING SKY
-  image: assets/images/appLogo.png
+  image: assets/images/circula_app_logo.png
   color_dark: "#89B7C2"
-  image_dark: assets/images/appLogo.png
+  image_dark: assets/images/circula_app_logo.png
 
   android_12:
-    image: assets/images/appLogo.png
+    image: assets/images/circula_app_logo.png
     color: "#89B7C2"
 
   ios: true

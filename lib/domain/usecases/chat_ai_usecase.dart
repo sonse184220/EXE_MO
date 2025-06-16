@@ -1,5 +1,4 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
-import 'package:inner_child_app/domain/entities/chat_ai/chat_message_model.dart';
 import 'package:inner_child_app/domain/entities/chat_ai/chat_session_model.dart';
 import 'package:inner_child_app/domain/repositories/i_chat_ai_repository.dart';
 

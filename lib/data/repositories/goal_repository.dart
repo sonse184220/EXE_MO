@@ -35,7 +35,7 @@ class GoalRepository implements IGoalRepository {
       final response = await _goalApiService.createOwnGoals(goal);
 
       if (response.statusCode == 201) {
-        final data = response.data;
+        // final data = response.data;
 
         // final goals =
         // (data as List<dynamic>)
@@ -55,7 +55,7 @@ class GoalRepository implements IGoalRepository {
       final response = await _goalApiService.updateOwnGoals(goalId, goal);
 
       if (response.statusCode == 204) {
-        final data = response.data;
+        // final data = response.data;
 
         // final goals =
         // (data as List<dynamic>)
@@ -75,7 +75,7 @@ class GoalRepository implements IGoalRepository {
       final response = await _goalApiService.deleteOwnGoals(goalId);
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        // final data = response.data;
 
         // final goals =
         // (data as List<dynamic>)

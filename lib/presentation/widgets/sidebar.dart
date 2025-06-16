@@ -104,6 +104,18 @@ class _CustomSideBarState extends ConsumerState<CustomSideBar> {
               index: 5,
               selected: widget.currentIndex == 5,
             ),
+            _buildDrawerItem(
+              icon: Icons.settings,
+              title: 'Quiz Category Manage',
+              index: 6,
+              selected: widget.currentIndex == 6,
+            ),
+            _buildDrawerItem(
+              icon: Icons.settings,
+              title: 'Quiz Manage',
+              index: 7,
+              selected: widget.currentIndex == 7,
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.red),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/mood_journal_type/mood_journal_type_model.dart';
-import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
 
 class MoodJournalTypeManagePage extends ConsumerStatefulWidget {

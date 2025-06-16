@@ -1,5 +1,4 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 
 class SecureStorageUtils {
   final _storage = const FlutterSecureStorage();

@@ -82,35 +82,7 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
       return loadedCategories;
     } catch (e) {
       debugPrint('Error loading categories: $e');
-
-      final mockCategories = [
-        AudioCategory(
-          audioCategoryId: '1',
-          audioCategoryName: 'Meditation',
-          subAudioCategories: [],
-        ),
-        AudioCategory(
-          audioCategoryId: '2',
-          audioCategoryName: 'Sleep',
-          subAudioCategories: [],
-        ),
-        AudioCategory(
-          audioCategoryId: '3',
-          audioCategoryName: 'Mindfulness',
-          subAudioCategories: [],
-        ),
-        AudioCategory(
-          audioCategoryId: '4',
-          audioCategoryName: 'Relaxation',
-          subAudioCategories: [],
-        ),
-      ];
-
-      setState(() {
-        categories = mockCategories;
-      });
-
-      return mockCategories;
+      return [];
     }
   }
 
@@ -126,51 +98,7 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
       return loadedSubCategories;
     } catch (e) {
       debugPrint('Error loading subcategories: $e');
-
-      final mockSubCategories = [
-        SubAudioCategoryModel(
-          subAudioCategoryId: '1',
-          subAudioCategoryName: 'Guided Meditation',
-          audioCategoryId: '1',
-          audioCategoryName: 'Meditation',
-        ),
-        SubAudioCategoryModel(
-          subAudioCategoryId: '2',
-          subAudioCategoryName: 'Breathing Exercises',
-          audioCategoryId: '1',
-          audioCategoryName: 'Meditation',
-        ),
-        SubAudioCategoryModel(
-          subAudioCategoryId: '3',
-          subAudioCategoryName: 'Sleep Stories',
-          audioCategoryId: '2',
-          audioCategoryName: 'Sleep',
-        ),
-        SubAudioCategoryModel(
-          subAudioCategoryId: '4',
-          subAudioCategoryName: 'White Noise',
-          audioCategoryId: '2',
-          audioCategoryName: 'Sleep',
-        ),
-        SubAudioCategoryModel(
-          subAudioCategoryId: '5',
-          subAudioCategoryName: 'Body Scan',
-          audioCategoryId: '3',
-          audioCategoryName: 'Mindfulness',
-        ),
-        SubAudioCategoryModel(
-          subAudioCategoryId: '6',
-          subAudioCategoryName: 'Nature Sounds',
-          audioCategoryId: '4',
-          audioCategoryName: 'Relaxation',
-        ),
-      ];
-
-      setState(() {
-        allSubCategories = mockSubCategories;
-      });
-
-      return mockSubCategories;
+      return [];
     }
   }
 

@@ -364,7 +364,7 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
                   ),
                   if (_searchQuery.isNotEmpty) ...[
                     Text(
-                      ' for "${_searchQuery}"',
+                      ' for "$_searchQuery"',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],

@@ -15,7 +15,7 @@ class MoodJournalRepository implements IMoodJournalRepository {
       final response = await _apiService.logMood(request);
 
       if (response.statusCode == 201) {
-        final data = response.data;
+        // final data = response.data;
 
         // final types =
         // (data as List<dynamic>)
@@ -55,7 +55,7 @@ class MoodJournalRepository implements IMoodJournalRepository {
       final response = await _apiService.updateMoodJournal(moodJournalId, request);
 
       if (response.statusCode == 201) {
-        final data = response.data;
+        // final data = response.data;
 
         // final types =
         // (data as List<dynamic>)
