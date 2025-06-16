@@ -558,7 +558,7 @@ class _AudioCategoryManagePageState
                         () => AudioCategory(
                           audioCategoryId: '',
                           audioCategoryName: 'Unknown',
-                          subAudioCategories: [],
+                          // subAudioCategories: [],
                         ),
                   );
 
@@ -939,7 +939,7 @@ class _AudioCategoryFormState extends State<AudioCategoryForm> {
     final newCategory = AudioCategory(
       audioCategoryId: widget.audioCategory?.audioCategoryId ?? '',
       audioCategoryName: _nameController.text.trim(),
-      subAudioCategories: [],
+      // subAudioCategories: [],
     );
     try {
       await widget.onSave(newCategory);

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class UserRegisterModel {
    String fullName;
    String emailAddress;
@@ -6,9 +8,10 @@ class UserRegisterModel {
    DateTime dateOfBirth;
    String gender;
    String phoneNumber;
+   final File? profilePicture;
 
    UserRegisterModel(this.fullName, this.emailAddress, this.password,
-       this.confirmPassword, this.dateOfBirth, this.gender, this.phoneNumber);
+       this.confirmPassword, this.dateOfBirth, this.gender, this.phoneNumber, this.profilePicture,);
 
 
 }

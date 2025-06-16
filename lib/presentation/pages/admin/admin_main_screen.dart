@@ -3,11 +3,10 @@ import 'package:inner_child_app/presentation/pages/admin/admin_home_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/audio_category_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/audio_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/mood_journal_type_manage_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/quiz_category_manage_page.dart';
+import 'package:inner_child_app/presentation/pages/admin/quiz_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/transaction_manage_page.dart';
 import 'package:inner_child_app/presentation/pages/admin/user_manage_page.dart';
-import 'package:inner_child_app/presentation/pages/main_pages/goals_page.dart';
-import 'package:inner_child_app/presentation/pages/main_pages/notification.dart';
-import 'package:inner_child_app/presentation/pages/main_pages/settings_page.dart';
 import 'package:inner_child_app/presentation/widgets/sidebar.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -31,6 +30,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const AudioManagePage(),
     const MoodJournalTypeManagePage(),
     const TransactionManagePage(),
+    const QuizCategoryManagePage(),
+    const QuizManagePage(),
   ];
 
   void _onAdminItemTapped(int index) {

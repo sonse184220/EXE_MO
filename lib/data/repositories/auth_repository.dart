@@ -174,7 +174,9 @@ class AuthRepository implements IAuthRepository {
   Future<Result<String>> editProfile(ProfileEditModel profile) async {
     try {
       final response = await _apiService.editProfile(profile);
-      return Result.success('okla update profile');
+      if(response.statusCode == 204){
+      return Result.success('Successfully update profile');}
+      return Result.failure('Update failed');
     } on DioException catch (e) {
       return Result.failure(e.response?.data['message'] ?? 'Update failed');
     } catch (e) {

@@ -1,1 +1,5 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"innerchildexeapp","appId":"1:172921488677:android:3b97a68e4d4aefad3c86cc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"innerchildexeapp","configurations":{"android":"1:172921488677:android:3b97a68e4d4aefad3c86cc","ios":"1:172921488677:ios:99166bf6c3c908aa3c86cc","macos":"1:172921488677:ios:99166bf6c3c908aa3c86cc","web":"1:172921488677:web:bb34e1798aaaf9bc3c86cc","windows":"1:172921488677:web:e031bbf02f5b45a13c86cc"}}}}}}
+{
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
+  }
+}

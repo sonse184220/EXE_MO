@@ -20,6 +20,7 @@ class ProfileEditPage extends ConsumerStatefulWidget {
 
 class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   late final AuthUsecase _authUseCase;
+  bool _isSubmitting = false;
 
   bool _isLoading = true;
   ProfileEditModel? _profileData;
@@ -91,8 +92,29 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
+      final File file = File(image.path);
+      final int fileSizeInBytes = await file.length();
+      final double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+      if (fileSizeInMB > 10) {
+        // Show alert if file exceeds 10MB
+        if (context.mounted) {
+          Notify.showFlushbar(
+            'Image exceeds the 10MB limit. Please choose a smaller file.',
+            isError: true,
+          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(
+          //     content: Text(),
+          //     backgroundColor: Colors.red,
+          //   ),
+          // );
+        }
+        return;
+      }
+
       setState(() {
-        _profileImage = File(image.path);
+        _profileImage = file;
       });
     }
   }
@@ -235,61 +257,102 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     return isValid;
   }
 
+
   Future<void> _submitForm() async {
     if (!_validateForm()) {
       return;
     }
 
-    try {
-      // setState(() {
-      //   _isLoading = true;
-      // });
+    setState(() {
+      _isSubmitting = true;
+    });
 
+    try {
       final userData = ProfileEditModel(
         fullName: _fullNameController.text,
         phoneNumber: _phoneNumberController.text,
         gender: _selectedGender!,
         dateOfBirth: _selectedBirthDate!,
-        // address: _addressController.text,
         profileImage: _profileImage,
       );
 
       final result = await _authUseCase.editProfile(userData);
 
-      // setState(() {
-      //   _isLoading = false;
-      // });
-
       if (result.isSuccess) {
         Notify.showFlushbar('Profile updated successfully');
-        _loadProfile();
+        await _loadProfile(); // Reload profile data after successful update
+
+        // Optional: Navigate back or show success state
+        if (mounted) {
+          Navigator.of(context).pop(); // Go back to previous screen
+        }
       } else {
-        Notify.showFlushbar(
+        _showErrorWithRetry(
           result.error ?? 'Failed to update profile',
-          isError: true,
+              () => _submitForm(), // Retry callback
         );
       }
     } catch (e) {
-      // setState(() {
-      //   _isLoading = false;
-      // });
-      Notify.showFlushbar(
+      _showErrorWithRetry(
         'An error occurred: ${e.toString()}',
-        isError: true,
+            () => _submitForm(), // Retry callback
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 
+// Helper method to show error with retry option
+  void _showErrorWithRetry(String message, VoidCallback retryCallback) {
+    // Show error notification
+    Notify.showFlushbar(message, isError: true);
+
+    // Optional: Show dialog with retry option
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                retryCallback(); // Retry the operation
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child:  Scaffold(
-      body: GestureDetector(
-        // Dismiss keyboard when tapping outside of text fields
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: LayoutBuilder(
+      child: Scaffold(
+        body: GestureDetector(
+          // Dismiss keyboard when tapping outside of text fields
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: LayoutBuilder(
             builder: (context, constraints) {
               return
               // SingleChildScrollView(
@@ -387,7 +450,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                                                           )
                                                           as ImageProvider
                                                       : AssetImage(
-                                                        "assets/profile_image.jpg",
+                                                        "assets/images/user_avt.png",
                                                       )),
                                           // backgroundImage:
                                           //     _profileImage != null
@@ -770,18 +833,38 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            _submitForm();
-                          },
+                          onPressed: _isSubmitting ? null : _submitForm, // Disable when submitting
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepOrange,
-                            padding: EdgeInsets.symmetric(vertical: 15),
+                            backgroundColor: _isSubmitting ? Colors.grey : Colors.deepOrange,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text(
-                            "Save Changes",
+                          child: _isSubmitting
+                              ? const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Saving...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          )
+                              : const Text(
+                            'Save Changes',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -789,6 +872,28 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                           ),
                         ),
                       ),
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: ElevatedButton(
+                      //     onPressed: () {
+                      //       _submitForm();
+                      //     },
+                      //     style: ElevatedButton.styleFrom(
+                      //       backgroundColor: Colors.deepOrange,
+                      //       padding: EdgeInsets.symmetric(vertical: 15),
+                      //       shape: RoundedRectangleBorder(
+                      //         borderRadius: BorderRadius.circular(8),
+                      //       ),
+                      //     ),
+                      //     child: Text(
+                      //       "Save Changes",
+                      //       style: TextStyle(
+                      //         color: Colors.white,
+                      //         fontWeight: FontWeight.bold,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

@@ -69,7 +69,7 @@ class AudioRepository implements IAudioRepository {
     try{
       final response = await audioApiService.updateAudio(id, audio);
 
-      if(response.statusCode == 204) {
+      if(response.statusCode == 200) {
         return Result.success('Audio uodated successfully');
       }
 

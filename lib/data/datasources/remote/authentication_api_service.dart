@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
+
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_login_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_register_model.dart';
@@ -19,6 +22,13 @@ class AuthApiService {
       'DateOfBirth': user.dateOfBirth.toIso8601String(), // or format as needed
       'gender': user.gender,
       'PhoneNumber': user.phoneNumber,
+      if (user.profilePicture != null)
+        'ProfilePicture': await MultipartFile.fromFile(
+          user.profilePicture!.path,
+          contentType: MediaType.parse(
+            lookupMimeType(user.profilePicture!.path) ?? 'application/octet-stream',
+          ),
+        ),
     });
 
     return await _client.post('innerchild/auth/register', data: formData);
@@ -48,14 +58,37 @@ class AuthApiService {
   }
 
   Future<Response> editProfile(ProfileEditModel profile) async {
-    final formData = FormData.fromMap({
-      'FullName': profile.fullName,
-      'DateOfBirth': profile.dateOfBirth?.toIso8601String(),
-      // or format as needed
-      'Gender': profile.gender,
-      'PhoneNumber': profile.phoneNumber,
-      'ProfilePicture': profile.profileImage,
-    });
+    final formData = FormData();
+
+    formData.fields.addAll([
+      MapEntry('FullName', profile.fullName ?? ''),
+      MapEntry('DateOfBirth', profile.dateOfBirth?.toIso8601String() ?? ''),
+      MapEntry('Gender', profile.gender ?? ''),
+      MapEntry('PhoneNumber', profile.phoneNumber ?? ''),
+    ]);
+
+    if (profile.profileImage != null) {
+      final mimeType = lookupMimeType(profile.profileImage!.path);
+      final mediaType = mimeType?.split('/');
+
+      if (mediaType != null && mediaType.length == 2) {
+        formData.files.add(MapEntry(
+          'ProfilePicture',
+          await MultipartFile.fromFile(
+            profile.profileImage!.path,
+            contentType: MediaType(mediaType[0], mediaType[1]),
+          ),
+        ));
+      }
+    }
+    // final formData = FormData.fromMap({
+    //   'FullName': profile.fullName,
+    //   'DateOfBirth': profile.dateOfBirth?.toIso8601String(),
+    //   // or format as needed
+    //   'Gender': profile.gender,
+    //   'PhoneNumber': profile.phoneNumber,
+    //   'ProfilePicture': profile.profileImage,
+    // });
 
     return await _client.put(
       'innerchild/auth/update-user',

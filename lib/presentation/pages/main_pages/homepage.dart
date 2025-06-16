@@ -5,12 +5,15 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/article/article_model.dart';
 import 'package:inner_child_app/domain/usecases/article_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/articles/article_detail.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/articles/article_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/audio_pages/home_audio_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_writing.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/quiz/all_quiz_page.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/therapy_tools_page.dart';
+
+import '../../../main.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -79,81 +82,81 @@ class _HomePageState extends ConsumerState<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       //Search Section
-                      Row(
-                        // mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  topRight: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
-                                color: Color.fromRGBO(255, 255, 255, 1),
-                                border: Border.all(
-                                  color: Color.fromRGBO(230, 230, 230, 1),
-                                  width: 1,
-                                ),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.search,
-                                    color: Color.fromRGBO(153, 153, 153, 1),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Search healing properties or article here',
-                                      style: TextStyle(
-                                        color: Color.fromRGBO(153, 153, 153, 1),
-                                        fontSize: 14,
-                                        fontFamily: 'League Spartan',
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              const Icon(Icons.notifications_none, size: 28),
-                              Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    '+9',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   // mainAxisSize: MainAxisSize.min,
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     Expanded(
+                      //       child: Container(
+                      //         decoration: BoxDecoration(
+                      //           borderRadius: BorderRadius.only(
+                      //             topLeft: Radius.circular(16),
+                      //             topRight: Radius.circular(16),
+                      //             bottomLeft: Radius.circular(16),
+                      //             bottomRight: Radius.circular(16),
+                      //           ),
+                      //           color: Color.fromRGBO(255, 255, 255, 1),
+                      //           border: Border.all(
+                      //             color: Color.fromRGBO(230, 230, 230, 1),
+                      //             width: 1,
+                      //           ),
+                      //         ),
+                      //         padding: EdgeInsets.symmetric(
+                      //           horizontal: 12,
+                      //           vertical: 16,
+                      //         ),
+                      //         child: Row(
+                      //           mainAxisSize: MainAxisSize.min,
+                      //           children: [
+                      //             Icon(
+                      //               Icons.search,
+                      //               color: Color.fromRGBO(153, 153, 153, 1),
+                      //             ),
+                      //             SizedBox(width: 8),
+                      //             Expanded(
+                      //               child: Text(
+                      //                 'Search healing properties or article here',
+                      //                 style: TextStyle(
+                      //                   color: Color.fromRGBO(153, 153, 153, 1),
+                      //                   fontSize: 14,
+                      //                   fontFamily: 'League Spartan',
+                      //                 ),
+                      //                 overflow: TextOverflow.ellipsis,
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //       ),
+                      //     ),
+                      //     const SizedBox(width: 12),
+                      //     Stack(
+                      //       alignment: Alignment.topRight,
+                      //       children: [
+                      //         const Icon(Icons.notifications_none, size: 28),
+                      //         Container(
+                      //           padding: const EdgeInsets.all(2),
+                      //           decoration: BoxDecoration(
+                      //             color: Colors.red,
+                      //             shape: BoxShape.circle,
+                      //           ),
+                      //           constraints: const BoxConstraints(
+                      //             minWidth: 16,
+                      //             minHeight: 16,
+                      //           ),
+                      //           child: const Center(
+                      //             child: Text(
+                      //               '+9',
+                      //               style: TextStyle(
+                      //                 color: Colors.white,
+                      //                 fontSize: 10,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ],
+                      // ),
                       SizedBox(height: 20),
                       //Mood Tracker Card Section
                       Container(
@@ -203,9 +206,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ),
                               const SizedBox(height: 16),
                               SizedBox(
-                                width: 160,
+                                // width: 160,
                                 child: OutlinedButton(
-                                  onPressed: () {},
+                                  onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context)=> TherapyToolsPage()));},
                                   style: OutlinedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     side: const BorderSide(color: Colors.white),
@@ -214,7 +217,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     ),
                                   ),
                                   child: const Text(
-                                    'See Details',
+                                    'Access healing journey',
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.w500,
@@ -244,7 +247,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> TherapyToolsPage())),
+                                onPressed: () => mainScreenKey.currentState?.switchToTherapyTab(),
                                 child: const Text(
                                   'See all',
                                   style: TextStyle(
@@ -323,7 +326,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> ArticleListPage())),
                                 child: const Text(
                                   'See all',
                                   style: TextStyle(
