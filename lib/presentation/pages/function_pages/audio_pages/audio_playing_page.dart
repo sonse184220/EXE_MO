@@ -139,30 +139,31 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       print('Error loading audio list: $e');
       // Fallback list for demo
       setState(() {
-        audioList = [
-          AudioModel(
-            audioId: "A001",
-            audioTitle: "Morning Meditation",
-            audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
-            audioThumbnail: "",
-            audioCreatedAt: DateTime.now(),
-            audioIsPremium: false,
-            audioStatus: "Active",
-            subAudioCategoryId: "SAC001",
-            subAudioCategoryName: "Guided Meditation",
-          ),
-          AudioModel(
-            audioId: "A002",
-            audioTitle: "Evening Relaxation",
-            audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
-            audioThumbnail: "",
-            audioCreatedAt: DateTime.now(),
-            audioIsPremium: false,
-            audioStatus: "Active",
-            subAudioCategoryId: "SAC002",
-            subAudioCategoryName: "Relaxation",
-          ),
-        ];
+        audioList = [];
+        // audioList = [
+        //   AudioModel(
+        //     audioId: "A001",
+        //     audioTitle: "Morning Meditation",
+        //     audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
+        //     audioThumbnail: "",
+        //     audioCreatedAt: DateTime.now(),
+        //     audioIsPremium: false,
+        //     audioStatus: "Active",
+        //     subAudioCategoryId: "SAC001",
+        //     subAudioCategoryName: "Guided Meditation",
+        //   ),
+        //   AudioModel(
+        //     audioId: "A002",
+        //     audioTitle: "Evening Relaxation",
+        //     audioUrl: "https://thantrieu.com/resources/music/1130295695.mp3",
+        //     audioThumbnail: "",
+        //     audioCreatedAt: DateTime.now(),
+        //     audioIsPremium: false,
+        //     audioStatus: "Active",
+        //     subAudioCategoryId: "SAC002",
+        //     subAudioCategoryName: "Relaxation",
+        //   ),
+        // ];
         currentAudioIndex = 0;
       });
     }
@@ -178,6 +179,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       });
 
       try {
+        print('url ne: $currentAudio?.audioUrl');
         await _audioPlayer.stop();
         await _audioPlayer.setSourceUrl(currentAudio!.audioUrl!);
         await _audioPlayer.resume();
@@ -612,7 +614,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                   // Bottom controls
                   Expanded(
                     child: Container(
-                      decoration: BoxDecoration(color: Color(0xFF4B3621)),
+                      decoration: BoxDecoration(color: Color(0xFF89B7C2)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [

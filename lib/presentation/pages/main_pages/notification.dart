@@ -1,14 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/notification/notification_model.dart';
+import 'package:inner_child_app/domain/usecases/notification_usecase.dart';
 
 class NotificationPage extends ConsumerStatefulWidget {
   const NotificationPage({super.key});
-
   @override
   NotificationState createState() => NotificationState();
 }
@@ -16,77 +15,183 @@ class NotificationPage extends ConsumerStatefulWidget {
 class NotificationState extends ConsumerState<NotificationPage> {
   List<NotificationModel> apiNotifications = [];
   bool isLoading = true;
-
-  late final _notificationUseCase;
+  bool hasError = false;
+  String errorMessage = '';
+  late final NotificationUseCase _notificationUseCase;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _notificationUseCase = ref.read(notificationUseCaseProvider);
     fetchNotifications();
   }
 
   Future<void> fetchNotifications() async {
-    // In a real app, you would replace this with your actual API endpoint
-    // For now, we'll simulate an API call and use the provided JSON data
+    setState(() {
+      isLoading = true;
+      hasError = false;
+      errorMessage = '';
+    });
+
     try {
-      // Simulate API delay
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await _notificationUseCase.getAllNotifications();
 
-      // This is where you would normally fetch from an API
-      // final response = await http.get(Uri.parse('your-api-endpoint'));
+      if (result.isSuccess) {
+        setState(() {
+          apiNotifications = result.data ?? [];
+          isLoading = false;
+          hasError = false;
+        });
+      } else {
+        // Handle API failure case
+        setState(() {
+          isLoading = false;
+          hasError = true;
+          errorMessage = result.error ?? 'Failed to load notifications';
+          apiNotifications = [];
+        });
 
-      // Using the sample JSON you provided
-      const String sampleJsonData = '''
-      [
-        {
-          "notificationId": "N001",
-          "notificationUrl": "notification/welcome",
-          "notificationName": "Welcome Notification",
-          "notificationDescription": "Welcome to our application",
-          "userId": "U001",
-          "user": null
-        },
-        {
-          "notificationId": "N002",
-          "notificationUrl": "notification/renewal",
-          "notificationName": "Renewal Notification",
-          "notificationDescription": "Your subscription will renew soon",
-          "userId": "U002",
-          "user": null
-        },
-        {
-          "notificationId": "N003",
-          "notificationUrl": "notification/feature",
-          "notificationName": "Feature Notification",
-          "notificationDescription": "We have added new features",
-          "userId": "U003",
-          "user": null
-        }
-      ]
-      ''';
-
-      final List<dynamic> jsonData = jsonDecode(sampleJsonData);
-
-      setState(() {
-        apiNotifications =
-            jsonData.map((item) => NotificationModel.fromJson(item)).toList();
-        isLoading = false;
-      });
+        Notify.showFlushbar(
+          result.error ?? 'Failed to load notifications',
+          isError: true,
+        );
+      }
     } catch (e) {
-      // setState(() {
-      //   errorMessage = 'Failed to load notifications: $e';
-      //   isLoading = false;
-      // });
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        errorMessage = 'Network error: Unable to load notifications';
+        apiNotifications = [];
+      });
+
       Notify.showFlushbar(
-        'Failed to load notifications: $e',
+        'Network error: Unable to load notifications',
         isError: true,
       );
-      setState(() {
-        isLoading = false;
-      });
     }
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: fetchNotifications,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_none,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No notifications yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'We\'ll notify you when something new arrives',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingWidget() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Loading notifications...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsList() {
+    if (apiNotifications.isEmpty) {
+      return _buildEmptyWidget();
+    }
+
+    return RefreshIndicator(
+      onRefresh: fetchNotifications,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: apiNotifications.length,
+        itemBuilder: (context, index) {
+          return notificationMap(apiNotifications[index]);
+        },
+      ),
+    );
   }
 
   Widget notificationMap(NotificationModel noti) {
@@ -94,8 +199,7 @@ class NotificationState extends ConsumerState<NotificationPage> {
       icon: Icons.favorite,
       iconColor: Colors.orange,
       title: noti.notificationName,
-      description:
-      noti.notificationDescription,
+      description: noti.notificationDescription,
       time: '14h',
       buttons: [
         NotificationButton(
@@ -131,7 +235,6 @@ class NotificationState extends ConsumerState<NotificationPage> {
                     ),
                   ],
                 ),
-                // child: Container(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -160,138 +263,13 @@ class NotificationState extends ConsumerState<NotificationPage> {
                         ),
                       ],
                     ),
-
-                    // Notification List (Scrollable)
+                    // Content Area
                     Expanded(
-                      child:
-                          isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : RefreshIndicator(
-                                onRefresh: fetchNotifications,
-                                child: ListView(
-                                  children: [
-                                    ...apiNotifications.map(notificationMap),
-                                    // // First notification with buttons
-                                    // NotificationCard(
-                                    //   icon: Icons.favorite,
-                                    //   iconColor: Colors.orange,
-                                    //   title:
-                                    //       'I have listed few things to help you improve your emotion',
-                                    //   time: '2m',
-                                    //   buttons: [
-                                    //     NotificationButton(
-                                    //       text: 'View Now',
-                                    //       color: Colors.blue,
-                                    //       textColor: Colors.white,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //     NotificationButton(
-                                    //       text: 'Ignore',
-                                    //       color: Colors.transparent,
-                                    //       textColor: Colors.black54,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                    //
-                                    // // Second notification with buttons
-                                    // NotificationCard(
-                                    //   icon: Icons.favorite,
-                                    //   iconColor: Colors.orange,
-                                    //   title: 'Have you written mood journal',
-                                    //   time: '2m',
-                                    //   buttons: [
-                                    //     NotificationButton(
-                                    //       text: 'Do now',
-                                    //       color: Colors.blue,
-                                    //       textColor: Colors.white,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //     NotificationButton(
-                                    //       text: 'Ignore',
-                                    //       color: Colors.transparent,
-                                    //       textColor: Colors.black54,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                    //
-                                    // // Comment notification with profile picture
-                                    // CommentNotificationCard(
-                                    //   profileImageUrl:
-                                    //       'https://randomuser.me/api/portraits/men/32.jpg',
-                                    //   name: 'Hùng',
-                                    //   action: 'added a comment on',
-                                    //   contentTitle: 'My daily file',
-                                    //   time: '8h',
-                                    //   comment:
-                                    //       '"Nice, how do you control your emotion?"',
-                                    // ),
-                                    //
-                                    // // Feature alert notification
-                                    // NotificationCard(
-                                    //   icon: Icons.favorite,
-                                    //   iconColor: Colors.orange,
-                                    //   title: 'New Feature Alert!',
-                                    //   description:
-                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
-                                    //   time: '14h',
-                                    //   buttons: [
-                                    //     NotificationButton(
-                                    //       text: 'Try now',
-                                    //       color: Colors.blue,
-                                    //       textColor: Colors.white,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                    //
-                                    // // File share notification with profile picture
-                                    // FileShareNotificationCard(
-                                    //   profileImageUrl:
-                                    //       'https://randomuser.me/api/portraits/women/33.jpg',
-                                    //   name: 'Vy',
-                                    //   action: 'has shared a file with you',
-                                    //   time: '14h',
-                                    //   fileName: 'MoodTracker.pdf',
-                                    //   fileSize: '2.2 MB',
-                                    // ),
-                                    //
-                                    // NotificationCard(
-                                    //   icon: Icons.favorite,
-                                    //   iconColor: Colors.orange,
-                                    //   title: 'New Feature Alert!',
-                                    //   description:
-                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
-                                    //   time: '14h',
-                                    //   buttons: [
-                                    //     NotificationButton(
-                                    //       text: 'Try now',
-                                    //       color: Colors.blue,
-                                    //       textColor: Colors.white,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                    // NotificationCard(
-                                    //   icon: Icons.favorite,
-                                    //   iconColor: Colors.orange,
-                                    //   title: 'New Feature Alert!',
-                                    //   description:
-                                    //       'We\'re pleased to introduce the latest enhancements in our app experience.',
-                                    //   time: '14h',
-                                    //   buttons: [
-                                    //     NotificationButton(
-                                    //       text: 'Try now',
-                                    //       color: Colors.blue,
-                                    //       textColor: Colors.white,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                  ],
-                                ),
-                              ),
+                      child: isLoading
+                          ? _buildLoadingWidget()
+                          : hasError
+                          ? _buildErrorWidget()
+                          : _buildNotificationsList(),
                     ),
                   ],
                 ),
@@ -346,7 +324,6 @@ class NotificationCard extends StatelessWidget {
             child: Icon(icon, color: iconColor, size: 24),
           ),
           const SizedBox(width: 12),
-
           // Content
           Expanded(
             child: Column(
@@ -373,7 +350,6 @@ class NotificationCard extends StatelessWidget {
               ],
             ),
           ),
-
           // Time and Options
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -471,7 +447,6 @@ class CommentNotificationCard extends StatelessWidget {
             backgroundImage: NetworkImage(profileImageUrl),
           ),
           const SizedBox(width: 12),
-
           // Content
           Expanded(
             child: Column(
@@ -512,7 +487,6 @@ class CommentNotificationCard extends StatelessWidget {
               ],
             ),
           ),
-
           // Time and Options
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -569,7 +543,6 @@ class FileShareNotificationCard extends StatelessWidget {
             backgroundImage: NetworkImage(profileImageUrl),
           ),
           const SizedBox(width: 12),
-
           // Content
           Expanded(
             child: Column(
@@ -631,7 +604,6 @@ class FileShareNotificationCard extends StatelessWidget {
               ],
             ),
           ),
-
           // Time and Options
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,

@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_notifier.dart';
 import 'package:inner_child_app/core/utils/dio_instance.dart';
+import 'package:inner_child_app/core/utils/global_signalR_ui_handler.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
+import 'package:inner_child_app/core/utils/signalr_service.dart';
 import 'package:inner_child_app/data/datasources/remote/article_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/audio_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/audio_category_api_service.dart';
@@ -315,9 +317,17 @@ final paymentUseCaseProvider = Provider(
 // 📍 State Notifiers
 // ─────────────────────────────────────────────────────────────
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(ref.read(storageProvider)),
-);
+// final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
+//   (ref) => AuthNotifier(ref.read(storageProvider)),
+// );
+
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final storage = ref.read(storageProvider);
+  final signalRService = ref.read(signalRServiceProvider);
+  final messagesNotifier = ref.read(signalRMessagesProvider.notifier);
+
+  return AuthNotifier(storage, signalRService, messagesNotifier);
+});
 
 // ─────────────────────────────────────────────────────────────
 // 🔁 Auth State Change Listener
@@ -326,3 +336,14 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
 final authStateChangeProvider = Provider<AuthStateChangeNotifier>(
   (ref) => AuthStateChangeNotifier(authNotifierProvider, ref),
 );
+
+// ─────────────────────────────────────────────────────────────
+// 📍 SignalR Providers
+// ─────────────────────────────────────────────────────────────
+final signalRServiceProvider = Provider<SignalRService>((ref) =>
+  SignalRService()
+);
+
+final signalRMessagesProvider = StateNotifierProvider<SignalRMessagesNotifier, List<SignalRMessage>>((ref) {
+  return SignalRMessagesNotifier();
+});

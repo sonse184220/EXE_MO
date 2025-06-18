@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_util_methods.dart';
+import 'package:inner_child_app/core/utils/global_signalR_ui_handler.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
+import 'package:inner_child_app/core/utils/signalr_service.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_state.dart';
 import 'package:inner_child_app/domain/entities/auth/auth_status_enum.dart';
@@ -17,18 +19,23 @@ import 'package:inner_child_app/domain/entities/auth/token_model.dart';
 class AuthNotifier extends StateNotifier<AuthState> {
   final SecureStorageUtils _storage;
   final Dio _refreshDio;
+  final SignalRService _signalRService;
+  final SignalRMessagesNotifier _messagesNotifier;
 
   Timer? _countdownTimer;
   int _remainingSeconds = 0;
 
   final tokenModel = AppConstants.tokenModel;
 
-  AuthNotifier(this._storage)
-    : _refreshDio = Dio(BaseOptions(
-    baseUrl: AppConstants.baseURL, // Replace with your base URL
-    connectTimeout: const Duration(seconds: 60),
-    receiveTimeout: const Duration(seconds: 60),
-  )), super(const AuthState(status: AuthStatus.loading)) {
+  AuthNotifier(this._storage, this._signalRService, this._messagesNotifier)
+    : _refreshDio = Dio(
+        BaseOptions(
+          baseUrl: AppConstants.baseURL, // Replace with your base URL
+          // connectTimeout: const Duration(seconds: 60),
+          // receiveTimeout: const Duration(seconds: 60),
+        ),
+      ),
+      super(const AuthState(status: AuthStatus.loading)) {
     _initialize();
   }
 
@@ -85,6 +92,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (refreshed) {
       await _updateStateWithNewToken();
       _startTokenExpiryCountdown(); // Restart countdown with new token
+
+      // Try to connect SignalR after successful token refresh
+      try {
+        await initSignalRAuthorize();
+        // If SignalR connects successfully, maintain authenticated state
+        state = state.copyWith(status: AuthStatus.authenticated);
+      } catch (e) {
+        debugPrint('❌ SignalR connection failed after token refresh: $e');
+        // Set error state if SignalR fails
+        state = state.copyWith(status: AuthStatus.error);
+      }
     } else {
       // Refresh failed, logout user
       await _storage.delete(tokenModel);
@@ -95,18 +113,211 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Initialize auth state by checking for stored token
+  /// Initialize auth state by checking for stored token AND connecting SignalR
   Future<void> _initialize() async {
     if (kDebugMode) {
       print('🚀 AuthNotifier: Starting initialization...');
     }
+
+    try {
+      // First, try to connect SignalR
+      // await _initSignalR();
+
+      // Then proceed with auth initialization
+      await _initializeAuth();
+
+      if (state.status == AuthStatus.authenticated) {
+        try {
+          state = state.copyWith(status: AuthStatus.loading);
+          await initSignalRAuthorize();
+          state = state.copyWith(status: AuthStatus.authenticated);
+        } catch (e) {
+          debugPrint('❌ SignalR connection failed during initialization: $e');
+          // Set error status but keep user info and token
+          state = state.copyWith(status: AuthStatus.error);
+        }
+      }
+
+      if (kDebugMode) {
+        print(
+          '✅ AuthNotifier: Full initialization completed with status: ${state.status}',
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error during initialization: $e');
+      // If SignalR fails, we set error state instead of continuing
+      state = AuthState(status: AuthStatus.error);
+    }
+  }
+
+  Future<void> _initSignalR() async {
+    try {
+      await _signalRService.initConnection();
+
+      // Subscribe to all SignalR events and forward to global handler
+      _signalRService.onMessage((args) {
+        if (args != null && args.isNotEmpty) {
+          try {
+            // Assuming the first arg is the message type and second is data
+            final messageType = args[0] as String? ?? 'ReceiveMessage';
+            // final messageData = args.length > 1 ? args[1] as Map<String, dynamic>? ?? {} : {};
+
+            final messageData =
+                args.length > 1
+                    ? Map<String, dynamic>.from(args[1] as Map)
+                    : <String, dynamic>{};
+
+            // Forward to global message handler
+            _messagesNotifier.addMessage(messageType, messageData);
+
+            if (kDebugMode) {
+              print(
+                "🔔 SignalR message forwarded: $messageType - $messageData",
+              );
+            }
+          } catch (e) {
+            debugPrint('Error processing SignalR message: $e');
+          }
+        }
+      });
+
+      // Subscribe to specific events if your SignalR service supports multiple event types
+      _signalRService.onUserOnline((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('UserOnline', data);
+        }
+      });
+
+      _signalRService.onUserOffline((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('UserOffline', data);
+        }
+      });
+
+      _signalRService.onNotification((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('NewNotification', data);
+        }
+      });
+
+      if (kDebugMode) {
+        print('✅ SignalR connected successfully');
+      }
+    } catch (e) {
+      debugPrint('❌ SignalR connection failed: $e');
+      throw e; // Rethrow to be caught by _initialize
+    }
+  }
+
+  Future<void> initSignalRAuthorize() async {
     try {
       final tokenModelJson = await _storage.read(tokenModel);
 
       // Check if token data exists
       if (tokenModelJson == null) {
         if (kDebugMode) {
-          print('🚀 AuthNotifier: Token null in secure storage initialization...');
+          print(
+            '🚀 AuthNotifier: No token available for SignalR connection...',
+          );
+        }
+        state = const AuthState(status: AuthStatus.unauthenticated);
+        return;
+      }
+
+      TokenModel tokenModelObject;
+
+      // If stored as JSON string, parse it
+      final Map<String, dynamic> jsonMap = json.decode(tokenModelJson);
+      tokenModelObject = TokenModel.fromJson(jsonMap);
+      if (kDebugMode) {
+        print(tokenModelObject.accessToken);
+      }
+
+      await _signalRService.initConnectionAuthorize(
+        tokenModelObject.accessToken,
+      );
+
+      _signalRService.onForceLogout((args) {
+        print("⚠️ force_logout received: $args");
+        if (args != null && args.isNotEmpty) {
+          final message = args[0] as String? ?? 'No message';
+          print("⚠️ force_logout received: $message");
+        } else {
+          print("⚠️ force_logout received with no data.");
+        }
+      });
+
+      // Subscribe to all SignalR events and forward to global handler
+      _signalRService.onMessage((args) {
+        if (args != null && args.isNotEmpty) {
+          try {
+            // Assuming the first arg is the message type and second is data
+            final messageType = args[0] as String? ?? 'ReceiveMessage';
+            // final messageData = args.length > 1 ? args[1] as Map<String, dynamic>? ?? {} : {};
+
+            final messageData =
+                args.length > 1
+                    ? Map<String, dynamic>.from(args[1] as Map)
+                    : <String, dynamic>{};
+
+            // Forward to global message handler
+            _messagesNotifier.addMessage(messageType, messageData);
+
+            if (kDebugMode) {
+              print(
+                "🔔 SignalR message forwarded: $messageType - $messageData",
+              );
+            }
+          } catch (e) {
+            debugPrint('Error processing SignalR message: $e');
+          }
+        }
+      });
+
+      // Subscribe to specific events if your SignalR service supports multiple event types
+      _signalRService.onUserOnline((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('UserOnline', data);
+        }
+      });
+
+      _signalRService.onUserOffline((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('UserOffline', data);
+        }
+      });
+
+      _signalRService.onNotification((args) {
+        if (args != null && args.isNotEmpty) {
+          final data = args[0] as Map<String, dynamic>? ?? {};
+          _messagesNotifier.addMessage('NewNotification', data);
+        }
+      });
+
+      if (kDebugMode) {
+        print('✅ SignalR connected successfully');
+      }
+    } catch (e) {
+      debugPrint('❌ SignalR connection failed: $e');
+      throw e; // Rethrow to be caught by _initialize
+    }
+  }
+
+  Future<void> _initializeAuth() async {
+    try {
+      final tokenModelJson = await _storage.read(tokenModel);
+
+      // Check if token data exists
+      if (tokenModelJson == null) {
+        if (kDebugMode) {
+          print(
+            '🚀 AuthNotifier: Token null in secure storage initialization...',
+          );
         }
         state = const AuthState(status: AuthStatus.unauthenticated);
         return;
@@ -122,64 +333,77 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
-
-      // Check if token is expired or close to expiry
-      if (userInfo != null) {
-        if (userInfo.isExpired) {
-          // Try to refresh token first
-          final refreshed = await _refreshToken();
-          if (refreshed) {
-            // Re-read the new token and update state
-            await _updateStateWithNewToken();
-            _startTokenExpiryCountdown();
-            state = AuthState(
-              status: AuthStatus.authenticated,
-              userInfo: userInfo,
-              token: tokenModelObject.accessToken,
-            );
-          } else {
-            // Refresh failed, remove token
-            await _storage.delete(tokenModel);
-            state = const AuthState(status: AuthStatus.unauthenticated);
-          }
-        } else if (shouldRefreshToken) {
-          // Token is close to expiry, proactively refresh
-          await _refreshToken();
+      if (userInfo == null) {
+        // Invalid token format, remove it
+        await _storage.delete(tokenModel);
+        state = const AuthState(status: AuthStatus.unauthenticated);
+        // return;
+      }else{
+        final refreshed = await _refreshToken();
+        if (refreshed) {
+          // Re-read the new token and update state
           await _updateStateWithNewToken();
           _startTokenExpiryCountdown();
+          // await initSignalRAuthorize();
           state = AuthState(
             status: AuthStatus.authenticated,
             userInfo: userInfo,
             token: tokenModelObject.accessToken,
           );
         } else {
-          // Token is valid
-          state = AuthState(
-            status: AuthStatus.authenticated,
-            userInfo: userInfo,
-            token: tokenModelObject.accessToken,
-          );
-          _startTokenExpiryCountdown();
+          // Refresh failed, remove token
+          await _storage.delete(tokenModel);
+          state = const AuthState(status: AuthStatus.unauthenticated);
         }
-      } else {
-        // Invalid token format, remove it
-        await _storage.delete(tokenModel);
-        state = const AuthState(status: AuthStatus.unauthenticated);
       }
 
-      if (kDebugMode) {
-        print('✅ AuthNotifier: Initialization completed with status: ${state.status}');
-      }
 
-      // // Check if token is expired
-      // if (userInfo != null && !userInfo.isExpired) {
-      //   state = AuthState(
-      //     status: AuthStatus.authenticated,
-      //     userInfo: userInfo,
-      //     token: tokenModelObject.accessToken,
-      //   );
+
+      // Check if token is expired or close to expiry
+      // if (userInfo != null) {
+      //   if (userInfo.isExpired) {
+      //     // Try to refresh token first
+      //     final refreshed = await _refreshToken();
+      //     if (refreshed) {
+      //       // Re-read the new token and update state
+      //       await _updateStateWithNewToken();
+      //       _startTokenExpiryCountdown();
+      //       // await initSignalRAuthorize();
+      //       state = AuthState(
+      //         status: AuthStatus.authenticated,
+      //         userInfo: userInfo,
+      //         token: tokenModelObject.accessToken,
+      //       );
+      //
+      //     } else {
+      //       // Refresh failed, remove token
+      //       await _storage.delete(tokenModel);
+      //       state = const AuthState(status: AuthStatus.unauthenticated);
+      //     }
+      //   } else if (shouldRefreshToken) {
+      //     // Token is close to expiry, proactively refresh
+      //     await _refreshToken();
+      //     await _updateStateWithNewToken();
+      //     _startTokenExpiryCountdown();
+      //     // await retrySignalRConnectionAuthorize();
+      //     state = AuthState(
+      //       status: AuthStatus.authenticated,
+      //       userInfo: userInfo,
+      //       token: tokenModelObject.accessToken,
+      //     );
+      //
+      //   } else {
+      //     // Token is valid
+      //     state = AuthState(
+      //       status: AuthStatus.authenticated,
+      //       userInfo: userInfo,
+      //       token: tokenModelObject.accessToken,
+      //     );
+      //     _startTokenExpiryCountdown();
+      //     // await initSignalRAuthorize();
+      //   }
       // } else {
-      //   // Token is expired, remove it
+      //   // Invalid token format, remove it
       //   await _storage.delete(tokenModel);
       //   state = const AuthState(status: AuthStatus.unauthenticated);
       // }
@@ -191,12 +415,143 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  // Add retry method for SignalR connection
+  Future<void> retrySignalRConnection() async {
+    try {
+      // state = state.copyWith(status: AuthStatus.loading);
+
+      await _initSignalR();
+
+      // After successful SignalR connection, re-initialize auth
+      await _initializeAuth();
+    } catch (e) {
+      debugPrint('❌ SignalR retry failed: $e');
+      state = const AuthState(status: AuthStatus.error);
+    }
+  }
+
+  Future<void> retrySignalRConnectionAuthorize() async {
+    try {
+      state = state.copyWith(status: AuthStatus.loading);
+
+      // await _signalRService.disconnect();
+      await initSignalRAuthorize();
+
+      state = state.copyWith(status: AuthStatus.authenticated);
+      // After successful SignalR connection, re-initialize auth
+      // await _initializeAuth();
+    } catch (e) {
+      debugPrint('❌ SignalR retry failed: $e');
+      state = const AuthState(status: AuthStatus.error);
+    }
+  }
+
+  /// Initialize auth state by checking for stored token
+  // Future<void> _initialize() async {
+  //   if (kDebugMode) {
+  //     print('🚀 AuthNotifier: Starting initialization...');
+  //   }
+  //   try {
+  //     final tokenModelJson = await _storage.read(tokenModel);
+  //
+  //     // Check if token data exists
+  //     if (tokenModelJson == null) {
+  //       if (kDebugMode) {
+  //         print('🚀 AuthNotifier: Token null in secure storage initialization...');
+  //       }
+  //       state = const AuthState(status: AuthStatus.unauthenticated);
+  //       return;
+  //     }
+  //
+  //     TokenModel tokenModelObject;
+  //
+  //     // If stored as JSON string, parse it
+  //     final Map<String, dynamic> jsonMap = json.decode(tokenModelJson);
+  //     tokenModelObject = TokenModel.fromJson(jsonMap);
+  //     if (kDebugMode) {
+  //       print(tokenModelObject.accessToken);
+  //     }
+  //
+  //     final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
+  //
+  //     // Check if token is expired or close to expiry
+  //     if (userInfo != null) {
+  //       if (userInfo.isExpired) {
+  //         // Try to refresh token first
+  //         final refreshed = await _refreshToken();
+  //         if (refreshed) {
+  //           // Re-read the new token and update state
+  //           await _updateStateWithNewToken();
+  //           _startTokenExpiryCountdown();
+  //           state = AuthState(
+  //             status: AuthStatus.authenticated,
+  //             userInfo: userInfo,
+  //             token: tokenModelObject.accessToken,
+  //           );
+  //         } else {
+  //           // Refresh failed, remove token
+  //           await _storage.delete(tokenModel);
+  //           state = const AuthState(status: AuthStatus.unauthenticated);
+  //         }
+  //       } else if (shouldRefreshToken) {
+  //         // Token is close to expiry, proactively refresh
+  //         await _refreshToken();
+  //         await _updateStateWithNewToken();
+  //         _startTokenExpiryCountdown();
+  //         state = AuthState(
+  //           status: AuthStatus.authenticated,
+  //           userInfo: userInfo,
+  //           token: tokenModelObject.accessToken,
+  //         );
+  //       } else {
+  //         // Token is valid
+  //         state = AuthState(
+  //           status: AuthStatus.authenticated,
+  //           userInfo: userInfo,
+  //           token: tokenModelObject.accessToken,
+  //         );
+  //         _startTokenExpiryCountdown();
+  //       }
+  //     } else {
+  //       // Invalid token format, remove it
+  //       await _storage.delete(tokenModel);
+  //       state = const AuthState(status: AuthStatus.unauthenticated);
+  //     }
+  //
+  //     if (kDebugMode) {
+  //       print('✅ AuthNotifier: Initialization completed with status: ${state.status}');
+  //     }
+  //
+  //     // // Check if token is expired
+  //     // if (userInfo != null && !userInfo.isExpired) {
+  //     //   state = AuthState(
+  //     //     status: AuthStatus.authenticated,
+  //     //     userInfo: userInfo,
+  //     //     token: tokenModelObject.accessToken,
+  //     //   );
+  //     // } else {
+  //     //   // Token is expired, remove it
+  //     //   await _storage.delete(tokenModel);
+  //     //   state = const AuthState(status: AuthStatus.unauthenticated);
+  //     // }
+  //   } catch (e) {
+  //     debugPrint('Error initializing auth state: $e');
+  //     // Clean up invalid token data
+  //     await _storage.delete(tokenModel);
+  //     state = const AuthState(status: AuthStatus.unauthenticated);
+  //   }
+  // }
+
   Future<void> _updateStateWithNewToken() async {
     try {
       final tokenModelJson = await _storage.read(tokenModel);
       if (tokenModelJson != null) {
-        final tokenModelObject = TokenModel.fromJson(json.decode(tokenModelJson));
-        final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
+        final tokenModelObject = TokenModel.fromJson(
+          json.decode(tokenModelJson),
+        );
+        final userInfo = _extractUserInfoFromToken(
+          tokenModelObject.accessToken,
+        );
 
         if (userInfo != null && !userInfo.isExpired) {
           state = AuthState(
@@ -220,7 +575,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // Call refresh token API
       final response = await _refreshDio.post(
-        'innerchild/auth/refresh-token', // Replace with your actual refresh endpoint
+        'innerchild/auth/refresh-token',
+        // Replace with your actual refresh endpoint
         data: {'refreshToken': tokenModelObject.refreshToken},
       );
 
@@ -228,6 +584,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final newTokenModel = TokenModel.fromJson(response.data);
         final newTokenJson = jsonEncode(newTokenModel.toJson());
         await _storage.write(tokenModel, newTokenJson);
+
+        // await retrySignalRConnectionAuthorize();
 
         if (kDebugMode) {
           print('✅ Token refreshed successfully in AuthNotifier');
@@ -245,18 +603,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // Public method to handle token refresh from UI
   Future<bool> refreshTokenIfNeeded() async {
     if (shouldRefreshToken || (state.userInfo?.isExpired ?? true)) {
-      // state = state.copyWith(status: AuthStatus.loading);
+      state = state.copyWith(status: AuthStatus.loading);
 
       final refreshed = await _refreshToken();
       if (refreshed) {
         await _updateStateWithNewToken();
         _startTokenExpiryCountdown();
+
+        try {
+          await initSignalRAuthorize();
+          // If SignalR connects successfully, maintain authenticated state
+          state = state.copyWith(status: AuthStatus.authenticated);
+        } catch (e) {
+          debugPrint(
+            '❌ SignalR connection failed after manual token refresh: $e',
+          );
+          // Set error state if SignalR fails
+          state = state.copyWith(status: AuthStatus.error);
+        }
+      } else {
+        // Token refresh failed
+        state = state.copyWith(status: AuthStatus.unauthenticated);
       }
       return refreshed;
     }
     return true; // Token is still valid
   }
-
 
   FromTokenUserInfo? _extractUserInfoFromToken(String token) {
     try {
@@ -280,12 +652,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.loading);
 
       if (profiles.isEmpty) {
-          throw Exception('Invalid profiles format');
-        }
+        throw Exception('Invalid profiles format');
+      }
 
-      final profilesJson = jsonEncode(
-        profiles.map((p) => p.toJson()).toList(),
-      );
+      final profilesJson = jsonEncode(profiles.map((p) => p.toJson()).toList());
       String profilesKey = AppConstants.profiles;
       await _storage.write(profilesKey, profilesJson);
 
@@ -343,15 +713,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.write(tokenModelString, tokenModelToJson);
 
       state = AuthState(
-        status: AuthStatus.authenticated,
+        status: AuthStatus.loading,
         userInfo: userInfo,
         token: tokenModel.accessToken,
       );
 
       _startTokenExpiryCountdown();
 
-      if (kDebugMode) {
-        print('setState authenticated: ${state.status}');
+      try {
+        await initSignalRAuthorize();
+        // If SignalR connects successfully, set to authenticated
+        state = state.copyWith(status: AuthStatus.authenticated);
+        if (kDebugMode) {
+          print('✅ Login successful with SignalR connection');
+        }
+      } catch (e) {
+        debugPrint('❌ SignalR connection failed during login: $e');
+        // Set error status but keep user info and token for retry
+        state = state.copyWith(status: AuthStatus.error);
       }
     } catch (e) {
       state = const AuthState(status: AuthStatus.unauthenticated);
@@ -364,6 +743,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(status: AuthStatus.loading);
       await _storage.delete(tokenModel);
+      _countdownTimer?.cancel();
       state = const AuthState(status: AuthStatus.unauthenticated);
       if (kDebugMode) {
         print('setState unauthenticated: ${state.status}');
@@ -412,6 +792,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (refreshed) {
           await _updateStateWithNewToken();
           _startTokenExpiryCountdown();
+
+          try {
+            await initSignalRAuthorize();
+            // If SignalR connects successfully, set to authenticated
+            state = state.copyWith(status: AuthStatus.authenticated);
+          } catch (e) {
+            debugPrint('❌ SignalR connection failed during auth check: $e');
+            // Set error state if SignalR fails
+            state = state.copyWith(status: AuthStatus.error);
+          }
         } else {
           // Refresh failed, remove token
           await _storage.delete(tokenModel);

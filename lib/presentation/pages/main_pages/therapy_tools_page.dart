@@ -50,15 +50,15 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                       alignment: Alignment.centerLeft,
                       children: [
                         // Back button on the left
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back_ios,
-                            color: Colors.blue,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
+                        // IconButton(
+                        //   icon: const Icon(
+                        //     Icons.arrow_back_ios,
+                        //     color: Colors.blue,
+                        //   ),
+                        //   padding: EdgeInsets.zero,
+                        //   constraints: const BoxConstraints(),
+                        //   onPressed: () => Navigator.of(context).pop(),
+                        // ),
                         // Centered title
                         Align(
                           alignment: Alignment.center,

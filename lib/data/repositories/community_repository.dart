@@ -155,7 +155,7 @@ class CommunityRepository implements ICommunityRepository {
     try {
       final response = await _apiService.updateCommunityGroup(groupId, name, description, status);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 204) {
         // final data = response.data;
 
         // final community = CommunityGroupModel.fromJson(data);

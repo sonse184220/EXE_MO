@@ -208,7 +208,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               SizedBox(
                                 // width: 160,
                                 child: OutlinedButton(
-                                  onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context)=> TherapyToolsPage()));},
+                                  onPressed: () => mainScreenKey.currentState?.switchToTherapyTab(),
                                   style: OutlinedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     side: const BorderSide(color: Colors.white),

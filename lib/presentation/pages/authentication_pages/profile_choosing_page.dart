@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
@@ -70,14 +71,16 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
       if (!mounted) return;
 
       if (result.isSuccess) {
+        // ref.read(authNotifierProvider.notifier).initSignalRAuthorize();
         // Navigator.pushReplacement(
         //   context,
         //   MaterialPageRoute(builder: (_) => MainScreen()),
         // );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.error ?? "Login failed")),
-        );
+        Notify.showFlushbar('Login with profile failed', isError: true);
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(result.error ?? "Login failed")),
+        // );
       }
     } catch (e) {
       debugPrint("Error during profile check: $e");

@@ -13,10 +13,12 @@ import 'package:inner_child_app/presentation/pages/authentication_pages/profile_
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
 import 'package:inner_child_app/presentation/widgets/loading_page.dart';
+import 'package:inner_child_app/presentation/widgets/signalR_error_page.dart';
 
 /// Routes names for app navigation
 class AppRoute {
   static const loading = "/loading";
+  static const error = "/error";
 
   //====== Auth Routes ======
   static const mainScreen = '/';
@@ -101,6 +103,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoute.loading; // Add this route below
       }
 
+      if (authState.status == AuthStatus.error) {
+        return AppRoute.error; // You'll need to add this route
+      }
+
       final isOnAuthPage = currentLocation == AppRoute.login ||
           currentLocation == AppRoute.register ||
           currentLocation == AppRoute.forgotPassword1 ||
@@ -108,6 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isOnProfileChoosing = currentLocation == '/user${AppRoute.profileChoosing}';
       final isOnLoadingPage = currentLocation == '/loading';
+      final isOnErrorPage = currentLocation == '/error';
 
       switch (authState.status) {
         case AuthStatus.unauthenticated:
@@ -188,6 +195,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           break;
 
         case AuthStatus.loading:
+        case AuthStatus.error:
         // Already handled above
           break;
       }
@@ -217,6 +225,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: AppRoute.loading,
           name: 'loading',
           builder: (context, state) => const LoadingPage(),
+        ),
+        GoRoute(
+          path: '/error',
+          name: 'error',
+          builder: (context, state) => const SignalRErrorPage(),
         ),
         GoRoute(
           path: AppRoute.mainScreen,
