@@ -192,7 +192,8 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
                       right: 0,
                       height: (screenHeight * 1 / 2) * 0.6,
                       child: Image.asset(
-                        'assets/images/daily_mindfulness_background.png',
+                        // 'assets/images/audio_playing.png',
+                        'assets/images/all_audio_background.png',
                         fit: BoxFit.cover,
                       ),
                     ),

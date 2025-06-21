@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 
+import '../../main.dart';
+
 // @freezed
 // class SignalRMessage with _$SignalRMessage {
 //   const factory SignalRMessage({
@@ -25,10 +27,10 @@ class SignalRMessage {
 }
 
 // SignalR messages stream provider
-final signalRMessagesProvider =
-    StateNotifierProvider<SignalRMessagesNotifier, List<SignalRMessage>>((ref) {
-      return SignalRMessagesNotifier();
-    });
+// final signalRMessagesProvider =
+//     StateNotifierProvider<SignalRMessagesNotifier, List<SignalRMessage>>((ref) {
+//       return SignalRMessagesNotifier();
+//     });
 
 class SignalRMessagesNotifier extends StateNotifier<List<SignalRMessage>> {
   SignalRMessagesNotifier() : super([]);
@@ -68,7 +70,10 @@ class GlobalSignalRUIHandler extends ConsumerWidget {
     ) {
       if (current.isNotEmpty) {
         final latestMessage = current.last;
-        _handleSignalRMessage(context, ref, latestMessage);
+        // _handleSignalRMessage(context, ref, latestMessage);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleSignalRMessage( ref, latestMessage);
+        });
       }
     });
 
@@ -76,10 +81,19 @@ class GlobalSignalRUIHandler extends ConsumerWidget {
   }
 
   void _handleSignalRMessage(
-    BuildContext context,
+    // BuildContext context,
     WidgetRef ref,
     SignalRMessage message,
   ) {
+    final BuildContext? context = navigatorKey.currentContext;
+
+    if (context == null || !context.mounted) {
+      debugPrint('⚠️ Context not available for SignalR message: ${message.type}');
+      return;
+    }
+
+    debugPrint('🔔 Handling SignalR message: ${message.type}');
+
     switch (message.type) {
       case 'ReceiveMessage':
         _handleReceiveMessage(context, message.data);
@@ -97,7 +111,7 @@ class GlobalSignalRUIHandler extends ConsumerWidget {
         _handleSystemMaintenance(context, message.data);
         break;
       case 'ForceLogout':
-        _handleForceLogout(context, ref);
+        _handleForceLogout(context, ref, message.data);
         break;
       // Add more message types as needed
       default:
@@ -188,27 +202,76 @@ class GlobalSignalRUIHandler extends ConsumerWidget {
     );
   }
 
-  void _handleForceLogout(BuildContext context, WidgetRef ref) {
-    // Force logout user
+  void _handleForceLogout(
+      BuildContext context,
+      WidgetRef ref,
+      Map<String, dynamic> data
+      ) {
+    final message = data['message'] as String? ??
+        'Your session has been terminated by the administrator.';
+
+    // Show confirmation dialog - user must click OK to logout
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Session Ended'),
-            content: const Text(
-              'Your session has been terminated. Please log in again.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  ref.read(authNotifierProvider.notifier).logout();
-                },
-                child: const Text('OK'),
+      barrierDismissible: false, // User must click OK
+      builder: (context) => PopScope(
+        canPop: false,
+        // onWillPop: () async => false, // Prevent back button dismiss
+        child: AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Session Terminated'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(message),
+              const SizedBox(height: 12),
+              const Text(
+                'You will be logged out when you click OK.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog first
+
+                // Call your logout method
+                try {
+                  await ref.read(authNotifierProvider.notifier).logout();
+                  debugPrint('✅ Force logout completed successfully');
+                } catch (e) {
+                  debugPrint('❌ Error during force logout: $e');
+                  // Optionally show error message to user
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Logout failed: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -280,6 +280,15 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
+  Future<Result<bool>> switchToProfileChoosing() async {
+    try {
+      await _authNotifier.switchToProfileChoosing();
+      return Result.success(true);
+    } catch (e) {
+      return Result.failure('An error occurred: $e');
+    }
+  }
+
   @override
   Future<Result<ProfileEditModel>> getPersonalDetail() async {
     try {

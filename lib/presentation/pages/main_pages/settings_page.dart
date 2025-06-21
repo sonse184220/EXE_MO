@@ -91,6 +91,47 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _buildSettingItem(
         icon: Icons.exit_to_app,
         color: Colors.red,
+        title: 'Switch Profile',
+        tap: () async {
+          final shouldLogout = await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+              title: Text('Confirm Switch Profile'),
+              content: Text('Are you sure you want to switch profile?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false), // Cancel
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true), // Confirm
+                  child: Text('Switch'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldLogout == true) {
+            final result = await _authUsecase.switchToProfileChoosing();
+            if (result.isSuccess) {
+              // Navigator.pushReplacement or go to login page
+              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Login()));
+            } else {
+              Notify.showFlushbar('Switch failed due to error. Please logout and login again if you want to switch profile!');
+            }
+          }
+        },
+        // tap: () {
+        //   Navigator.push(
+        //     context,
+        //     MaterialPageRoute(builder: (context) => Login()),
+        //   );
+        // },
+      ),
+      _buildSettingItem(
+        icon: Icons.exit_to_app,
+        color: Colors.red,
         title: 'Logout',
         tap: () async {
           final shouldLogout = await showDialog<bool>(

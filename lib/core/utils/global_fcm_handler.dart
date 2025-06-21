@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class GlobalFCMHandler extends StatefulWidget {
+import 'dependency_injection/injection.dart';
+
+class GlobalFCMHandler extends ConsumerStatefulWidget {
   final Widget child;
 
   const GlobalFCMHandler({super.key, required this.child});
 
   @override
-  State<GlobalFCMHandler> createState() => _GlobalFCMHandlerState();
+  ConsumerState<GlobalFCMHandler> createState() => _GlobalFCMHandlerState();
 }
 
-class _GlobalFCMHandlerState extends State<GlobalFCMHandler> {
+class _GlobalFCMHandlerState extends ConsumerState<GlobalFCMHandler> {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
@@ -36,9 +39,19 @@ class _GlobalFCMHandlerState extends State<GlobalFCMHandler> {
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('✅ User granted notification permission');
 
+      // Initialize the FCM token in the provider
+      await ref.read(fcmTokenProvider.notifier).initializeToken();
+
+      // Listen for token refresh
+      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+        ref.read(fcmTokenProvider.notifier).updateToken(newToken);
+        print('🔄 FCM Token refreshed: $newToken');
+        // TODO: Send updated token to your server
+      });
+
       // Get the FCM device token
-      final fcmToken = await FirebaseMessaging.instance.getToken();
-      print('📱 Device FCM Token: $fcmToken');
+      // final fcmToken = await FirebaseMessaging.instance.getToken();
+      print('📱 Device FCM Token: ${ref.read(fcmTokenProvider)}');
 
       // TODO: Send this token to your server to associate it with the user/session
 
@@ -122,5 +135,23 @@ class _GlobalFCMHandlerState extends State<GlobalFCMHandler> {
   @override
   Widget build(BuildContext context) {
     return widget.child;
+  }
+}
+
+class FCMTokenNotifier extends StateNotifier<String?> {
+  FCMTokenNotifier() : super(null);
+
+  Future<void> initializeToken() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      state = token;
+      print('📱 FCM Token stored in provider: $token');
+    } catch (e) {
+      print('Error getting FCM token: $e');
+    }
+  }
+
+  void updateToken(String? newToken) {
+    state = newToken;
   }
 }

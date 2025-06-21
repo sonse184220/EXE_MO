@@ -48,6 +48,12 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
           .userInfo
           ?.profileId;
 
+  String? get cl =>
+      ref
+          .watch(authNotifierProvider)
+          .userInfo
+          ?.purchasePlan;
+
   late final List<Widget> communityPosts;
 
   // Color scheme

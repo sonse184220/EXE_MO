@@ -73,6 +73,7 @@ import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 import 'package:inner_child_app/domain/usecases/subscription_usecase.dart';
 import '../../../data/datasources/remote/authentication_api_service.dart';
+import '../global_fcm_handler.dart';
 
 // ─────────────────────────────────────────────────────────────
 // 🔐 Secure Storage
@@ -346,4 +347,11 @@ final signalRServiceProvider = Provider<SignalRService>((ref) =>
 
 final signalRMessagesProvider = StateNotifierProvider<SignalRMessagesNotifier, List<SignalRMessage>>((ref) {
   return SignalRMessagesNotifier();
+});
+
+// ─────────────────────────────────────────────────────────────
+// 📍 FCM Providers
+// ─────────────────────────────────────────────────────────────
+final fcmTokenProvider = StateNotifierProvider<FCMTokenNotifier, String?>((ref) {
+  return FCMTokenNotifier();
 });

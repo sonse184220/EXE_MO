@@ -208,7 +208,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       debugPrint('❌ SignalR connection failed: $e');
-      throw e; // Rethrow to be caught by _initialize
+      rethrow; // Rethrow to be caught by _initialize
     }
   }
 
@@ -242,12 +242,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       _signalRService.onForceLogout((args) {
         print("⚠️ force_logout received: $args");
+
+        String message = 'Your session has been terminated by the administrator.';
         if (args != null && args.isNotEmpty) {
-          final message = args[0] as String? ?? 'No message';
-          print("⚠️ force_logout received: $message");
-        } else {
-          print("⚠️ force_logout received with no data.");
+          message = args[0] as String? ?? message;
+          print("⚠️ force_logout message: $message");
         }
+
+        // Forward to global message handler with the logout message
+        _messagesNotifier.addMessage('ForceLogout', {
+          'message': message,
+          'timestamp': DateTime.now().toIso8601String(),
+        });
       });
 
       // Subscribe to all SignalR events and forward to global handler
@@ -304,7 +310,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       debugPrint('❌ SignalR connection failed: $e');
-      throw e; // Rethrow to be caught by _initialize
+      rethrow; // Rethrow to be caught by _initialize
     }
   }
 
@@ -743,10 +749,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(status: AuthStatus.loading);
       await _storage.delete(tokenModel);
+      String profilesKey = AppConstants.profiles;
+      await _storage.delete(profilesKey);
       _countdownTimer?.cancel();
       state = const AuthState(status: AuthStatus.unauthenticated);
       if (kDebugMode) {
         print('setState unauthenticated: ${state.status}');
+      }
+    } catch (e) {
+      // Revert to previous authenticated state if logout fails
+      state = state.copyWith(status: AuthStatus.authenticated);
+      rethrow;
+    }
+  }
+
+  Future<void> switchToProfileChoosing() async {
+    try {
+      await _storage.delete(tokenModel);
+      state = const AuthState(status: AuthStatus.profileSelection, token: null, userInfo: null);
+      if (kDebugMode) {
+        print('setState profile selection: ${state.status}');
       }
     } catch (e) {
       // Revert to previous authenticated state if logout fails
