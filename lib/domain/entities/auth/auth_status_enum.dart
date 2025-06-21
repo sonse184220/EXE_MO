@@ -3,4 +3,5 @@ enum AuthStatus {
   unauthenticated,
   profileSelection,
   loading,
+  error,
 }

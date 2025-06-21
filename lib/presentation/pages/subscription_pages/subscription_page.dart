@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
-import 'package:inner_child_app/core/utils/result_model.dart';
+import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/subscription/subscription_model.dart';
 import 'package:inner_child_app/domain/usecases/payment_usecase.dart';
 import 'package:inner_child_app/domain/usecases/subscription_usecase.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+enum PurchasePlan { FamilyPlan, PremiumPlan, FreePlan }
 
 class SubscriptionPage extends ConsumerStatefulWidget {
   const SubscriptionPage({super.key});
@@ -18,6 +21,8 @@ class SubscriptionPage extends ConsumerStatefulWidget {
 class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
   late final SubscriptionUsecase _subscriptionUsecase;
   late final PaymentUsecase _paymentUsecase; // Add payment usecase
+
+  PurchasePlan? currentUserPlan;
 
   List<SubscriptionModel> subscriptions = [];
   SubscriptionModel? selectedSubscription;
@@ -33,6 +38,20 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
     _loadSubscriptions();
   }
 
+  String formatCurrency(double amount, {String currency = "VND", bool withSpace = false}) {
+    final formatter = NumberFormat("#,##0", "en_US");
+    final formattedNumber = formatter.format(amount.toInt());
+    return withSpace ? "$formattedNumber $currency" : "$formattedNumber$currency";
+  }
+
+  PurchasePlan? stringToPurchasePlan(String? value) {
+    if (value == null) return null;
+    return PurchasePlan.values.firstWhere(
+          (e) => e.name == value,
+      orElse: () => PurchasePlan.FreePlan, // default if no match, or throw
+    );
+  }
+
   Future<void> _loadSubscriptions() async {
     setState(() {
       isLoading = true;
@@ -40,13 +59,16 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
     });
 
     try {
+      final userInfo = ref.read(authNotifierProvider).userInfo;
+      currentUserPlan = stringToPurchasePlan(userInfo?.purchasePlan);
+
       final result = await _subscriptionUsecase.getAllSubscriptions();
 // final result = Result.success('');
       if (result.isSuccess && result.data != null) {
         setState(() {
           subscriptions = result.data!;
           // Set first subscription as default selected if available
-          if (subscriptions.isNotEmpty) {
+          if (subscriptions.isNotEmpty  && currentUserPlan == PurchasePlan.FreePlan) {
             selectedSubscription = subscriptions.first;
           }
           isLoading = false;
@@ -65,13 +87,47 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
     }
   }
 
+  Future<bool> _showPurchaseConfirmationDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Purchase'),
+          content: Text(
+              'This ${selectedSubscription?.subscriptionType} plan will last for 30 days before expiring. Do you want to continue?'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F3422),
+              ),
+              child: const Text('Continue', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+
   Future<void> _handleSubscriptionPurchase() async {
     if (selectedSubscription == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a subscription plan')),
-      );
+      Notify.showFlushbar('Please select a subscription plan', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please select a subscription plan')),
+      // );
       return;
     }
+
+    if (currentUserPlan == PurchasePlan.FreePlan) {
+      bool confirmed = await _showPurchaseConfirmationDialog();
+      if (!confirmed) return;
+    }
+
 
     setState(() {
       isProcessingPayment = true;
@@ -88,27 +144,31 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
           // Launch the QR payment URL
           await _launchPaymentUrl(paymentUrl);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment QR opened. Complete payment to activate subscription.'),
-              backgroundColor: Colors.blue,
-            ),
-          );
+          Notify.showFlushbar('Payment QR opened. Complete payment to activate subscription.');
+
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(
+          //     content: Text('Payment QR opened. Complete payment to activate subscription.'),
+          //     backgroundColor: Colors.blue,
+          //   ),
+          // );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment initiated successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          Notify.showFlushbar('Payment initiated successfully!');
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(
+          //     content: Text('Payment initiated successfully!'),
+          //     backgroundColor: Colors.green,
+          //   ),
+          // );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.error ?? 'Payment failed. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        Notify.showFlushbar(result.error ?? 'Payment failed. Please try again.', isError: true);
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(result.error ?? 'Payment failed. Please try again.'),
+        //     backgroundColor: Colors.red,
+        //   ),
+        // );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -236,7 +296,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '${subscription.subscriptionPrice.toString()}.000VND',
+                  subscription.subscriptionPrice == null ? 'N/A' : formatCurrency(subscription.subscriptionPrice!),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -338,193 +398,199 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(
+              Icons.error_outline,
+              size: 60,
+              color: Colors.red[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
               errorMessage!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Colors.grey[600]),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
               onPressed: _loadSubscriptions,
-              child: const Text('Retry'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F3422),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),
       )
-          : Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/subscription_icon.png',
-                      height: 150,
-                      width: 150,
-                    ),
+          : _buildMainContent(),
+    );
+  }
+
+  Widget _buildPurchaseUI() {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ... your existing purchase UI content ...
+                const SizedBox(height: 8),
+                Center(
+                  child: Image.asset(
+                    'assets/images/subscription_icon.png',
+                    height: 150,
+                    width: 150,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Stay in control. Track your health and elevate your wellness!',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Stay in control. Track your health and elevate your wellness!',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Subscription cards and benefits here...
+
+                SizedBox(
+                  height: 300, // Set height as per your layout needs
+                  child: ListView.separated(
+                    itemCount: subscriptions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final subscription = subscriptions[index];
+                      return SubscriptionPlanCard(
+                        subscription: subscription,
+                        isSelected: selectedSubscription?.subscriptionId == subscription.subscriptionId,
+                        onTap: () {
+                          setState(() {
+                            selectedSubscription = subscription;
+                          });
+                        },
+                        onDetailsPressed: () => _showSubscriptionDetails(subscription),
+                        isRecommended: subscription.subscriptionType?.toLowerCase() == 'premium',
+                      );
+                    },
                   ),
+                ),
+
+                if (selectedSubscription != null) ...[
                   const SizedBox(height: 16),
-
-                  SizedBox(
-                    height: 300, // Set height as per your layout needs
-                    child: ListView.separated(
-                      itemCount: subscriptions.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final subscription = subscriptions[index];
-                        return SubscriptionPlanCard(
-                          subscription: subscription,
-                          isSelected: selectedSubscription?.subscriptionId == subscription.subscriptionId,
-                          onTap: () {
-                            setState(() {
-                              selectedSubscription = subscription;
-                            });
-                          },
-                          onDetailsPressed: () => _showSubscriptionDetails(subscription),
-                          isRecommended: subscription.subscriptionType?.toLowerCase() == 'premium',
-                        );
-                      },
-                    ),
-                  ),
-
-                  /// Subscription Cards (Scrollable middle section)
-                  // ...subscriptions.map((subscription) => Padding(
-                  //   padding: const EdgeInsets.only(bottom: 16),
-                  //   child: SubscriptionPlanCard(
-                  //     subscription: subscription,
-                  //     isSelected: selectedSubscription?.subscriptionId ==
-                  //         subscription.subscriptionId,
-                  //     onTap: () {
-                  //       setState(() {
-                  //         selectedSubscription = subscription;
-                  //       });
-                  //     },
-                  //     onDetailsPressed: () =>
-                  //         _showSubscriptionDetails(subscription),
-                  //     isRecommended: subscription.subscriptionType?.toLowerCase() ==
-                  //         'premium',
-                  //   ),
-                  // )),
-
-                  /// Benefits Section (scrollable with rest)
-                  if (selectedSubscription != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      alignment: Alignment.topLeft,
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(
-                        'With ${selectedSubscription!.subscriptionType}, you can:',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                  Container(
+                    alignment: Alignment.topLeft,
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      'With ${selectedSubscription!.subscriptionType}, you can:',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    _buildBenefitItem(
-                      icon: Icons.track_changes_outlined,
-                      text: 'Unlimited mood tracking',
+                  ),
+                  const SizedBox(height: 10),
+                  _buildBenefitItem(
+                    icon: Icons.track_changes_outlined,
+                    text: 'Unlimited mood tracking',
+                  ),
+                  _buildBenefitItem(
+                    icon: Icons.bookmark_add_outlined,
+                    text: 'Exclusive meditation guides',
+                  ),
+                  _buildBenefitItem(
+                    icon: FontAwesomeIcons.magnifyingGlass,
+                    text: 'Smart health monitoring',
+                  ),
+                  _buildBenefitItem(
+                    icon: Icons.headphones_outlined,
+                    text: 'Brainwave sound therapy',
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        // Purchase button for free users only
+        SafeArea(
+          minimum: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: ElevatedButton(
+              onPressed: selectedSubscription == null || isProcessingPayment
+                  ? null
+                  : _handleSubscriptionPurchase,
+              // ... your existing button styling ...
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F3422),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(64),
+                ),
+                minimumSize: const Size(0, 60),
+              ),
+              child: isProcessingPayment
+                  ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
-                    _buildBenefitItem(
-                      icon: Icons.bookmark_add_outlined,
-                      text: 'Exclusive meditation guides',
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Processing...',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              )
+                  : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16),
+                      child: Text(
+                        selectedSubscription != null
+                            ? 'Buy ${selectedSubscription!.subscriptionType} - ${formatCurrency(selectedSubscription!.subscriptionPrice!)}'
+                            : 'Select a subscription plan',
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    _buildBenefitItem(
-                      icon: FontAwesomeIcons.magnifyingGlass,
-                      text: 'Smart health monitoring',
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(right: 16),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 18,
                     ),
-                    _buildBenefitItem(
-                      icon: Icons.headphones_outlined,
-                      text: 'Brainwave sound therapy',
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ),
-
-          /// Sticky Buy Button (Always visible)
-          SafeArea(
-            minimum: const EdgeInsets.all(16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: ElevatedButton(
-                onPressed: selectedSubscription == null || isProcessingPayment
-                    ? null
-                    : _handleSubscriptionPurchase,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F3422),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(64),
-                  ),
-                  minimumSize: const Size(0, 60),
-                ),
-                child: isProcessingPayment
-                    ? const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                        AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Processing...',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: Text(
-                          selectedSubscription != null
-                              ? 'Buy ${selectedSubscription!.subscriptionType} - ${selectedSubscription!.subscriptionPrice}.000VND'
-                              : 'Select a subscription plan',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(right: 16),
-                      child: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        ],
-      ),
+        ),
+      ],
     );
   }
-  // @override
+
   // Widget build(BuildContext context) {
   //   return Scaffold(
   //     backgroundColor: Colors.white,
@@ -559,144 +625,303 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
   //         ],
   //       ),
   //     )
-  //         : SingleChildScrollView(
-  //       padding: const EdgeInsets.only(bottom: 16),
-  //       child: Column(
-  //         children: [
-  //           Center(
-  //             child: Image.asset(
-  //               'assets/images/subscription_icon.png',
-  //               height: 150,
-  //               width: 150,
-  //             ),
-  //           ),
-  //           const Text(
-  //             'Stay in control. Track your health and elevate your wellness!',
-  //             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //           const SizedBox(height: 16),
-  //
-  //           // Dynamic subscription cards
-  //           ...subscriptions.map((subscription) => Padding(
-  //             padding: const EdgeInsets.only(bottom: 16),
-  //             child: SubscriptionPlanCard(
-  //               subscription: subscription,
-  //               isSelected: selectedSubscription?.subscriptionId == subscription.subscriptionId,
-  //               onTap: () {
-  //                 setState(() {
-  //                   selectedSubscription = subscription;
-  //                 });
-  //               },
-  //               onDetailsPressed: () => _showSubscriptionDetails(subscription),
-  //               isRecommended: subscription.subscriptionType?.toLowerCase() == 'premium',
-  //             ),
-  //           )),
-  //
-  //           const SizedBox(height: 16),
-  //
-  //           // Benefits section (you can customize this based on selected subscription)
-  //           if (selectedSubscription != null) ...[
-  //             Container(
-  //               alignment: Alignment.topLeft,
-  //               padding: const EdgeInsets.only(left: 30),
-  //               child: Text(
-  //                 'With ${selectedSubscription!.subscriptionType}, you can:',
-  //                 textAlign: TextAlign.left,
-  //                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             _buildBenefitItem(
-  //               icon: Icons.track_changes_outlined,
-  //               text: 'Unlimited mood tracking',
-  //             ),
-  //             _buildBenefitItem(
-  //               icon: Icons.bookmark_add_outlined,
-  //               text: 'Exclusive meditation guides',
-  //             ),
-  //             _buildBenefitItem(
-  //               icon: FontAwesomeIcons.magnifyingGlass,
-  //               text: 'Smart health monitoring',
-  //             ),
-  //             _buildBenefitItem(
-  //               icon: Icons.headphones_outlined,
-  //               text: 'Brainwave sound therapy',
-  //             ),
-  //           ],
-  //
-  //           // Purchase button
-  //           Container(
-  //             padding: const EdgeInsets.symmetric(horizontal: 16),
-  //             width: double.infinity,
-  //             child: ConstrainedBox(
-  //               constraints: const BoxConstraints(
-  //                 maxWidth: 500,
-  //               ),
-  //               child: ElevatedButton(
-  //                 onPressed: selectedSubscription == null || isProcessingPayment
-  //                     ? null
-  //                     : _handleSubscriptionPurchase,
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: const Color(0xFF4F3422),
-  //                   padding: const EdgeInsets.symmetric(vertical: 16),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(64),
+  //         : Column(
+  //       children: [
+  //         Expanded(
+  //           child: SingleChildScrollView(
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.center,
+  //               children: [
+  //                 const SizedBox(height: 8),
+  //                 Center(
+  //                   child: Image.asset(
+  //                     'assets/images/subscription_icon.png',
+  //                     height: 150,
+  //                     width: 150,
   //                   ),
-  //                   minimumSize: const Size(0, 60),
   //                 ),
-  //                 child: isProcessingPayment
-  //                     ? const Row(
-  //                   mainAxisAlignment: MainAxisAlignment.center,
-  //                   children: [
-  //                     SizedBox(
-  //                       width: 20,
-  //                       height: 20,
-  //                       child: CircularProgressIndicator(
-  //                         strokeWidth: 2,
-  //                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-  //                       ),
-  //                     ),
-  //                     SizedBox(width: 12),
-  //                     Text(
-  //                       'Processing...',
-  //                       style: TextStyle(color: Colors.white, fontSize: 16),
-  //                     ),
-  //                   ],
-  //                 )
-  //                     : Row(
-  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                   children: [
-  //                     Expanded(
-  //                       child: Padding(
-  //                         padding: const EdgeInsets.only(left: 16),
-  //                         child: Text(
-  //                           selectedSubscription != null
-  //                               ? 'Buy ${selectedSubscription!.subscriptionType} - ${selectedSubscription!.subscriptionPrice}.000VND'
-  //                               : 'Select a subscription plan',
-  //                           style: const TextStyle(color: Colors.white, fontSize: 16),
-  //                           textAlign: TextAlign.center,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     const Padding(
-  //                       padding: EdgeInsets.only(right: 16),
-  //                       child: Icon(
-  //                         Icons.arrow_forward_ios,
-  //                         color: Colors.white,
-  //                         size: 18,
-  //                       ),
-  //                     ),
-  //                   ],
+  //                 const SizedBox(height: 8),
+  //                 const Text(
+  //                   'Stay in control. Track your health and elevate your wellness!',
+  //                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+  //                   textAlign: TextAlign.center,
   //                 ),
+  //                 const SizedBox(height: 16),
+  //
+  //                 SizedBox(
+  //                   height: 300, // Set height as per your layout needs
+  //                   child: ListView.separated(
+  //                     itemCount: subscriptions.length,
+  //                     separatorBuilder: (_, __) => const SizedBox(height: 16),
+  //                     itemBuilder: (context, index) {
+  //                       final subscription = subscriptions[index];
+  //                       return SubscriptionPlanCard(
+  //                         subscription: subscription,
+  //                         isSelected: selectedSubscription?.subscriptionId == subscription.subscriptionId,
+  //                         onTap: () {
+  //                           setState(() {
+  //                             selectedSubscription = subscription;
+  //                           });
+  //                         },
+  //                         onDetailsPressed: () => _showSubscriptionDetails(subscription),
+  //                         isRecommended: subscription.subscriptionType?.toLowerCase() == 'premium',
+  //                       );
+  //                     },
+  //                   ),
+  //                 ),
+  //
+  //                 /// Subscription Cards (Scrollable middle section)
+  //                 // ...subscriptions.map((subscription) => Padding(
+  //                 //   padding: const EdgeInsets.only(bottom: 16),
+  //                 //   child: SubscriptionPlanCard(
+  //                 //     subscription: subscription,
+  //                 //     isSelected: selectedSubscription?.subscriptionId ==
+  //                 //         subscription.subscriptionId,
+  //                 //     onTap: () {
+  //                 //       setState(() {
+  //                 //         selectedSubscription = subscription;
+  //                 //       });
+  //                 //     },
+  //                 //     onDetailsPressed: () =>
+  //                 //         _showSubscriptionDetails(subscription),
+  //                 //     isRecommended: subscription.subscriptionType?.toLowerCase() ==
+  //                 //         'premium',
+  //                 //   ),
+  //                 // )),
+  //
+  //                 /// Benefits Section (scrollable with rest)
+  //                 if (selectedSubscription != null) ...[
+  //                   const SizedBox(height: 16),
+  //                   Container(
+  //                     alignment: Alignment.topLeft,
+  //                     padding: const EdgeInsets.only(left: 8),
+  //                     child: Text(
+  //                       'With ${selectedSubscription!.subscriptionType}, you can:',
+  //                       style: const TextStyle(
+  //                         fontWeight: FontWeight.bold,
+  //                         fontSize: 14,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 10),
+  //                   _buildBenefitItem(
+  //                     icon: Icons.track_changes_outlined,
+  //                     text: 'Unlimited mood tracking',
+  //                   ),
+  //                   _buildBenefitItem(
+  //                     icon: Icons.bookmark_add_outlined,
+  //                     text: 'Exclusive meditation guides',
+  //                   ),
+  //                   _buildBenefitItem(
+  //                     icon: FontAwesomeIcons.magnifyingGlass,
+  //                     text: 'Smart health monitoring',
+  //                   ),
+  //                   _buildBenefitItem(
+  //                     icon: Icons.headphones_outlined,
+  //                     text: 'Brainwave sound therapy',
+  //                   ),
+  //                 ],
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //
+  //         /// Sticky Buy Button (Always visible)
+  //         SafeArea(
+  //           minimum: const EdgeInsets.all(16),
+  //           child: ConstrainedBox(
+  //             constraints: const BoxConstraints(maxWidth: 500),
+  //             child: ElevatedButton(
+  //               onPressed: selectedSubscription == null || isProcessingPayment
+  //                   ? null
+  //                   : _handleSubscriptionPurchase,
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: const Color(0xFF4F3422),
+  //                 padding: const EdgeInsets.symmetric(vertical: 16),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(64),
+  //                 ),
+  //                 minimumSize: const Size(0, 60),
+  //               ),
+  //               child: isProcessingPayment
+  //                   ? const Row(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   SizedBox(
+  //                     width: 20,
+  //                     height: 20,
+  //                     child: CircularProgressIndicator(
+  //                       strokeWidth: 2,
+  //                       valueColor:
+  //                       AlwaysStoppedAnimation<Color>(Colors.white),
+  //                     ),
+  //                   ),
+  //                   SizedBox(width: 12),
+  //                   Text(
+  //                     'Processing...',
+  //                     style: TextStyle(
+  //                         color: Colors.white, fontSize: 16),
+  //                   ),
+  //                 ],
+  //               )
+  //                   : Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   Expanded(
+  //                     child: Padding(
+  //                       padding: const EdgeInsets.only(left: 16),
+  //                       child: Text(
+  //                         selectedSubscription != null
+  //                             ? 'Buy ${selectedSubscription!.subscriptionType} - ${selectedSubscription!.subscriptionPrice}.000VND'
+  //                             : 'Select a subscription plan',
+  //                         style: const TextStyle(
+  //                             color: Colors.white, fontSize: 16),
+  //                         textAlign: TextAlign.center,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   const Padding(
+  //                     padding: EdgeInsets.only(right: 16),
+  //                     child: Icon(
+  //                       Icons.arrow_forward_ios,
+  //                       color: Colors.white,
+  //                       size: 18,
+  //                     ),
+  //                   ),
+  //                 ],
   //               ),
   //             ),
-  //           )
-  //         ],
-  //       ),
+  //           ),
+  //         )
+  //       ],
   //     ),
   //   );
   // }
+
+  Widget _buildMainContent() {
+    // Empty state
+    if (subscriptions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.subscriptions_outlined,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No subscription plans available',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check back later for available plans',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Current subscription UI for Premium/Family users
+    if (currentUserPlan == PurchasePlan.PremiumPlan ||
+        currentUserPlan == PurchasePlan.FamilyPlan) {
+      return _buildCurrentSubscriptionUI();
+    }
+
+    // Purchase UI for Free users
+    return _buildPurchaseUI();
+  }
+
+  // 7. UI for current subscription (Premium/Family users)
+  Widget _buildCurrentSubscriptionUI() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 8),
+          Center(
+            child: Image.asset(
+              'assets/images/subscription_icon.png',
+              height: 150,
+              width: 150,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF9BB168).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF9BB168)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: const Color(0xFF9BB168),
+                  size: 50,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'You have ${currentUserPlan.toString().split('.').last} active',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Enjoy all premium features',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Your subscription includes:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildBenefitItem(
+            icon: Icons.track_changes_outlined,
+            text: 'Unlimited mood tracking',
+          ),
+          _buildBenefitItem(
+            icon: Icons.bookmark_add_outlined,
+            text: 'Exclusive meditation guides',
+          ),
+          _buildBenefitItem(
+            icon: FontAwesomeIcons.magnifyingGlass,
+            text: 'Smart health monitoring',
+          ),
+          _buildBenefitItem(
+            icon: Icons.headphones_outlined,
+            text: 'Brainwave sound therapy',
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SubscriptionPlanCard extends StatelessWidget {
@@ -714,6 +939,12 @@ class SubscriptionPlanCard extends StatelessWidget {
     required this.onDetailsPressed,
     this.isRecommended,
   });
+
+  String formatCurrency(double amount, {String currency = "VND", bool withSpace = false}) {
+    final formatter = NumberFormat("#,##0", "en_US");
+    final formattedNumber = formatter.format(amount.toInt());
+    return withSpace ? "$formattedNumber $currency" : "$formattedNumber$currency";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -760,7 +991,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      '${subscription.subscriptionPrice}.000VND',
+                      formatCurrency(subscription.subscriptionPrice!),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

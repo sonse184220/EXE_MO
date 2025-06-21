@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:inner_child_app/core/global_signalR_wrapper.dart';
 import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:inner_child_app/core/utils/global_fcm_handler.dart';
+import 'package:inner_child_app/core/utils/global_signalR_ui_handler.dart';
 import 'package:inner_child_app/presentation/pages/main_pages/main_screen.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -42,9 +45,14 @@ class InnerChildApp extends ConsumerWidget {
       title: 'InnerChildApp',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      builder: (context, child) => GlobalVersionChecker(
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder:
+          (context, child) => GlobalSignalRUIHandler(
+            child: GlobalFCMHandler(
+              child: GlobalVersionChecker(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
       // Inject GlobalAuthWrapper *inside* MaterialApp
       // builder: (context, child) =>
       //     GlobalAuthWrapper(child: child ?? const SizedBox.shrink()),
@@ -81,33 +89,33 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
     });
   }
 
-
   Future<void> _showCurrentVersionDialog() async {
-
     final info = await PackageInfo.fromPlatform();
     final currentVersion = info.buildNumber;
 
-
     final globalContext = navigatorKey.currentContext;
     if (globalContext == null || !mounted) {
-      print('❌ Global context is null or widget unmounted, cannot show version dialog.');
+      print(
+        '❌ Global context is null or widget unmounted, cannot show version dialog.',
+      );
       return;
     }
 
     // if (context.mounted) {
-      showDialog(
-        context: globalContext,
-        builder: (_) => AlertDialog(
-          title: const Text('Phiên bản hiện tại'),
-          content: Text('🔢 Build version: $currentVersion'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(globalContext).pop(),
-              child: const Text('OK'),
-            )
-          ],
-        ),
-      );
+    showDialog(
+      context: globalContext,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Phiên bản hiện tại'),
+            content: Text('🔢 Build version: $currentVersion'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(globalContext).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
     // }
   }
 
@@ -116,7 +124,8 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
   //   return status.isGranted;
   // }
   Future<bool> _requestStoragePermission() async {
-    if (Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 30) {
+    if (Platform.isAndroid &&
+        (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 30) {
       final status = await Permission.manageExternalStorage.request();
       return status.isGranted;
     } else {
@@ -177,72 +186,86 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
   void _showUpdateDialog(String apkUrl) {
     final globalContext = navigatorKey.currentContext;
     if (globalContext == null || !mounted) {
-      print('❌ Cannot show update dialog: context is null or widget unmounted.');
+      print(
+        '❌ Cannot show update dialog: context is null or widget unmounted.',
+      );
       return;
     }
 
     showDialog(
       context: globalContext,
       barrierDismissible: false,
-      builder: (_) => WillPopScope(
-        onWillPop: () async => false, // Prevent back button dismissal
-        child: AlertDialog(
-          backgroundColor: const Color(0xFFFFF5F7),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          titleTextStyle: const TextStyle(
-            fontFamily: 'LeagueSpartan',
-            fontSize: 22,
-            color: Color(0xFFE37083),
-            fontWeight: FontWeight.bold,
-          ),
-          contentTextStyle: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-          title: const Text('Update Available'),
-          content: const Text(
-            'A new version of the app is available.\nPlease update to continue.',
-          ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF89B7C2),
+      builder:
+          (_) => WillPopScope(
+            onWillPop: () async => false, // Prevent back button dismissal
+            child: AlertDialog(
+              backgroundColor: const Color(0xFFFFF5F7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              onPressed: () {
-                if (Navigator.canPop(globalContext)) {
-                  Navigator.of(globalContext).pop();
-                }
-              },
-              child: const Text('Later', style: TextStyle(fontFamily: 'Inter')),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE37083),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              titleTextStyle: const TextStyle(
+                fontFamily: 'LeagueSpartan',
+                fontSize: 22,
+                color: Color(0xFFE37083),
+                fontWeight: FontWeight.bold,
+              ),
+              contentTextStyle: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              title: const Text('Update Available'),
+              content: const Text(
+                'A new version of the app is available.\nPlease update to continue.',
+              ),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              actions: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF89B7C2),
+                  ),
+                  onPressed: () {
+                    if (Navigator.canPop(globalContext)) {
+                      Navigator.of(globalContext).pop();
+                    }
+                  },
+                  child: const Text(
+                    'Later',
+                    style: TextStyle(fontFamily: 'Inter'),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              onPressed: () {
-                if (Navigator.canPop(globalContext)) {
-                  Navigator.of(globalContext).pop();
-                }
-                _downloadAndInstallApk(apkUrl);
-              },
-              child: const Text(
-                'Update Now',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  color: Colors.white,
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE37083),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                  onPressed: () {
+                    if (Navigator.canPop(globalContext)) {
+                      Navigator.of(globalContext).pop();
+                    }
+                    _downloadAndInstallApk(apkUrl);
+                  },
+                  child: const Text(
+                    'Update Now',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -252,7 +275,9 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
 
     if (!await _requestStoragePermission()) {
       print('❌ Storage permission denied');
-      _showErrorDialog('Storage permission is required to download updates. Please enable it in app settings.');
+      _showErrorDialog(
+        'Storage permission is required to download updates. Please enable it in app settings.',
+      );
       return;
     }
 
@@ -281,14 +306,14 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
         options: Options(
           followRedirects: true,
           responseType: ResponseType.bytes,
-          headers: {
-            'User-Agent': 'Mozilla/5.0',
-          },
+          headers: {'User-Agent': 'Mozilla/5.0'},
         ),
         deleteOnError: true,
         onReceiveProgress: (received, total) {
           if (total != -1) {
-            print('⬇️ Download progress: ${(received / total * 100).toStringAsFixed(0)}%');
+            print(
+              '⬇️ Download progress: ${(received / total * 100).toStringAsFixed(0)}%',
+            );
           }
         },
       );
@@ -307,11 +332,15 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
         }
 
         final fileSize = await apkFile.length();
-        print('📦 File size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
+        print(
+          '📦 File size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+        );
 
         // Check if file size is reasonable (should be at least 1MB)
         if (fileSize < 1024 * 1024) {
-          throw Exception('Downloaded file is too small ($fileSize bytes). Download may be corrupted.');
+          throw Exception(
+            'Downloaded file is too small ($fileSize bytes). Download may be corrupted.',
+          );
         }
 
         final result = await OpenFilex.open(filePath);
@@ -322,13 +351,16 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
           String errorMessage = 'Failed to open installer.';
           switch (result.type) {
             case ResultType.noAppToOpen:
-              errorMessage = 'No app available to install APK files. Please install a file manager.';
+              errorMessage =
+                  'No app available to install APK files. Please install a file manager.';
               break;
             case ResultType.fileNotFound:
-              errorMessage = 'Installation file not found. Please try downloading again.';
+              errorMessage =
+                  'Installation file not found. Please try downloading again.';
               break;
             case ResultType.permissionDenied:
-              errorMessage = 'Permission denied. Please enable "Install from unknown sources" in settings.';
+              errorMessage =
+                  'Permission denied. Please enable "Install from unknown sources" in settings.';
               break;
             case ResultType.error:
               errorMessage = 'Installation error: ${result.message}';
@@ -339,7 +371,9 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
           _showErrorDialog(errorMessage);
         }
       } else {
-        throw Exception('Download failed with HTTP status ${response.statusCode}');
+        throw Exception(
+          'Download failed with HTTP status ${response.statusCode}',
+        );
       }
     } catch (e) {
       // Ensure loading dialog is closed
@@ -353,13 +387,16 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
       if (e is DioException) {
         switch (e.type) {
           case DioExceptionType.connectionTimeout:
-            errorMessage = 'Connection timeout. Please check your internet connection and try again.';
+            errorMessage =
+                'Connection timeout. Please check your internet connection and try again.';
             break;
           case DioExceptionType.receiveTimeout:
-            errorMessage = 'Download timeout. Please check your internet connection and try again.';
+            errorMessage =
+                'Download timeout. Please check your internet connection and try again.';
             break;
           case DioExceptionType.connectionError:
-            errorMessage = 'Network error. Please check your internet connection.';
+            errorMessage =
+                'Network error. Please check your internet connection.';
             break;
           case DioExceptionType.badResponse:
             errorMessage = 'Server error. Please try again later.';
@@ -368,9 +405,11 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
             errorMessage = 'Download failed: ${e.message}';
         }
       } else if (e.toString().contains('No space left')) {
-        errorMessage = 'Not enough storage space. Please free up some space and try again.';
+        errorMessage =
+            'Not enough storage space. Please free up some space and try again.';
       } else if (e.toString().contains('Permission denied')) {
-        errorMessage = 'Storage permission denied. Please enable storage permission in app settings.';
+        errorMessage =
+            'Storage permission denied. Please enable storage permission in app settings.';
       }
 
       _showErrorDialog(errorMessage);
@@ -384,30 +423,32 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
     showDialog(
       context: globalContext,
       barrierDismissible: false,
-      builder: (_) => PopScope(
-        canPop: false, // Prevent back navigation
-        child: AlertDialog(
-          backgroundColor: const Color(0xFFFFF5F7),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: Row(
-            children: const [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE37083)),
+      builder:
+          (_) => PopScope(
+            canPop: false, // Prevent back navigation
+            child: AlertDialog(
+              backgroundColor: const Color(0xFFFFF5F7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              SizedBox(width: 16),
-              Flexible(
-                child: Text(
-                  'Downloading and installing the update...',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
+              content: Row(
+                children: const [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFE37083),
+                    ),
                   ),
-                ),
+                  SizedBox(width: 16),
+                  Flexible(
+                    child: Text(
+                      'Downloading and installing the update...',
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      )
     );
   }
 
@@ -418,62 +459,71 @@ class _GlobalVersionCheckerState extends State<GlobalVersionChecker> {
     showDialog(
       context: globalContext,
       barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF5F7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        titleTextStyle: const TextStyle(
-          fontFamily: 'LeagueSpartan',
-          fontSize: 20,
-          color: Color(0xFFE37083),
-          fontWeight: FontWeight.bold,
-        ),
-        contentTextStyle: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 16,
-          color: Colors.black87,
-        ),
-        title: const Text('Update Failed'),
-        content: Text(message),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF89B7C2),
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: const Color(0xFFFFF5F7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            onPressed: () {
-              if (Navigator.canPop(globalContext)) {
-                Navigator.of(globalContext).pop();
-              }
-            },
-            child: const Text('OK', style: TextStyle(fontFamily: 'Inter')),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE37083),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            titleTextStyle: const TextStyle(
+              fontFamily: 'LeagueSpartan',
+              fontSize: 20,
+              color: Color(0xFFE37083),
+              fontWeight: FontWeight.bold,
+            ),
+            contentTextStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            title: const Text('Update Failed'),
+            content: Text(message),
+            actionsPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF89B7C2),
+                ),
+                onPressed: () {
+                  if (Navigator.canPop(globalContext)) {
+                    Navigator.of(globalContext).pop();
+                  }
+                },
+                child: const Text('OK', style: TextStyle(fontFamily: 'Inter')),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            onPressed: () {
-              if (Navigator.canPop(globalContext)) {
-                Navigator.of(globalContext).pop();
-              }
-              // Retry the version check which will show update dialog again
-              _versionChecked = false;
-              _checkAppVersion();
-            },
-            child: const Text(
-              'Retry',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: Colors.white,
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE37083),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+                onPressed: () {
+                  if (Navigator.canPop(globalContext)) {
+                    Navigator.of(globalContext).pop();
+                  }
+                  // Retry the version check which will show update dialog again
+                  _versionChecked = false;
+                  _checkAppVersion();
+                },
+                child: const Text(
+                  'Retry',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
     );
   }
 

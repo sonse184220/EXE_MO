@@ -57,10 +57,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         icon: Icons.settings,
         color: Colors.red.shade300,
         title: 'Your payment transactions',
-        tap: () { Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PaymentTransactionHistory()),
-        );}
+        tap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentTransactionHistory(),
+            ),
+          );
+        },
       ),
       _buildSettingItem(
         icon: Icons.help_outline,
@@ -87,18 +91,78 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _buildSettingItem(
         icon: Icons.exit_to_app,
         color: Colors.red,
+        title: 'Switch Profile',
+        tap: () async {
+          final shouldLogout = await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+              title: Text('Confirm Switch Profile'),
+              content: Text('Are you sure you want to switch profile?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false), // Cancel
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true), // Confirm
+                  child: Text('Switch'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldLogout == true) {
+            final result = await _authUsecase.switchToProfileChoosing();
+            if (result.isSuccess) {
+              // Navigator.pushReplacement or go to login page
+              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Login()));
+            } else {
+              Notify.showFlushbar('Switch failed due to error. Please logout and login again if you want to switch profile!');
+            }
+          }
+        },
+        // tap: () {
+        //   Navigator.push(
+        //     context,
+        //     MaterialPageRoute(builder: (context) => Login()),
+        //   );
+        // },
+      ),
+      _buildSettingItem(
+        icon: Icons.exit_to_app,
+        color: Colors.red,
         title: 'Logout',
         tap: () async {
-          final result = await _authUsecase.logout();
-          if(result.isSuccess) {
-            // Navigator.push(
-            //         context,
-            //         MaterialPageRoute(builder: (context) => Login()),
-            //       );
-          }else{
-            Notify.showFlushbar('Logout fail');
+          final shouldLogout = await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: Text('Confirm Logout'),
+                  content: Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false), // Cancel
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true), // Confirm
+                      child: Text('Logout'),
+                    ),
+                  ],
+                ),
+          );
+
+          if (shouldLogout == true) {
+            final result = await _authUsecase.logout();
+            if (result.isSuccess) {
+              // Navigator.pushReplacement or go to login page
+              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Login()));
+            } else {
+              Notify.showFlushbar('Logout failed');
+            }
           }
-        }
+        },
         // tap: () {
         //   Navigator.push(
         //     context,
@@ -177,42 +241,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     required VoidCallback? tap,
   }) {
     return
-      // GestureDetector(
-      // onTap: tap,
-      // child:
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFFEEEEEE), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((0.05 * 255).round()),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ListTile(
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha((0.1 * 255).round()),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
+    // GestureDetector(
+    // onTap: tap,
+    // child:
+    Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFEEEEEE), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha((0.05 * 255).round()),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
-          title: Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ],
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha((0.1 * 255).round()),
+            borderRadius: BorderRadius.circular(10),
           ),
-          trailing:
-              title.isNotEmpty
-                  ? const Icon(Icons.chevron_right, color: Colors.grey)
-                  : null,
-          onTap: tap,
+          child: Icon(icon, color: color, size: 24),
         ),
-      );
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        trailing:
+            title.isNotEmpty
+                ? const Icon(Icons.chevron_right, color: Colors.grey)
+                : null,
+        onTap: tap,
+      ),
+    );
     // );
   }
 }

@@ -31,6 +31,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   bool isUpdatingPost = false;
   String? errorMessage;
 
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   late TabController _tabController;
 
   String? get currentUserId =>
@@ -44,6 +47,12 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
           .watch(authNotifierProvider)
           .userInfo
           ?.profileId;
+
+  String? get cl =>
+      ref
+          .watch(authNotifierProvider)
+          .userInfo
+          ?.purchasePlan;
 
   late final List<Widget> communityPosts;
 
@@ -59,6 +68,17 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   bool get isCurrentUserAdmin {
     return currentUserId != null &&
         communityGroup?.createdBy == currentUserId;
+  }
+
+  List<dynamic> _filterPosts(List<dynamic> posts) {
+    if (_searchQuery.isEmpty) {
+      return posts;
+    }
+
+    return posts.where((post) {
+      final title = post.communityPostTitle?.toLowerCase() ?? '';
+      return title.contains(_searchQuery.toLowerCase());
+    }).toList();
   }
 
   Future<void> _updateCommunityGroup() async {
@@ -550,6 +570,10 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         .toList();
   }
 
+  List<dynamic> get filteredActivePosts => _filterPosts(activePosts);
+  List<dynamic> get filteredUserPosts => _filterPosts(userPosts);
+  List<dynamic> get filteredPendingPosts => _filterPosts(pendingPosts);
+
   Future<void> _createCommunityPost({
     required String title,
     required String content,
@@ -688,6 +712,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   @override
   void dispose() {
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -908,9 +933,15 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   color: lightGray,
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: const TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search Posts and comments',
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Search Posts',
                     hintStyle: TextStyle(
                       color: Colors.grey,
                       fontFamily: 'Inter',
@@ -922,7 +953,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                       vertical: 15,
                     ),
                   ),
-                  style: TextStyle(fontFamily: 'Inter'),
+                  style: const TextStyle(fontFamily: 'Inter'),
                 ),
               ),
             ),
@@ -975,7 +1006,8 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   }
 
   Widget _buildPostsTab() {
-    final posts = activePosts;
+    // final posts = activePosts;
+    final posts = filteredActivePosts;
 
     if (posts.isEmpty) {
       return Center(
@@ -1027,7 +1059,8 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   }
 
   Widget _buildMyPostsTab() {
-    final myPosts = userPosts;
+    // final myPosts = userPosts;
+    final myPosts = filteredUserPosts;
 
     if (myPosts.isEmpty) {
       return Center(
@@ -1084,7 +1117,8 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
 
   Widget _buildApproveTab() {
-    final pendingPostsList = pendingPosts;
+    // final pendingPostsList = pendingPosts;
+    final pendingPostsList = filteredPendingPosts;
 
     if (pendingPostsList.isEmpty) {
       return Center(

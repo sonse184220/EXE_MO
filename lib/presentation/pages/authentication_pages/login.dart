@@ -145,15 +145,15 @@ class LoginPage extends ConsumerState<Login> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        floatingActionButton: FloatingActionButton(
-          onPressed: isAnyLoading ? null :
-              () =>
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminMainScreen()),
-              ),
-          child: const Icon(Icons.add),
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: isAnyLoading ? null :
+        //       () =>
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(builder: (context) => AdminMainScreen()),
+        //       ),
+        //   child: const Icon(Icons.add),
+        // ),
         body: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(

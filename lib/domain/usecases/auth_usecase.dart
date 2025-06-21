@@ -52,6 +52,11 @@ class AuthUsecase {
     return repository.logout();
   }
 
+  Future<Result<bool>> switchToProfileChoosing(
+      ) {
+    return repository.switchToProfileChoosing();
+  }
+
   Future<Result<ProfileEditModel>> getPersonalDetail(){
     return repository.getPersonalDetail();
   }

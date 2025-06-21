@@ -15,6 +15,7 @@ abstract class IAuthRepository {
   Future<Result<String>> forgotPassword(String email);
   Future<Result<String>> resetPassword(String password, String confirmPassword);
   Future<Result<bool>> logout();
+  Future<Result<bool>> switchToProfileChoosing();
   Future<Result<ProfileEditModel>> getPersonalDetail();
   Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword);
   Future<Result<UserDetailModel>> getUserDetail(String userId);
