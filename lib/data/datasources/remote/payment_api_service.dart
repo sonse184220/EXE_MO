@@ -16,4 +16,13 @@ class PaymentApiService {
   Future<Response> getPaymentTransactionHistory() {
     return _client.get('innerchild/payment/all-own-transaction');
   }
+
+  Future<Response> getTransactionDetailForAdmin(String transactionId) {
+    return _client.get('innerchild/payment/admin-view-transaction-detail/$transactionId');
+  }
+
+
+  Future<Response> getTransactionsForAdmin() {
+    return _client.get('innerchild/payment/all-transactions');
+  }
 }

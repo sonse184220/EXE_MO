@@ -41,19 +41,6 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
 
-  // final List<HabitItem> _goals = [
-  //   HabitItem(title: "Meditating", isCompleted: true, color: Colors.green),
-  //   HabitItem(title: "Read Philosophy", isCompleted: true, color: Colors.green),
-  //   HabitItem(title: "Journaling", isCompleted: false, color: Colors.green),
-  //   HabitItem(title: "Exercise", isCompleted: false, color: Colors.blue),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  //   HabitItem(title: "Drink Water", isCompleted: true, color: Colors.purple),
-  // ];
-
   Future<void> _fetchGoals() async {
     setState(() {
       _isLoading = true;
@@ -68,7 +55,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error ='Error while fetch all goals';
         _isLoading = false;
       });
     }
@@ -225,7 +212,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       //   SnackBar(content: Text('Error: ${e.toString()}')),
       // );
 
-      Notify.showFlushbar('Error: ${e.toString()}', isError: true);
+      Notify.showFlushbar('Error while add new goal', isError: true);
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -280,7 +267,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
                     }
                   } catch (e) {
                     setDialogState(() => isDeleting = false);
-                    Notify.showFlushbar('Error deleting goal: ${e.toString()}', isError: true);
+                    Notify.showFlushbar('Error deleting goal', isError: true);
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -293,35 +280,6 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
     );
   }
 
-  // Future<void> _deleteGoal(GoalModel goal) async {
-  //   bool isDeleting = false;
-  //   final confirmed = await showDialog<bool>(
-  //     context: context,
-  //     barrierDismissible: !isDeleting,
-  //     builder: (context) {
-  //       return
-  //     },
-  //   );
-  //
-  //   if (confirmed == true) {
-  //     try {
-  //       final result = await _goalUsecase.deleteOwnGoals(goal.goalId!);
-  //
-  //       if(result.isSuccess) {
-  //         Notify.showFlushbar('Goal deleted successfully!');
-  //       }
-  //       // ScaffoldMessenger.of(context).showSnackBar(
-  //       //   SnackBar(content: Text('Goal deleted successfully!')),
-  //       // );
-  //       await _fetchGoals();
-  //     } catch (e) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Error deleting goal: ${e.toString()}')),
-  //       );
-  //     }
-  //   }
-  // }
-
   Future<void> _toggleGoalCompletion(GoalModel goal) async {
     try {
       final newStatus = goal.goalStatus == 'completed' ? 'active' : 'completed';
@@ -329,7 +287,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       await _fetchGoals();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating goal: ${e.toString()}')),
+        SnackBar(content: Text('Error updating goal')),
       );
     }
   }
@@ -656,50 +614,6 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
     );
   }
 
-  // Widget _buildHabitForm() {
-  //   return Column(
-  //     children: [
-  //       // Title input
-  //       _buildFormTextField(hintText: 'Title'),
-  //       SizedBox(height: 12),
-  //
-  //       // Description input
-  //       _buildFormTextField(hintText: 'Description', maxLines: 3),
-  //       SizedBox(height: 12),
-  //
-  //       // Note input
-  //       _buildFormTextField(hintText: 'Note'),
-  //       SizedBox(height: 20),
-  //
-  //       // Add button
-  //       SizedBox(
-  //         width: double.infinity,
-  //         height: 50,
-  //         child: ElevatedButton(
-  //           onPressed: () {
-  //             // Add task functionality would go here
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.deepOrange,
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(12),
-  //             ),
-  //           ),
-  //           child: Text(
-  //             'Add this task',
-  //             style: TextStyle(
-  //               fontSize: 16,
-  //               fontWeight: FontWeight.bold,
-  //               color: Colors.white,
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //       SizedBox(height: 30),
-  //     ],
-  //   );
-  // }
-
   Widget _buildFormTextField({
     required TextEditingController controller,
     required String hintText,
@@ -728,29 +642,6 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       ),
     );
   }
-
-
-  // Widget _buildFormTextField({required String hintText, int maxLines = 1}) {
-  //   return Container(
-  //     padding: EdgeInsets.symmetric(
-  //       horizontal: 16,
-  //       vertical: maxLines > 1 ? 12 : 0,
-  //     ),
-  //     decoration: BoxDecoration(
-  //       color: Colors.grey[200],
-  //       borderRadius: BorderRadius.circular(12),
-  //     ),
-  //     child: TextField(
-  //       maxLines: maxLines,
-  //       decoration: InputDecoration(
-  //         hintText: hintText,
-  //         hintStyle: TextStyle(color: Colors.grey[500]),
-  //         border: InputBorder.none,
-  //         contentPadding: EdgeInsets.symmetric(vertical: 14),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildTodayGoalsSection() {
     return Expanded(child:  Column(
@@ -869,179 +760,12 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
         itemBuilder: (context, index) {
           return GoalListItem(
             goal: _goals[index],
-            onToggle: () => _toggleGoalCompletion(_goals[index]),
+            // onToggle: () => _toggleGoalCompletion(_goals[index]),
+            onToggle: () => null,
             onEdit: () => _toggleForm(goalToEdit: _goals[index]),
             onDelete: () => _deleteGoal(_goals[index]),
           );
         },
-      ),
-    );
-  }
-
-  // Widget _buildGoalItem(GoalItem goal) {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       borderRadius: BorderRadius.circular(6),
-  //       color: Color(0xFFEDFFF4),
-  //     ),
-  //     margin: EdgeInsets.only(bottom: 10),
-  //     child: Row(
-  //       children: [
-  //         SizedBox(width: 15),
-  //         Expanded(
-  //           child: Text(
-  //             habit.title,
-  //             style: TextStyle(fontSize: 16, color: Colors.black87),
-  //           ),
-  //         ),
-  //         GestureDetector(
-  //           onTap: onToggle,
-  //           child: Container(
-  //             width: 24,
-  //             height: 24,
-  //             decoration: BoxDecoration(
-  //               borderRadius: BorderRadius.circular(6),
-  //               border: Border.all(
-  //                 // color: Color(0xFF5FE394),
-  //                 color: Color(0xFF37C871),
-  //                 width: 2,
-  //               ),
-  //               color:
-  //               habit.isCompleted ? Color(0xFF5FE394) : Colors.transparent,
-  //             ),
-  //             child:
-  //             habit.isCompleted
-  //                 ? Icon(Icons.check, size: 16, color: Colors.white)
-  //                 : null,
-  //           ),
-  //         ),
-  //         IconButton(
-  //           icon: Icon(Icons.more_vert, color: Colors.grey),
-  //           onPressed: onOptions,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  //   // return Container(
-  //   //   margin: EdgeInsets.only(bottom: 12),
-  //   //   child: Row(
-  //   //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //   //     children: [
-  //   //       Text(
-  //   //         goal.title,
-  //   //         style: TextStyle(
-  //   //           fontSize: 14,
-  //   //           fontWeight: FontWeight.w500,
-  //   //           color: goal.isCompleted ? Colors.green : Colors.black,
-  //   //         ),
-  //   //       ),
-  //   //       Row(
-  //   //         children: [
-  //   //           // Checkbox
-  //   //           GestureDetector(
-  //   //             onTap: () {
-  //   //               setState(() {
-  //   //                 goal.isCompleted = !goal.isCompleted;
-  //   //               });
-  //   //             },
-  //   //             child: Container(
-  //   //               width: 24,
-  //   //               height: 24,
-  //   //               decoration: BoxDecoration(
-  //   //                 borderRadius: BorderRadius.circular(4),
-  //   //                 border: goal.isCompleted ? null : Border.all(color: Colors.grey[400]!),
-  //   //                 color: goal.isCompleted ? Colors.green : Colors.transparent,
-  //   //               ),
-  //   //               child: goal.isCompleted
-  //   //                   ? Icon(Icons.check, size: 16, color: Colors.white)
-  //   //                   : null,
-  //   //             ),
-  //   //           ),
-  //   //           SizedBox(width: 8),
-  //   //
-  //   //           // Options button
-  //   //           IconButton(
-  //   //             icon: Icon(Icons.more_vert, color: Colors.grey),
-  //   //             onPressed: () {
-  //   //               // Options functionality would go here
-  //   //             },
-  //   //           ),
-  //   //         ],
-  //   //       ),
-  //   //     ],
-  //   //   ),
-  //   // );
-  // }
-}
-
-class HabitItem {
-  final String title;
-  final bool isCompleted;
-  final Color color;
-
-  HabitItem({
-    required this.title,
-    required this.isCompleted,
-    this.color = Colors.green,
-  });
-}
-
-// Reusable HabitListItem Widget
-class HabitListItem extends StatelessWidget {
-  final HabitItem habit;
-  final VoidCallback? onToggle;
-  final VoidCallback? onOptions;
-
-  const HabitListItem({
-    super.key,
-    required this.habit,
-    this.onToggle,
-    this.onOptions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        color: Color(0xFFEDFFF4),
-      ),
-      margin: EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              habit.title,
-              style: TextStyle(fontSize: 16, color: Colors.black87),
-            ),
-          ),
-          GestureDetector(
-            onTap: onToggle,
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  // color: Color(0xFF5FE394),
-                  color: Color(0xFF37C871),
-                  width: 2,
-                ),
-                color:
-                    habit.isCompleted ? Color(0xFF5FE394) : Colors.transparent,
-              ),
-              child:
-                  habit.isCompleted
-                      ? Icon(Icons.check, size: 16, color: Colors.white)
-                      : null,
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.more_vert, color: Colors.grey),
-            onPressed: onOptions,
-          ),
-        ],
       ),
     );
   }
@@ -1182,13 +906,3 @@ class GoalListItem extends StatelessWidget {
     );
   }
 }
-
-// class GoalItem {
-//   final String title;
-//   bool isCompleted;
-//
-//   GoalItem({
-//     required this.title,
-//     required this.isCompleted,
-//   });
-// }

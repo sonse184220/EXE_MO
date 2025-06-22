@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
-import 'package:inner_child_app/presentation/pages/admin/admin_main_screen.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/forgot_password_1.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/register.dart';

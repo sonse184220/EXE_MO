@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
+import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_members_page.dart';
@@ -28,6 +29,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   CommunityGroupModel? communityGroup;
   bool isLoading = true;
   bool isJoinLoading = false;
+  bool isCreatingPost = false;
   bool isUpdatingPost = false;
   String? errorMessage;
 
@@ -36,23 +38,12 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   late TabController _tabController;
 
-  String? get currentUserId =>
-      ref
-          .watch(authNotifierProvider)
-          .userInfo
-          ?.userId;
+  String? get currentUserId => ref.watch(authNotifierProvider).userInfo?.userId;
 
   String? get currentProfileId =>
-      ref
-          .watch(authNotifierProvider)
-          .userInfo
-          ?.profileId;
+      ref.watch(authNotifierProvider).userInfo?.profileId;
 
-  String? get cl =>
-      ref
-          .watch(authNotifierProvider)
-          .userInfo
-          ?.purchasePlan;
+  String? get cl => ref.watch(authNotifierProvider).userInfo?.purchasePlan;
 
   late final List<Widget> communityPosts;
 
@@ -66,8 +57,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   // Check if current user is the community admin/owner
   bool get isCurrentUserAdmin {
-    return currentUserId != null &&
-        communityGroup?.createdBy == currentUserId;
+    return currentUserId != null && communityGroup?.createdBy == currentUserId;
   }
 
   List<dynamic> _filterPosts(List<dynamic> posts) {
@@ -83,15 +73,17 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
   Future<void> _updateCommunityGroup() async {
     final nameController = TextEditingController(
-        text: communityGroup?.communityName ?? '');
+      text: communityGroup?.communityName ?? '',
+    );
     final descriptionController = TextEditingController(
-        text: communityGroup?.communityDescription ?? '');
+      text: communityGroup?.communityDescription ?? '',
+    );
     String selectedStatus = communityGroup?.communityStatus ?? 'Active';
 
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) =>
-          AlertDialog(
+      builder:
+          (context) => AlertDialog(
             title: const Text(
               'Update Community Group',
               style: TextStyle(
@@ -126,7 +118,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   items: const [
                     DropdownMenuItem(value: 'Active', child: Text('Active')),
                     DropdownMenuItem(
-                        value: 'Inactive', child: Text('Inactive')),
+                      value: 'Inactive',
+                      child: Text('Inactive'),
+                    ),
                   ],
                   onChanged: (value) {
                     selectedStatus = value!;
@@ -142,18 +136,18 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: const Text(
-                    'Cancel', style: TextStyle(fontFamily: 'Inter')),
+                  'Cancel',
+                  style: TextStyle(fontFamily: 'Inter'),
+                ),
               ),
               ElevatedButton(
                 onPressed: () async {
-                  if (nameController.text
-                      .trim()
-                      .isEmpty ||
-                      descriptionController.text
-                          .trim()
-                          .isEmpty) {
+                  if (nameController.text.trim().isEmpty ||
+                      descriptionController.text.trim().isEmpty) {
                     Notify.showFlushbar(
-                        'Please fill all fields', isError: true);
+                      'Please fill all fields',
+                      isError: true,
+                    );
                     return;
                   }
 
@@ -161,8 +155,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (context) =>
-                      const Center(child: CircularProgressIndicator()),
+                      builder:
+                          (context) =>
+                              const Center(child: CircularProgressIndicator()),
                     );
 
                     final result = await _communityUsecase.updateCommunityGroup(
@@ -176,7 +171,8 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                       Navigator.of(context).pop(); // Close loading dialog
                       Navigator.of(context).pop(true); // Close update dialog
                       Notify.showFlushbar(
-                          'Community group updated successfully!');
+                        'Community group updated successfully!',
+                      );
                       await fetchCommunityGroupById();
                     } else {
                       throw Exception('Failed to update community group');
@@ -185,7 +181,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                     if (mounted) {
                       Navigator.of(context).pop(); // Close loading dialog
                       Notify.showFlushbar(
-                          'Error updating group: $e', isError: true);
+                        'Error updating group: $e',
+                        isError: true,
+                      );
                     }
                   }
                 },
@@ -194,7 +192,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   foregroundColor: Colors.white,
                 ),
                 child: const Text(
-                    'Update', style: TextStyle(fontFamily: 'Inter')),
+                  'Update',
+                  style: TextStyle(fontFamily: 'Inter'),
+                ),
               ),
             ],
           ),
@@ -214,7 +214,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         communityPostTitle: post.communityPostTitle ?? '',
         communityPostContent: post.communityPostContent ?? '',
         communityGroupId: widget.communityGroupId,
-        communityPostStatus: 'Active'
+        communityPostStatus: 'Active',
       );
 
       final result = await _communityUsecase.updateCommunityPost(
@@ -242,12 +242,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) =>
-          Container(
-            height: MediaQuery
-                .of(context)
-                .size
-                .height * 0.8,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.8,
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -413,31 +410,34 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: isUpdatingPost
-                              ? null
-                              : () async {
-                            await _approvePost(post);
-                            Navigator.pop(context);
-                          },
+                          onPressed:
+                              isUpdatingPost
+                                  ? null
+                                  : () async {
+                                    await _approvePost(post);
+                                    Navigator.pop(context);
+                                  },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryOrange,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          child: isUpdatingPost
-                              ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
-                            ),
-                          )
-                              : const Text(
-                            'Approve',
-                            style: TextStyle(fontFamily: 'Inter'),
-                          ),
+                          child:
+                              isUpdatingPost
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Approve',
+                                    style: TextStyle(fontFamily: 'Inter'),
+                                  ),
                         ),
                       ),
                     ],
@@ -533,20 +533,21 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       return false;
     }
     return communityGroup!.communityMembersDetail!.any(
-          (member) => member.userId == currentUserId,
+      (member) => member.userId == currentUserId,
     );
   }
 
   List<dynamic> get userPosts {
-    if (currentUserId == null ||
-        communityGroup?.communityPostsDetail == null) {
+    if (currentUserId == null || communityGroup?.communityPostsDetail == null) {
       return [];
     }
     return communityGroup!.communityPostsDetail!
-        .where((post) =>
-    post.userId == currentUserId &&
-        (post.communityPostStatus?.toLowerCase() == 'active' ||
-            post.communityPostStatus?.toLowerCase() != 'inactive'))
+        .where(
+          (post) =>
+              post.userId == currentUserId &&
+              (post.communityPostStatus?.toLowerCase() == 'active' ||
+                  post.communityPostStatus?.toLowerCase() != 'inactive'),
+        )
         .toList();
   }
 
@@ -555,9 +556,11 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       return [];
     }
     return communityGroup!.communityPostsDetail!
-        .where((post) =>
-    post.communityPostStatus?.toLowerCase() == 'active' ||
-        post.communityPostStatus?.toLowerCase() != 'inactive')
+        .where(
+          (post) =>
+              post.communityPostStatus?.toLowerCase() == 'active' ||
+              post.communityPostStatus?.toLowerCase() != 'inactive',
+        )
         .toList();
   }
 
@@ -571,7 +574,9 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
   }
 
   List<dynamic> get filteredActivePosts => _filterPosts(activePosts);
+
   List<dynamic> get filteredUserPosts => _filterPosts(userPosts);
+
   List<dynamic> get filteredPendingPosts => _filterPosts(pendingPosts);
 
   Future<void> _createCommunityPost({
@@ -594,26 +599,28 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         communityPostContent: content,
         communityPostImageFile: imageFile,
         communityGroupId: widget.communityGroupId,
-        communityPostStatus: postStatus
+        communityPostStatus: postStatus,
       );
-      
+
       // print('title ${createCommunityPostModel.communityPostTitle}, groupId ${createCommunityPostModel.communityGroupId}, image ${createCommunityPostModel.communityPostImageFile}');
 
-      final result = editingPost != null
-          ? await _communityUsecase.updateCommunityPost(
-        editingPost.communityPostId,
-        createCommunityPostModel,
-      )
-          : await _communityUsecase.createCommunityPost(
-        createCommunityPostModel,
-      );
+      final result =
+          editingPost != null
+              ? await _communityUsecase.updateCommunityPost(
+                editingPost.communityPostId,
+                createCommunityPostModel,
+              )
+              : await _communityUsecase.createCommunityPost(
+                createCommunityPostModel,
+              );
 
       if (result.isSuccess) {
-        String message = editingPost != null
-            ? 'Post updated successfully!'
-            : isCurrentUserAdmin
-            ? 'Post created successfully!'
-            : 'Post submitted for approval!';
+        String message =
+            editingPost != null
+                ? 'Post updated successfully!'
+                : isCurrentUserAdmin
+                ? 'Post created successfully!'
+                : 'Post submitted for approval!';
 
         Notify.showFlushbar(message);
         onCloseDialog?.call();
@@ -660,11 +667,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Something went wrong',
@@ -679,10 +682,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
           Text(
             errorMessage ?? 'Unknown error occurred',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontFamily: 'Inter',
-            ),
+            style: TextStyle(color: Colors.grey[500], fontFamily: 'Inter'),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
@@ -691,10 +691,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
               backgroundColor: primaryOrange,
               foregroundColor: Colors.white,
             ),
-            child: const Text(
-              'Retry',
-              style: TextStyle(fontFamily: 'Inter'),
-            ),
+            child: const Text('Retry', style: TextStyle(fontFamily: 'Inter')),
           ),
         ],
       ),
@@ -786,22 +783,22 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                     _updateCommunityGroup();
                   }
                 },
-                itemBuilder: (context) =>
-                [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, color: primaryOrange),
-                        SizedBox(width: 8),
-                        Text(
-                          'Edit Community',
-                          style: TextStyle(fontFamily: 'Inter'),
+                itemBuilder:
+                    (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: primaryOrange),
+                            SizedBox(width: 8),
+                            Text(
+                              'Edit Community',
+                              style: TextStyle(fontFamily: 'Inter'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
               ),
           ],
         ),
@@ -857,22 +854,21 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                         ),
                         const SizedBox(height: 4),
                         InkWell(
-                          onTap: () =>
-                              Navigator.push(
+                          onTap:
+                              () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      CommunityMembersPage(
+                                  builder:
+                                      (context) => CommunityMembersPage(
                                         communityId: widget.communityGroupId,
                                         communityName:
-                                        communityGroup?.communityName ??
+                                            communityGroup?.communityName ??
                                             'Community Group',
                                       ),
                                 ),
                               ),
                           child: Text(
-                            '${communityGroup?.communityMembersDetail?.length ??
-                                0} participants',
+                            '${communityGroup?.communityMembersDetail?.length ?? 0} participants',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 14,
@@ -888,38 +884,36 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   if (currentUserId != null && !isCurrentUserAdmin)
                     isJoinLoading
                         ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: primaryOrange,
-                        strokeWidth: 2,
-                      ),
-                    )
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: primaryOrange,
+                            strokeWidth: 2,
+                          ),
+                        )
                         : ElevatedButton(
-                      onPressed: isUserJoined
-                          ? _leaveCommunity
-                          : _joinCommunity,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isUserJoined
-                            ? Colors.red
-                            : primaryOrange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
+                          onPressed:
+                              isUserJoined ? _leaveCommunity : _joinCommunity,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isUserJoined ? Colors.red : primaryOrange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            isUserJoined ? 'Leave' : 'Join',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: Text(
-                        isUserJoined ? 'Leave' : 'Join',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -987,8 +981,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   // My Posts Tab
                   _buildMyPostsTab(),
                   // Admin Approve Tab or Trending Tab
-                  if (isCurrentUserAdmin)
-                    _buildApproveTab()
+                  if (isCurrentUserAdmin) _buildApproveTab(),
                   // else
                   //   _buildTrendingTab(),
                 ],
@@ -997,7 +990,18 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
           ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _showCreatePostDialog(),
+          onPressed:
+              ()  {
+                if (isUserJoined) {
+                  _showCreatePostDialog();
+                } else {
+                  print('clmm');
+                  Notify.showFlushbar(
+                    "You need to join this group first.",
+                    isError: true,
+                  );
+                }
+              },
           backgroundColor: primaryOrange,
           child: const Icon(Icons.add, color: Colors.white),
         ),
@@ -1038,14 +1042,16 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         final isUserPost = post.userId == currentUserId;
 
         return GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CommunityPostDetailPage(
-                postId: post.communityPostId!,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => CommunityPostDetailPage(
+                        postId: post.communityPostId!,
+                      ),
+                ),
               ),
-            ),
-          ),
           child: CommunityPostCard(
             post: post,
             communityName: communityGroup?.communityName ?? '',
@@ -1081,7 +1087,11 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
             const SizedBox(height: 8),
             Text(
               'Tap the + button to create your first post',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500], fontFamily: 'Inter'),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+                fontFamily: 'Inter',
+              ),
             ),
           ],
         ),
@@ -1095,14 +1105,16 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
         final post = myPosts[index];
 
         return GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CommunityPostDetailPage(
-                postId: post.communityPostId!,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => CommunityPostDetailPage(
+                        postId: post.communityPostId!,
+                      ),
+                ),
               ),
-            ),
-          ),
           child: CommunityPostCard(
             post: post,
             communityName: communityGroup?.communityName ?? '',
@@ -1114,7 +1126,6 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       },
     );
   }
-
 
   Widget _buildApproveTab() {
     // final pendingPostsList = pendingPosts;
@@ -1253,9 +1264,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                         return Container(
                           height: 150,
                           color: Colors.grey[200],
-                          child: const Center(
-                            child: Icon(Icons.broken_image),
-                          ),
+                          child: const Center(child: Icon(Icons.broken_image)),
                         );
                       },
                     ),
@@ -1280,9 +1289,34 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            bool isUpdating = false;
+
+            Future<void> handleSubmit() async {
+              if (titleController.text.trim().isEmpty ||
+                  contentController.text.trim().isEmpty) {
+                Notify.showFlushbar("All fields are required.", isError: true);
+                return;
+              }
+
+              setState(() => isUpdating = true);
+
+              await _createCommunityPost(
+                title: titleController.text.trim(),
+                content: contentController.text.trim(),
+                imageFile: selectedImage,
+                editingPost: editingPost,
+                onCloseDialog: () {
+                  Navigator.pop(context);
+                },
+              );
+
+              setState(() => isUpdating = false);
+            }
+
             return AlertDialog(
               title: Text(editingPost != null ? 'Edit Post' : 'Create Post'),
               content: SingleChildScrollView(
@@ -1292,12 +1326,14 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                     TextField(
                       controller: titleController,
                       decoration: const InputDecoration(labelText: 'Title'),
+                      enabled: !isUpdating,
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: contentController,
                       maxLines: 3,
                       decoration: const InputDecoration(labelText: 'Content'),
+                      enabled: !isUpdating,
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton.icon(
@@ -1307,17 +1343,20 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                         backgroundColor: primaryOrange,
                         foregroundColor: Colors.white,
                       ),
-                      onPressed: () async {
-                        final picker = ImagePicker();
-                        final pickedFile = await picker.pickImage(
-                          source: ImageSource.gallery,
-                        );
-                        if (pickedFile != null) {
-                          setState(() {
-                            selectedImage = File(pickedFile.path);
-                          });
-                        }
-                      },
+                      onPressed:
+                          isUpdating
+                              ? null
+                              : () async {
+                                final picker = ImagePicker();
+                                final pickedFile = await picker.pickImage(
+                                  source: ImageSource.gallery,
+                                );
+                                if (pickedFile != null) {
+                                  setState(() {
+                                    selectedImage = File(pickedFile.path);
+                                  });
+                                }
+                              },
                     ),
                     if (selectedImage != null)
                       Padding(
@@ -1335,35 +1374,26 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isUpdating ? null : () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (titleController.text.trim().isEmpty ||
-                        contentController.text.trim().isEmpty) {
-                      Notify.showFlushbar(
-                        "All fields are required.",
-                        isError: true,
-                      );
-                      return;
-                    }
-
-                    await _createCommunityPost(
-                      title: titleController.text.trim(),
-                      content: contentController.text.trim(),
-                      imageFile: selectedImage,
-                      editingPost: editingPost,
-                      onCloseDialog: () {
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
+                  onPressed: isUpdating ? null : handleSubmit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryOrange,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text(editingPost != null ? 'Update' : 'Create'),
+                  child:
+                      isUpdating
+                          ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : Text(editingPost != null ? 'Update' : 'Create'),
                 ),
               ],
             );
@@ -1373,6 +1403,110 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     );
   }
 
+  // void _showCreatePostDialog({dynamic editingPost}) {
+  //   final TextEditingController titleController = TextEditingController();
+  //   final TextEditingController contentController = TextEditingController();
+  //   File? selectedImage;
+  //
+  //   if (editingPost != null) {
+  //     titleController.text = editingPost.communityPostTitle ?? '';
+  //     contentController.text = editingPost.communityPostContent ?? '';
+  //   }
+  //
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return StatefulBuilder(
+  //         builder: (context, setState) {
+  //           return AlertDialog(
+  //             title: Text(editingPost != null ? 'Edit Post' : 'Create Post'),
+  //             content: SingleChildScrollView(
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   TextField(
+  //                     controller: titleController,
+  //                     decoration: const InputDecoration(labelText: 'Title'),
+  //                   ),
+  //                   const SizedBox(height: 10),
+  //                   TextField(
+  //                     controller: contentController,
+  //                     maxLines: 3,
+  //                     decoration: const InputDecoration(labelText: 'Content'),
+  //                   ),
+  //                   const SizedBox(height: 10),
+  //                   ElevatedButton.icon(
+  //                     icon: const Icon(Icons.image),
+  //                     label: const Text('Choose Image'),
+  //                     style: ElevatedButton.styleFrom(
+  //                       backgroundColor: primaryOrange,
+  //                       foregroundColor: Colors.white,
+  //                     ),
+  //                     onPressed: () async {
+  //                       final picker = ImagePicker();
+  //                       final pickedFile = await picker.pickImage(
+  //                         source: ImageSource.gallery,
+  //                       );
+  //                       if (pickedFile != null) {
+  //                         setState(() {
+  //                           selectedImage = File(pickedFile.path);
+  //                         });
+  //                       }
+  //                     },
+  //                   ),
+  //                   if (selectedImage != null)
+  //                     Padding(
+  //                       padding: const EdgeInsets.only(top: 8),
+  //                       child: Text(
+  //                         'Selected: ${selectedImage!.path.split('/').last}',
+  //                         style: const TextStyle(
+  //                           fontSize: 12,
+  //                           color: Colors.grey,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                 ],
+  //               ),
+  //             ),
+  //             actions: [
+  //               TextButton(
+  //                 onPressed: () => Navigator.pop(context),
+  //                 child: const Text('Cancel'),
+  //               ),
+  //               ElevatedButton(
+  //                 onPressed: () async {
+  //                   if (titleController.text.trim().isEmpty ||
+  //                       contentController.text.trim().isEmpty) {
+  //                     Notify.showFlushbar(
+  //                       "All fields are required.",
+  //                       isError: true,
+  //                     );
+  //                     return;
+  //                   }
+  //
+  //                   await _createCommunityPost(
+  //                     title: titleController.text.trim(),
+  //                     content: contentController.text.trim(),
+  //                     imageFile: selectedImage,
+  //                     editingPost: editingPost,
+  //                     onCloseDialog: () {
+  //                       Navigator.pop(context);
+  //                     },
+  //                   );
+  //                 },
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: primaryOrange,
+  //                   foregroundColor: Colors.white,
+  //                 ),
+  //                 child: Text(editingPost != null ? 'Update' : 'Create'),
+  //               ),
+  //             ],
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   String _formatDate(DateTime? date) {
     if (date == null) return '';
@@ -1390,63 +1524,10 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
       return 'now';
     }
   }
-// Widget _buildApproveTab() {
-//   final pendingPostsList = pendingPosts;
-//
-//   if (pendingPostsList.isEmpty) {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Icon(Icons.check_circle_outline, size: 64, color: Colors.grey[400]),
-//           const SizedBox(height: 16),
-//           Text(
-//             'No posts pending approval',
-//             style: TextStyle(
-//               fontSize: 18,
-//               color: Colors.grey[600],
-//               fontWeight: FontWeight.w500,
-//               fontFamily: 'League Spartan',
-//             ),
-//           ),
-//           const SizedBox(height: 8),
-//           Text(
-//             'All posts have been reviewed',
-//             style: TextStyle(
-//               fontSize: 14,
-//               color: Colors.grey[500],
-//               fontFamily: 'Inter',
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   return ListView.builder(
-//       padding: const EdgeInsets.all(16),
-//   itemCount: pendingPostsList.length,
-//   itemBuilder: (context, index) {
-//   final post = pendingPostsList[index];
-//
-//   return GestureDetector(
-//   onTap: () => _showPostApprovalDialog(post),
-//   child: Container(
-//   margin: const EdgeInsets.only(bottom: 16),
-//   decoration: BoxDecoration(
-//   color: Colors.white,
-//   borderRadius: BorderRadius.circular(12),
-//   border: Border.all(color: Colors.orange.withOpacity(0.3)),
-//   boxShadow: [
-//   BoxShadow(
-//   color: Colors.black.withOpacity(0.05),
-//   blurRadius: 10,
-//   offset
-
 }
 
 class CommunityPostCard extends StatelessWidget {
-  final dynamic post;
+  final CommunityPostModel post;
   final String communityName;
   final bool isUserPost;
   final VoidCallback? onEdit;
@@ -1491,25 +1572,31 @@ class CommunityPostCard extends StatelessWidget {
             Row(
               children: [
                 // Author avatar
-               GestureDetector(onTap: (){}, child:  CircleAvatar(
-                 radius: 24,
-                 backgroundColor: post.profilePicture != null
-                     ? Colors.transparent
-                     : primaryOrange.withOpacity(0.2),
-                 backgroundImage: post.profilePicture != null
-                     ? NetworkImage(post.profilePicture!)
-                     : null,
-                 child: post.profilePicture == null
-                     ? Text(
-                   (post.userName ?? 'U')[0].toUpperCase(),
-                   style: const TextStyle(
-                     color: primaryOrange,
-                     fontWeight: FontWeight.bold,
-                     fontSize: 18,
-                   ),
-                 )
-                     : null,
-               ),),
+                GestureDetector(
+                  onTap: () {},
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor:
+                        post.profilePicture != null
+                            ? Colors.transparent
+                            : primaryOrange.withOpacity(0.2),
+                    backgroundImage:
+                        post.profilePicture != null
+                            ? NetworkImage(post.profilePicture!)
+                            : null,
+                    child:
+                        post.profilePicture == null
+                            ? Text(
+                              (post.userName ?? 'U')[0].toUpperCase(),
+                              style: const TextStyle(
+                                color: primaryOrange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            )
+                            : null,
+                  ),
+                ),
                 // CircleAvatar(
                 //   radius: 20,
                 //   backgroundColor: primaryOrange.withOpacity(0.2),
@@ -1557,27 +1644,27 @@ class CommunityPostCard extends StatelessWidget {
                     },
                     itemBuilder:
                         (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: primaryOrange),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      // const PopupMenuItem(
-                      //   value: 'delete',
-                      //   child: Row(
-                      //     children: [
-                      //       Icon(Icons.delete, color: Colors.red),
-                      //       SizedBox(width: 8),
-                      //       Text('Delete'),
-                      //     ],
-                      //   ),
-                      // ),
-                    ],
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: primaryOrange),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          // const PopupMenuItem(
+                          //   value: 'delete',
+                          //   child: Row(
+                          //     children: [
+                          //       Icon(Icons.delete, color: Colors.red),
+                          //       SizedBox(width: 8),
+                          //       Text('Delete'),
+                          //     ],
+                          //   ),
+                          // ),
+                        ],
                   ),
               ],
             ),
@@ -1632,27 +1719,71 @@ class CommunityPostCard extends StatelessWidget {
 
             // Hashtags or category
             if (post.communityPostStatus != null)
-              Text(
-                '#${post.communityPostStatus}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: primaryOrange,
-                  fontWeight: FontWeight.w500,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      post.communityPostStatus?.isNotEmpty == true
+                          ? primaryOrange.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color:
+                        post.communityPostStatus?.isNotEmpty == true
+                            ? primaryOrange
+                            : Colors.grey,
+                  ),
+                ),
+                child: Text(
+                  post.communityPostStatus?.isNotEmpty == true
+                      ? post.communityPostStatus!
+                      : 'Unknown',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        post.communityPostStatus?.isNotEmpty == true
+                            ? primaryOrange
+                            : Colors.grey[800],
+                  ),
                 ),
               ),
 
+            //   Text(
+            //     // 'cc',
+            //     (post.communityPostStatus?.isNotEmpty ?? false)
+            //         ? post.communityPostStatus!
+            //         : 'Unknown',
+            //     style: const TextStyle(
+            //       fontSize: 12,
+            //       color: Colors.white,
+            //       fontWeight: FontWeight.w500,
+            //       fontFamily: 'Inter',
+            //     ),
+            //   ),
+            //   Text(
+            //     '#${post.communityPostStatus}',
+            //     style: const TextStyle(
+            //       fontSize: 14,
+            //       color: primaryOrange,
+            //       fontWeight: FontWeight.w500,
+            //     ),
+            //   ),
             const SizedBox(height: 12),
 
             // Post actions
-            Row(
-              children: [
-                _buildActionButton(Icons.favorite_border, '12'),
-                const SizedBox(width: 24),
-                _buildActionButton(Icons.chat_bubble_outline, '5'),
-                const SizedBox(width: 24),
-                _buildActionButton(Icons.share_outlined, ''),
-              ],
-            ),
+            // Row(
+            //   children: [
+            //     _buildActionButton(Icons.favorite_border, '12'),
+            //     const SizedBox(width: 24),
+            //     _buildActionButton(Icons.chat_bubble_outline, '5'),
+            //     const SizedBox(width: 24),
+            //     _buildActionButton(Icons.share_outlined, ''),
+            //   ],
+            // ),
           ],
         ),
       ),

@@ -306,7 +306,6 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     }
   }
 
-// Helper method to show error with retry option
   void _showErrorWithRetry(String message, VoidCallback retryCallback) {
     // Show error notification
     Notify.showFlushbar(message, isError: true);
@@ -316,14 +315,40 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Error'),
-          content: Text(message),
+          title: const Text(
+            'Error',
+            style: TextStyle(
+              fontFamily: 'League Spartan',
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFE37083), // RASPBERRY
+            ),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.black87,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF89B7C2), // SPRING SKY
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -331,11 +356,19 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                 retryCallback(); // Retry the operation
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
+                backgroundColor: const Color(0xFFE37083), // RASPBERRY
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(
                 'Retry',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -343,10 +376,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA), // Light background
         body: GestureDetector(
           // Dismiss keyboard when tapping outside of text fields
           onTap: () {
@@ -354,22 +389,21 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           },
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return
-              // SingleChildScrollView(
-              // child:
-              ConstrainedBox(
+              return ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  // margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
+                        color: const Color(0xFF89B7C2).withOpacity(0.1), // SPRING SKY shadow
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                        spreadRadius: 0,
                       ),
                     ],
                   ),
@@ -382,14 +416,21 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                         alignment: Alignment.centerLeft,
                         children: [
                           // Back button on the left
-                          IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.blue,
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF89B7C2).withOpacity(0.1), // SPRING SKY
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => Navigator.of(context).pop(),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back_ios,
+                                color: Color(0xFF89B7C2), // SPRING SKY
+                                size: 20,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              constraints: const BoxConstraints(),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
                           ),
                           // Centered title
                           Align(
@@ -397,9 +438,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                             child: const Text(
                               'Edit Profile',
                               style: TextStyle(
-                                color: Colors.black,
+                                fontFamily: 'League Spartan',
+                                color: Color(0xFFE37083), // RASPBERRY
                                 fontWeight: FontWeight.bold,
-                                fontSize: 20,
+                                fontSize: 24,
                               ),
                             ),
                           ),
@@ -407,438 +449,698 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       ),
 
                       _isLoading
-                          ? const Center(child: CircularProgressIndicator())
+                          ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            const Color(0xFFFFB876), // PAPAYA
+                          ),
+                        ),
+                      )
                           : _profileData == null
                           ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Failed to load profile.',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(height: 10),
-                                ElevatedButton(
-                                  onPressed: _loadProfile,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepOrange,
-                                  ),
-                                  child: const Text("Retry"),
-                                ),
-                              ],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Failed to load profile.',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                color: Color(0xFFE37083), // RASPBERRY
+                              ),
                             ),
-                          )
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadProfile,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFFB876), // PAPAYA
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: const Text(
+                                "Retry",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                           : Expanded(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 20),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 24),
 
-                                  // Profile Image
-                                  Center(
-                                    child: Stack(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 50,
-                                          backgroundImage:
-                                              _profileImage != null
-                                                  ? FileImage(_profileImage!)
-                                                  : (_pictureProfile != null
-                                                      ? NetworkImage(
-                                                            _pictureProfile!,
-                                                          )
-                                                          as ImageProvider
-                                                      : AssetImage(
-                                                        "assets/images/user_avt.png",
-                                                      )),
-                                          // backgroundImage:
-                                          //     _profileImage != null
-                                          //         ? FileImage(_profileImage!)
-                                          //             as ImageProvider
-                                          //         : AssetImage(
-                                          //           "assets/profile_image.jpg",
-                                          //         ),
-                                        ),
-                                        Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: GestureDetector(
-                                            onTap: _pickImage,
-                                            child: Container(
-                                              padding: EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: Colors.deepOrange,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.camera_alt,
-                                                color: Colors.white,
-                                                size: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 30),
-
-                                  // Personal Information Section
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepOrange,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        "Personal Information",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Full Name
-                                  Text(
-                                    "Fullname",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _fullNameController,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15,
-                                        vertical: 15,
-                                      ),
-                                      errorText: _fullNameError,
-                                    ),
-                                    onChanged: (value) {
-                                      if (_fullNameError != null) {
-                                        setState(() {
-                                          _fullNameError = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Gender Selection
-                                  Text(
-                                    "Gender",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 15,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      // border: Border.all(
-                                      //   color: Colors.grey.shade300,
-                                      // ),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border:
-                                          _genderError != null
-                                              ? Border.all(color: Colors.red)
-                                              : Border.all(
-                                                color: Colors.grey.shade300,
-                                              ),
-                                    ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton2<String>(
-                                        isExpanded: true,
-                                        hint: Text("Select Gender"),
-                                        items:
-                                            _genderOptions.map((String value) {
-                                              return DropdownMenuItem<String>(
-                                                value: value,
-                                                child: Text(value),
-                                              );
-                                            }).toList(),
-                                        value: _selectedGender,
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            _selectedGender = newValue;
-                                            _genderError = null;
-                                          });
-                                        },
-                                        buttonStyleData: ButtonStyleData(),
-                                        dropdownStyleData: DropdownStyleData(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (_genderError != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 5,
-                                        left: 12,
-                                      ),
-                                      child: Text(
-                                        _genderError!,
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-
-                                  SizedBox(height: 20),
-
-                                  // Phone Number
-                                  Text(
-                                    "Phone Number",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _phoneNumberController,
-                                    keyboardType: TextInputType.phone,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15,
-                                        vertical: 15,
-                                      ),
-                                      errorText: _phoneNumberError,
-                                    ),
-                                    onChanged: (value) {
-                                      if (_phoneNumberError != null) {
-                                        setState(() {
-                                          _phoneNumberError = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Email Address
-                                  Text(
-                                    "Email Address",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15,
-                                        vertical: 15,
-                                      ),
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Date of Birth
-                                  Text(
-                                    "Date of Birth",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _dateController,
-                                    readOnly: true,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15,
-                                        vertical: 15,
-                                      ),
-                                      hintText: "DD/MM/YY",
-                                      suffixIcon: Icon(Icons.calendar_today),
-                                    ),
-                                    onTap: () async {
-                                      final DateTime? picked =
-                                          await showDatePicker(
-                                            context: context,
-                                            initialDate:
-                                                _selectedBirthDate ??
-                                                DateTime.now(),
-                                            firstDate: DateTime(1900),
-                                            lastDate: DateTime.now(),
-                                          );
-                                      if (picked != null &&
-                                          picked != _selectedBirthDate) {
-                                        setState(() {
-                                          _selectedBirthDate = picked;
-                                          _dateController.text = DateFormat(
-                                            'dd/MM/yyyy',
-                                          ).format(picked);
-                                        });
-                                      }
-                                    },
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Home Address
-                                  Text(
-                                    "Home Address",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-
-                                  // SizedBox(height: 8),
-                                  // TextFormField(
-                                  //   controller: _addressController,
-                                  //   maxLines: 2,
-                                  //   decoration: InputDecoration(
-                                  //     border: OutlineInputBorder(
-                                  //       borderRadius: BorderRadius.circular(8),
-                                  //       borderSide: BorderSide(
-                                  //         color: Colors.grey.shade300,
-                                  //       ),
-                                  //     ),
-                                  //     contentPadding: EdgeInsets.symmetric(
-                                  //       horizontal: 15,
-                                  //       vertical: 15,
-                                  //     ),
-                                  //     prefixIcon: Padding(
-                                  //       padding: const EdgeInsets.only(
-                                  //         left: 12.0,
-                                  //         right: 8.0,
-                                  //       ),
-                                  //       child: Icon(Icons.home, color: Colors.grey),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  SizedBox(height: 30),
-
-                                  // Security Section - Link to change password
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepOrange,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.security,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        "Security",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  SizedBox(height: 20),
-
-                                  // Change Password Button
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => PasswordChangePage(),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.all(15),
+                              // Profile Image
+                              Center(
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.grey.shade300,
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            const Color(0xFFFFB876), // PAPAYA
+                                            const Color(0xFFF49AA2), // ICE CREAM
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Change Password",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                      child: CircleAvatar(
+                                        radius: 50,
+                                        backgroundColor: Colors.white,
+                                        child: CircleAvatar(
+                                          radius: 46,
+                                          backgroundImage:
+                                          _profileImage != null
+                                              ? FileImage(_profileImage!)
+                                              : (_pictureProfile != null
+                                              ? NetworkImage(
+                                            _pictureProfile!,
+                                          )
+                                          as ImageProvider
+                                              : const AssetImage(
+                                            "assets/images/user_avt.png",
+                                          )),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: _pickImage,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                const Color(0xFFFFCB7C), // SUNSHINE
+                                                const Color(0xFFFFB876), // PAPAYA
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
                                             ),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFFFFB876).withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
                                           ),
-                                          Icon(Icons.chevron_right),
-                                        ],
+                                          child: const Icon(
+                                            Icons.camera_alt,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              // Personal Information Section
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFFF49AA2), // ICE CREAM
+                                          const Color(0xFFE37083), // RASPBERRY
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    "Personal Information",
+                                    style: TextStyle(
+                                      fontFamily: 'League Spartan',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Color(0xFFE37083), // RASPBERRY
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
+
+                              const SizedBox(height: 24),
+
+                              // Full Name
+                              const Text(
+                                "Fullname",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _fullNameController,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                ),
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFFB876), // PAPAYA
+                                      width: 2,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE37083), // RASPBERRY
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  errorText: _fullNameError,
+                                  errorStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color(0xFFE37083), // RASPBERRY
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+                                ),
+                                onChanged: (value) {
+                                  if (_fullNameError != null) {
+                                    setState(() {
+                                      _fullNameError = null;
+                                    });
+                                  }
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Gender Selection
+                              const Text(
+                                "Gender",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: _genderError != null
+                                      ? Border.all(
+                                    color: const Color(0xFFE37083), // RASPBERRY
+                                    width: 2,
+                                  )
+                                      : Border.all(
+                                    color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                  ),
+                                  color: const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton2<String>(
+                                    isExpanded: true,
+                                    hint: const Text(
+                                      "Select Gender",
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    items: _genderOptions.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: const TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    value: _selectedGender,
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        _selectedGender = newValue;
+                                        _genderError = null;
+                                      });
+                                    },
+                                    buttonStyleData: const ButtonStyleData(
+                                      height: 50,
+                                    ),
+                                    dropdownStyleData: DropdownStyleData(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF89B7C2).withOpacity(0.1),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    iconStyleData: const IconStyleData(
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_down,
+                                        color: Color(0xFFFFB876), // PAPAYA
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (_genderError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 5,
+                                    left: 12,
+                                  ),
+                                  child: Text(
+                                    _genderError!,
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color(0xFFE37083), // RASPBERRY
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+
+                              const SizedBox(height: 20),
+
+                              // Phone Number
+                              const Text(
+                                "Phone Number",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _phoneNumberController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                ),
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFFB876), // PAPAYA
+                                      width: 2,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE37083), // RASPBERRY
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  errorText: _phoneNumberError,
+                                  errorStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color(0xFFE37083), // RASPBERRY
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+                                ),
+                                onChanged: (value) {
+                                  if (_phoneNumberError != null) {
+                                    setState(() {
+                                      _phoneNumberError = null;
+                                    });
+                                  }
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Email Address
+                              const Text(
+                                "Email Address",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                ),
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFFB876), // PAPAYA
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Date of Birth
+                              const Text(
+                                "Date of Birth",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _dateController,
+                                readOnly: true,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                ),
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: const Color(0xFF89B7C2).withOpacity(0.3), // SPRING SKY
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFFB876), // PAPAYA
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  hintText: "DD/MM/YY",
+                                  hintStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.grey,
+                                  ),
+                                  suffixIcon: Container(
+                                    margin: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFCB7C).withOpacity(0.2), // SUNSHINE
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.calendar_today,
+                                      color: Color(0xFFFFB876), // PAPAYA
+                                      size: 20,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+                                ),
+                                onTap: () async {
+                                  final DateTime? picked =
+                                  await showDatePicker(
+                                    context: context,
+                                    initialDate:
+                                    _selectedBirthDate ??
+                                        DateTime.now(),
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime.now(),
+                                    builder: (context, child) {
+                                      return Theme(
+                                        data: Theme.of(context).copyWith(
+                                          colorScheme: const ColorScheme.light(
+                                            primary: Color(0xFFFFB876), // PAPAYA
+                                            onPrimary: Colors.white,
+                                            surface: Colors.white,
+                                            onSurface: Colors.black,
+                                          ),
+                                        ),
+                                        child: child!,
+                                      );
+                                    },
+                                  );
+                                  if (picked != null &&
+                                      picked != _selectedBirthDate) {
+                                    setState(() {
+                                      _selectedBirthDate = picked;
+                                      _dateController.text = DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(picked);
+                                    });
+                                  }
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Home Address
+                              const Text(
+                                "Home Address",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              // Security Section - Link to change password
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFFA8BF8A), // MEADOW
+                                          const Color(0xFF89B7C2), // SPRING SKY
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.security,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    "Security",
+                                    style: TextStyle(
+                                      fontFamily: 'League Spartan',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Color(0xFFA8BF8A), // MEADOW
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Change Password Button
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => PasswordChangePage(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFFA8BF8A).withOpacity(0.1), // MEADOW
+                                        const Color(0xFF89B7C2).withOpacity(0.1), // SPRING SKY
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    border: Border.all(
+                                      color: const Color(0xFFA8BF8A).withOpacity(0.3), // MEADOW
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        "Change Password",
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Color(0xFF2C3E50),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFA8BF8A).withOpacity(0.2), // MEADOW
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Icon(
+                                          Icons.chevron_right,
+                                          color: Color(0xFFA8BF8A), // MEADOW
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                      SizedBox(height: 20),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       // Save Changes Button
-                      SizedBox(
+                      Container(
                         width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: _isSubmitting
+                              ? LinearGradient(
+                            colors: [Colors.grey.shade400, Colors.grey.shade500],
+                          )
+                              : LinearGradient(
+                            colors: [
+                              const Color(0xFFFFB876), // PAPAYA
+                              const Color(0xFFE37083), // RASPBERRY
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: _isSubmitting
+                              ? []
+                              : [
+                            BoxShadow(
+                              color: const Color(0xFFFFB876).withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton(
                           onPressed: _isSubmitting ? null : _submitForm, // Disable when submitting
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _isSubmitting ? Colors.grey : Colors.deepOrange,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: _isSubmitting
@@ -857,8 +1159,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                               Text(
                                 'Saving...',
                                 style: TextStyle(
+                                  fontFamily: 'Inter',
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
                             ],
@@ -866,46 +1170,626 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                               : const Text(
                             'Save Changes',
                             style: TextStyle(
+                              fontFamily: 'Inter',
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
                         ),
                       ),
-                      // SizedBox(
-                      //   width: double.infinity,
-                      //   child: ElevatedButton(
-                      //     onPressed: () {
-                      //       _submitForm();
-                      //     },
-                      //     style: ElevatedButton.styleFrom(
-                      //       backgroundColor: Colors.deepOrange,
-                      //       padding: EdgeInsets.symmetric(vertical: 15),
-                      //       shape: RoundedRectangleBorder(
-                      //         borderRadius: BorderRadius.circular(8),
-                      //       ),
-                      //     ),
-                      //     child: Text(
-                      //       "Save Changes",
-                      //       style: TextStyle(
-                      //         color: Colors.white,
-                      //         fontWeight: FontWeight.bold,
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
-              )
-              // )
-              ;
+              );
             },
           ),
         ),
       ),
     );
   }
+
+
+// Helper method to show error with retry option
+//   void _showErrorWithRetry(String message, VoidCallback retryCallback) {
+//     // Show error notification
+//     Notify.showFlushbar(message, isError: true);
+//
+//     // Optional: Show dialog with retry option
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           title: const Text('Error'),
+//           content: Text(message),
+//           actions: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.of(context).pop();
+//               },
+//               child: const Text('Cancel'),
+//             ),
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.of(context).pop();
+//                 retryCallback(); // Retry the operation
+//               },
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: Colors.deepOrange,
+//               ),
+//               child: const Text(
+//                 'Retry',
+//                 style: TextStyle(color: Colors.white),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+  @override
+  // Widget build(BuildContext context) {
+  //   return SafeArea(
+  //     child: Scaffold(
+  //       body: GestureDetector(
+  //         // Dismiss keyboard when tapping outside of text fields
+  //         onTap: () {
+  //           FocusScope.of(context).unfocus();
+  //         },
+  //         child: LayoutBuilder(
+  //           builder: (context, constraints) {
+  //             return
+  //             // SingleChildScrollView(
+  //             // child:
+  //             ConstrainedBox(
+  //               constraints: BoxConstraints(minHeight: constraints.maxHeight),
+  //               child: Container(
+  //                 width: double.infinity,
+  //                 padding: const EdgeInsets.all(20),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.white,
+  //                   borderRadius: BorderRadius.circular(16),
+  //                   boxShadow: [
+  //                     BoxShadow(
+  //                       color: Colors.black12,
+  //                       blurRadius: 10,
+  //                       offset: Offset(0, 5),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 child: Column(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     // Back button and title
+  //                     Stack(
+  //                       alignment: Alignment.centerLeft,
+  //                       children: [
+  //                         // Back button on the left
+  //                         IconButton(
+  //                           icon: const Icon(
+  //                             Icons.arrow_back_ios,
+  //                             color: Colors.blue,
+  //                           ),
+  //                           padding: EdgeInsets.zero,
+  //                           constraints: const BoxConstraints(),
+  //                           onPressed: () => Navigator.of(context).pop(),
+  //                         ),
+  //                         // Centered title
+  //                         Align(
+  //                           alignment: Alignment.center,
+  //                           child: const Text(
+  //                             'Edit Profile',
+  //                             style: TextStyle(
+  //                               color: Colors.black,
+  //                               fontWeight: FontWeight.bold,
+  //                               fontSize: 20,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //
+  //                     _isLoading
+  //                         ? const Center(child: CircularProgressIndicator())
+  //                         : _profileData == null
+  //                         ? Center(
+  //                           child: Column(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               const Text(
+  //                                 'Failed to load profile.',
+  //                                 style: TextStyle(fontSize: 16),
+  //                               ),
+  //                               const SizedBox(height: 10),
+  //                               ElevatedButton(
+  //                                 onPressed: _loadProfile,
+  //                                 style: ElevatedButton.styleFrom(
+  //                                   backgroundColor: Colors.deepOrange,
+  //                                 ),
+  //                                 child: const Text("Retry"),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         )
+  //                         : Expanded(
+  //                           child: SingleChildScrollView(
+  //                             child: Column(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               children: [
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Profile Image
+  //                                 Center(
+  //                                   child: Stack(
+  //                                     children: [
+  //                                       CircleAvatar(
+  //                                         radius: 50,
+  //                                         backgroundImage:
+  //                                             _profileImage != null
+  //                                                 ? FileImage(_profileImage!)
+  //                                                 : (_pictureProfile != null
+  //                                                     ? NetworkImage(
+  //                                                           _pictureProfile!,
+  //                                                         )
+  //                                                         as ImageProvider
+  //                                                     : AssetImage(
+  //                                                       "assets/images/user_avt.png",
+  //                                                     )),
+  //                                         // backgroundImage:
+  //                                         //     _profileImage != null
+  //                                         //         ? FileImage(_profileImage!)
+  //                                         //             as ImageProvider
+  //                                         //         : AssetImage(
+  //                                         //           "assets/profile_image.jpg",
+  //                                         //         ),
+  //                                       ),
+  //                                       Positioned(
+  //                                         bottom: 0,
+  //                                         right: 0,
+  //                                         child: GestureDetector(
+  //                                           onTap: _pickImage,
+  //                                           child: Container(
+  //                                             padding: EdgeInsets.all(8),
+  //                                             decoration: BoxDecoration(
+  //                                               color: Colors.deepOrange,
+  //                                               shape: BoxShape.circle,
+  //                                             ),
+  //                                             child: Icon(
+  //                                               Icons.camera_alt,
+  //                                               color: Colors.white,
+  //                                               size: 16,
+  //                                             ),
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ],
+  //                                   ),
+  //                                 ),
+  //
+  //                                 SizedBox(height: 30),
+  //
+  //                                 // Personal Information Section
+  //                                 Row(
+  //                                   children: [
+  //                                     Container(
+  //                                       padding: EdgeInsets.all(8),
+  //                                       decoration: BoxDecoration(
+  //                                         color: Colors.deepOrange,
+  //                                         shape: BoxShape.circle,
+  //                                       ),
+  //                                       child: Icon(
+  //                                         Icons.person,
+  //                                         color: Colors.white,
+  //                                         size: 16,
+  //                                       ),
+  //                                     ),
+  //                                     SizedBox(width: 10),
+  //                                     Text(
+  //                                       "Personal Information",
+  //                                       style: TextStyle(
+  //                                         fontWeight: FontWeight.bold,
+  //                                         fontSize: 16,
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Full Name
+  //                                 Text(
+  //                                   "Fullname",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(height: 8),
+  //                                 TextFormField(
+  //                                   controller: _fullNameController,
+  //                                   decoration: InputDecoration(
+  //                                     border: OutlineInputBorder(
+  //                                       borderRadius: BorderRadius.circular(8),
+  //                                       borderSide: BorderSide(
+  //                                         color: Colors.grey.shade300,
+  //                                       ),
+  //                                     ),
+  //                                     contentPadding: EdgeInsets.symmetric(
+  //                                       horizontal: 15,
+  //                                       vertical: 15,
+  //                                     ),
+  //                                     errorText: _fullNameError,
+  //                                   ),
+  //                                   onChanged: (value) {
+  //                                     if (_fullNameError != null) {
+  //                                       setState(() {
+  //                                         _fullNameError = null;
+  //                                       });
+  //                                     }
+  //                                   },
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Gender Selection
+  //                                 Text(
+  //                                   "Gender",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(height: 8),
+  //                                 Container(
+  //                                   padding: EdgeInsets.symmetric(
+  //                                     horizontal: 15,
+  //                                   ),
+  //                                   decoration: BoxDecoration(
+  //                                     // border: Border.all(
+  //                                     //   color: Colors.grey.shade300,
+  //                                     // ),
+  //                                     borderRadius: BorderRadius.circular(8),
+  //                                     border:
+  //                                         _genderError != null
+  //                                             ? Border.all(color: Colors.red)
+  //                                             : Border.all(
+  //                                               color: Colors.grey.shade300,
+  //                                             ),
+  //                                   ),
+  //                                   child: DropdownButtonHideUnderline(
+  //                                     child: DropdownButton2<String>(
+  //                                       isExpanded: true,
+  //                                       hint: Text("Select Gender"),
+  //                                       items:
+  //                                           _genderOptions.map((String value) {
+  //                                             return DropdownMenuItem<String>(
+  //                                               value: value,
+  //                                               child: Text(value),
+  //                                             );
+  //                                           }).toList(),
+  //                                       value: _selectedGender,
+  //                                       onChanged: (newValue) {
+  //                                         setState(() {
+  //                                           _selectedGender = newValue;
+  //                                           _genderError = null;
+  //                                         });
+  //                                       },
+  //                                       buttonStyleData: ButtonStyleData(),
+  //                                       dropdownStyleData: DropdownStyleData(
+  //                                         decoration: BoxDecoration(
+  //                                           borderRadius: BorderRadius.circular(
+  //                                             12,
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                                 if (_genderError != null)
+  //                                   Padding(
+  //                                     padding: const EdgeInsets.only(
+  //                                       top: 5,
+  //                                       left: 12,
+  //                                     ),
+  //                                     child: Text(
+  //                                       _genderError!,
+  //                                       style: TextStyle(
+  //                                         color: Colors.red,
+  //                                         fontSize: 12,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Phone Number
+  //                                 Text(
+  //                                   "Phone Number",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(height: 8),
+  //                                 TextFormField(
+  //                                   controller: _phoneNumberController,
+  //                                   keyboardType: TextInputType.phone,
+  //                                   decoration: InputDecoration(
+  //                                     border: OutlineInputBorder(
+  //                                       borderRadius: BorderRadius.circular(8),
+  //                                       borderSide: BorderSide(
+  //                                         color: Colors.grey.shade300,
+  //                                       ),
+  //                                     ),
+  //                                     contentPadding: EdgeInsets.symmetric(
+  //                                       horizontal: 15,
+  //                                       vertical: 15,
+  //                                     ),
+  //                                     errorText: _phoneNumberError,
+  //                                   ),
+  //                                   onChanged: (value) {
+  //                                     if (_phoneNumberError != null) {
+  //                                       setState(() {
+  //                                         _phoneNumberError = null;
+  //                                       });
+  //                                     }
+  //                                   },
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Email Address
+  //                                 Text(
+  //                                   "Email Address",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(height: 8),
+  //                                 TextFormField(
+  //                                   controller: _emailController,
+  //                                   keyboardType: TextInputType.emailAddress,
+  //                                   decoration: InputDecoration(
+  //                                     border: OutlineInputBorder(
+  //                                       borderRadius: BorderRadius.circular(8),
+  //                                       borderSide: BorderSide(
+  //                                         color: Colors.grey.shade300,
+  //                                       ),
+  //                                     ),
+  //                                     contentPadding: EdgeInsets.symmetric(
+  //                                       horizontal: 15,
+  //                                       vertical: 15,
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Date of Birth
+  //                                 Text(
+  //                                   "Date of Birth",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //                                 SizedBox(height: 8),
+  //                                 TextFormField(
+  //                                   controller: _dateController,
+  //                                   readOnly: true,
+  //                                   decoration: InputDecoration(
+  //                                     border: OutlineInputBorder(
+  //                                       borderRadius: BorderRadius.circular(8),
+  //                                       borderSide: BorderSide(
+  //                                         color: Colors.grey.shade300,
+  //                                       ),
+  //                                     ),
+  //                                     contentPadding: EdgeInsets.symmetric(
+  //                                       horizontal: 15,
+  //                                       vertical: 15,
+  //                                     ),
+  //                                     hintText: "DD/MM/YY",
+  //                                     suffixIcon: Icon(Icons.calendar_today),
+  //                                   ),
+  //                                   onTap: () async {
+  //                                     final DateTime? picked =
+  //                                         await showDatePicker(
+  //                                           context: context,
+  //                                           initialDate:
+  //                                               _selectedBirthDate ??
+  //                                               DateTime.now(),
+  //                                           firstDate: DateTime(1900),
+  //                                           lastDate: DateTime.now(),
+  //                                         );
+  //                                     if (picked != null &&
+  //                                         picked != _selectedBirthDate) {
+  //                                       setState(() {
+  //                                         _selectedBirthDate = picked;
+  //                                         _dateController.text = DateFormat(
+  //                                           'dd/MM/yyyy',
+  //                                         ).format(picked);
+  //                                       });
+  //                                     }
+  //                                   },
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Home Address
+  //                                 Text(
+  //                                   "Home Address",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w500,
+  //                                   ),
+  //                                 ),
+  //
+  //                                 // SizedBox(height: 8),
+  //                                 // TextFormField(
+  //                                 //   controller: _addressController,
+  //                                 //   maxLines: 2,
+  //                                 //   decoration: InputDecoration(
+  //                                 //     border: OutlineInputBorder(
+  //                                 //       borderRadius: BorderRadius.circular(8),
+  //                                 //       borderSide: BorderSide(
+  //                                 //         color: Colors.grey.shade300,
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //     contentPadding: EdgeInsets.symmetric(
+  //                                 //       horizontal: 15,
+  //                                 //       vertical: 15,
+  //                                 //     ),
+  //                                 //     prefixIcon: Padding(
+  //                                 //       padding: const EdgeInsets.only(
+  //                                 //         left: 12.0,
+  //                                 //         right: 8.0,
+  //                                 //       ),
+  //                                 //       child: Icon(Icons.home, color: Colors.grey),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 SizedBox(height: 30),
+  //
+  //                                 // Security Section - Link to change password
+  //                                 Row(
+  //                                   children: [
+  //                                     Container(
+  //                                       padding: EdgeInsets.all(8),
+  //                                       decoration: BoxDecoration(
+  //                                         color: Colors.deepOrange,
+  //                                         shape: BoxShape.circle,
+  //                                       ),
+  //                                       child: Icon(
+  //                                         Icons.security,
+  //                                         color: Colors.white,
+  //                                         size: 16,
+  //                                       ),
+  //                                     ),
+  //                                     SizedBox(width: 10),
+  //                                     Text(
+  //                                       "Security",
+  //                                       style: TextStyle(
+  //                                         fontWeight: FontWeight.bold,
+  //                                         fontSize: 16,
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //
+  //                                 SizedBox(height: 20),
+  //
+  //                                 // Change Password Button
+  //                                 GestureDetector(
+  //                                   onTap: () {
+  //                                     Navigator.push(
+  //                                       context,
+  //                                       MaterialPageRoute(
+  //                                         builder:
+  //                                             (context) => PasswordChangePage(),
+  //                                       ),
+  //                                     );
+  //                                   },
+  //                                   child: Container(
+  //                                     padding: EdgeInsets.all(15),
+  //                                     decoration: BoxDecoration(
+  //                                       border: Border.all(
+  //                                         color: Colors.grey.shade300,
+  //                                       ),
+  //                                       borderRadius: BorderRadius.circular(8),
+  //                                     ),
+  //                                     child: Row(
+  //                                       mainAxisAlignment:
+  //                                           MainAxisAlignment.spaceBetween,
+  //                                       children: [
+  //                                         Text(
+  //                                           "Change Password",
+  //                                           style: TextStyle(
+  //                                             fontWeight: FontWeight.bold,
+  //                                           ),
+  //                                         ),
+  //                                         Icon(Icons.chevron_right),
+  //                                       ],
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                         ),
+  //                     SizedBox(height: 20),
+  //                     // Save Changes Button
+  //                     SizedBox(
+  //                       width: double.infinity,
+  //                       child: ElevatedButton(
+  //                         onPressed: _isSubmitting ? null : _submitForm, // Disable when submitting
+  //                         style: ElevatedButton.styleFrom(
+  //                           backgroundColor: _isSubmitting ? Colors.grey : Colors.deepOrange,
+  //                           padding: const EdgeInsets.symmetric(vertical: 15),
+  //                           shape: RoundedRectangleBorder(
+  //                             borderRadius: BorderRadius.circular(8),
+  //                           ),
+  //                         ),
+  //                         child: _isSubmitting
+  //                             ? const Row(
+  //                           mainAxisAlignment: MainAxisAlignment.center,
+  //                           children: [
+  //                             SizedBox(
+  //                               width: 20,
+  //                               height: 20,
+  //                               child: CircularProgressIndicator(
+  //                                 strokeWidth: 2,
+  //                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+  //                               ),
+  //                             ),
+  //                             SizedBox(width: 10),
+  //                             Text(
+  //                               'Saving...',
+  //                               style: TextStyle(
+  //                                 color: Colors.white,
+  //                                 fontWeight: FontWeight.bold,
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         )
+  //                             : const Text(
+  //                           'Save Changes',
+  //                           style: TextStyle(
+  //                             color: Colors.white,
+  //                             fontWeight: FontWeight.bold,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     // SizedBox(
+  //                     //   width: double.infinity,
+  //                     //   child: ElevatedButton(
+  //                     //     onPressed: () {
+  //                     //       _submitForm();
+  //                     //     },
+  //                     //     style: ElevatedButton.styleFrom(
+  //                     //       backgroundColor: Colors.deepOrange,
+  //                     //       padding: EdgeInsets.symmetric(vertical: 15),
+  //                     //       shape: RoundedRectangleBorder(
+  //                     //         borderRadius: BorderRadius.circular(8),
+  //                     //       ),
+  //                     //     ),
+  //                     //     child: Text(
+  //                     //       "Save Changes",
+  //                     //       style: TextStyle(
+  //                     //         color: Colors.white,
+  //                     //         fontWeight: FontWeight.bold,
+  //                     //       ),
+  //                     //     ),
+  //                     //   ),
+  //                     // ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             )
+  //             // )
+  //             ;
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _successNotify() {
     showDialog(

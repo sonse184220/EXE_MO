@@ -670,14 +670,14 @@ class GroupListItem extends StatelessWidget {
                       const SizedBox(width: 12),
                       Icon(Icons.people, size: 16, color: Colors.grey[500]),
                       const SizedBox(width: 4),
-                      Text(
-                        '${community.communityMembersDetail?.length ?? 0} members',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                          fontFamily: 'Inter',
-                        ),
-                      ),
+                      // Text(
+                      //   '${community.communityMembersDetail?.length ?? 0} members',
+                      //   style: TextStyle(
+                      //     fontSize: 12,
+                      //     color: Colors.grey[500],
+                      //     fontFamily: 'Inter',
+                      //   ),
+                      // ),
                       const Spacer(),
                       Text(
                         _formatDate(community.communityCreatedAt),

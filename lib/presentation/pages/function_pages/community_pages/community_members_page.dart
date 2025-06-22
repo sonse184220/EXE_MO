@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
-import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/community/community_member_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
