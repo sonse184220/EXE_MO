@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:inner_child_app/core/global_signalR_wrapper.dart';
 import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';

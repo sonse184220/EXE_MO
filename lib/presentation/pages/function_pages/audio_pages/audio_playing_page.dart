@@ -2,12 +2,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:http/http.dart' as http;
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/domain/entities/audio/audio_model.dart';
 import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 
 class AudioPlayingPage extends ConsumerStatefulWidget {
   final String audioId;
+
   const AudioPlayingPage({super.key, required this.audioId});
 
   @override
@@ -131,7 +133,9 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
         final data = result.data!;
         setState(() {
           audioList = data;
-          currentAudioIndex = audioList.indexWhere((audio) => audio.audioId == widget.audioId);
+          currentAudioIndex = audioList.indexWhere(
+            (audio) => audio.audioId == widget.audioId,
+          );
           if (currentAudioIndex == -1) currentAudioIndex = 0;
         });
       }
@@ -179,13 +183,20 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       });
 
       try {
-        print('url ne: $currentAudio?.audioUrl');
+        print('url ne: ${currentAudio?.audioUrl}');
         await _audioPlayer.stop();
-        await _audioPlayer.setSourceUrl(currentAudio!.audioUrl!);
-        await _audioPlayer.resume();
-        // setState(() {
-        //   isPlaying = true;
-        // });
+
+        // ⏱️ Set custom timeout here
+        final response = await http
+            .get(Uri.parse(currentAudio!.audioUrl!))
+            .timeout(const Duration(seconds: 60));
+
+        if (response.statusCode == 200) {
+          await _audioPlayer.setSourceBytes(response.bodyBytes);
+          await _audioPlayer.resume();
+        } else {
+          throw Exception('Failed to load audio: ${response.statusCode}');
+        }
       } catch (e) {
         print('Error loading audio: $e');
         setState(() {
@@ -199,6 +210,37 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       }
     }
   }
+
+  // Future<void> _loadAndPlayAudio() async {
+  //   if (currentAudio?.audioUrl != null) {
+  //     setState(() {
+  //       isLoading = true;
+  //       isSetSourceError = false;
+  //       currentPosition = Duration.zero;
+  //       totalDuration = Duration.zero;
+  //     });
+  //
+  //     try {
+  //       print('url ne: $currentAudio?.audioUrl');
+  //       await _audioPlayer.stop();
+  //       await _audioPlayer.setSourceUrl(currentAudio!.audioUrl!);
+  //       await _audioPlayer.resume();
+  //       // setState(() {
+  //       //   isPlaying = true;
+  //       // });
+  //     } catch (e) {
+  //       print('Error loading audio: $e');
+  //       setState(() {
+  //         isSetSourceError = true;
+  //       });
+  //     } finally {
+  //       setState(() {
+  //         isLoading = false;
+  //         isInitialLoading = false;
+  //       });
+  //     }
+  //   }
+  // }
 
   // Fixed retry function that maintains correct state
   Future<void> _retryLoadAudio() async {
@@ -341,34 +383,40 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                           shape: BoxShape.circle,
                           color: Colors.grey[300],
                         ),
-                        child: audio.audioThumbnail!.isNotEmpty
-                            ? ClipOval(
-                          child: Image.network(
-                            audio.audioThumbnail!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.music_note, color: Colors.grey);
-                            },
-                          ),
-                        )
-                            : Icon(Icons.music_note, color: Colors.grey),
+                        child:
+                            audio.audioThumbnail!.isNotEmpty
+                                ? ClipOval(
+                                  child: Image.network(
+                                    audio.audioThumbnail!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(
+                                        Icons.music_note,
+                                        color: Colors.grey,
+                                      );
+                                    },
+                                  ),
+                                )
+                                : Icon(Icons.music_note, color: Colors.grey),
                       ),
                       title: Text(
                         audio.audioTitle ?? 'Unknown title',
                         style: TextStyle(
                           color: isCurrentTrack ? Colors.amber : Colors.white,
-                          fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isCurrentTrack
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                         ),
                       ),
                       subtitle: Text(
                         audio.subAudioCategoryName ?? 'Unknown category',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                        ),
+                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
                       ),
-                      trailing: isCurrentTrack
-                          ? Icon(Icons.play_arrow, color: Colors.amber)
-                          : null,
+                      trailing:
+                          isCurrentTrack
+                              ? Icon(Icons.play_arrow, color: Colors.amber)
+                              : null,
                       onTap: () {
                         setState(() {
                           currentAudioIndex = index;
@@ -415,8 +463,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     final imgSize = MediaQuery.of(context).size.width - 20;
 
     return SafeArea(
-      child:  Scaffold(
-      body: LayoutBuilder(
+      child: Scaffold(
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -436,22 +484,32 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                               ),
                               child: Transform.scale(
                                 scale: 1.2,
-                                child: currentAudio?.audioThumbnail != null &&
-                                    currentAudio!.audioThumbnail!.isNotEmpty
-                                    ? Image.network(
-                                  currentAudio!.audioThumbnail!,
+                                child:Image.asset(
+                                  'assets/images/all_audio_background.png',
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Image.asset(
-                                      'assets/images/audio_playing.png',
-                                      fit: BoxFit.cover,
-                                    );
-                                  },
                                 )
-                                    : Image.asset(
-                                  'assets/images/audio_playing.png',
-                                  fit: BoxFit.cover,
-                                ),
+                                    // currentAudio?.audioThumbnail != null &&
+                                    //         currentAudio!
+                                    //             .audioThumbnail!
+                                    //             .isNotEmpty
+                                    //     ? Image.network(
+                                    //       currentAudio!.audioThumbnail!,
+                                    //       fit: BoxFit.cover,
+                                    //       errorBuilder: (
+                                    //         context,
+                                    //         error,
+                                    //         stackTrace,
+                                    //       ) {
+                                    //         return Image.asset(
+                                    //           'assets/images/audio_playing.png',
+                                    //           fit: BoxFit.cover,
+                                    //         );
+                                    //       },
+                                    //     )
+                                    //     : Image.asset(
+                                    //       'assets/images/audio_playing.png',
+                                    //       fit: BoxFit.cover,
+                                    //     ),
                               ),
                             ),
                           ),
@@ -464,7 +522,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     GestureDetector(
                                       onTap: () => Navigator.pop(context),
@@ -482,19 +541,30 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap:(isLoading || isInitialLoading) ? null : _showPlaylist,
-                                      child: Opacity(opacity:   (isLoading || isInitialLoading) ? 0.5 : 1.0,child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            shape: BoxShape.circle,
-            ),
-            child: Icon(
-            Icons.playlist_play,
-            color: Colors.white,
-            size: 18,
-            ),
-            ),),
+                                      onTap:
+                                          (isLoading || isInitialLoading)
+                                              ? null
+                                              : _showPlaylist,
+                                      child: Opacity(
+                                        opacity:
+                                            (isLoading || isInitialLoading)
+                                                ? 0.5
+                                                : 1.0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(
+                                              0.3,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.playlist_play,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -508,7 +578,10 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                         animation: _rotationController,
                                         builder: (context, child) {
                                           return Transform.rotate(
-                                            angle: _rotationController.value * 2 * 3.14159,
+                                            angle:
+                                                _rotationController.value *
+                                                2 *
+                                                3.14159,
                                             child: Container(
                                               width: imgSize,
                                               height: imgSize,
@@ -516,39 +589,53 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                                 shape: BoxShape.circle,
                                                 color: Colors.grey[300],
                                               ),
-                                              child: isLoading
-                                                  ? Center(
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                ),
-                                              )
-                                                  : currentAudio?.audioThumbnail != null &&
-                                                  currentAudio!.audioThumbnail!.isNotEmpty
-                                                  ? ClipOval(
-                                                child: Image.network(
-                                                  currentAudio!.audioThumbnail!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return Icon(
-                                                      Icons.music_note,
-                                                      color: Colors.grey,
-                                                      size: 100,
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                                  : Icon(
-                                                Icons.music_note,
-                                                color: Colors.grey,
-                                                size: 100,
-                                              ),
+                                              child:
+                                                  isLoading
+                                                      ? Center(
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                      )
+                                                      : currentAudio
+                                                                  ?.audioThumbnail !=
+                                                              null &&
+                                                          currentAudio!
+                                                              .audioThumbnail!
+                                                              .isNotEmpty
+                                                      ? ClipOval(
+                                                        child: Image.network(
+                                                          currentAudio!
+                                                              .audioThumbnail!,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (
+                                                            context,
+                                                            error,
+                                                            stackTrace,
+                                                          ) {
+                                                            return Icon(
+                                                              Icons.music_note,
+                                                              color:
+                                                                  Colors.grey,
+                                                              size: 100,
+                                                            );
+                                                          },
+                                                        ),
+                                                      )
+                                                      : Icon(
+                                                        Icons.music_note,
+                                                        color: Colors.grey,
+                                                        size: 100,
+                                                      ),
                                             ),
                                           );
                                         },
                                       ),
                                       SizedBox(height: 20),
                                       Text(
-                                        currentAudio?.audioTitle ?? 'Loading...',
+                                        currentAudio?.audioTitle ??
+                                            'Loading...',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
@@ -558,7 +645,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        currentAudio?.subAudioCategoryName ?? '',
+                                        currentAudio?.subAudioCategoryName ??
+                                            '',
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.7),
                                           fontSize: 14,
@@ -566,35 +654,49 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                       ),
                                       SizedBox(height: 16),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             _formatDuration(currentPosition),
                                             style: TextStyle(
-                                              color: Colors.white.withOpacity(0.7),
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
                                               fontSize: 14,
                                             ),
                                           ),
                                           Expanded(
                                             child: Slider(
-                                              value: totalDuration.inMilliseconds > 0
-                                                  ? currentPosition.inMilliseconds /
-                                                  totalDuration.inMilliseconds
-                                                  : 0.0,
+                                              value:
+                                                  totalDuration.inMilliseconds >
+                                                          0
+                                                      ? currentPosition
+                                                              .inMilliseconds /
+                                                          totalDuration
+                                                              .inMilliseconds
+                                                      : 0.0,
                                               onChanged: (value) {
                                                 final position = Duration(
-                                                  milliseconds: (value * totalDuration.inMilliseconds).round(),
+                                                  milliseconds:
+                                                      (value *
+                                                              totalDuration
+                                                                  .inMilliseconds)
+                                                          .round(),
                                                 );
                                                 _seekTo(position);
                                               },
                                               activeColor: Colors.white,
-                                              inactiveColor: Colors.white.withOpacity(0.3),
+                                              inactiveColor: Colors.white
+                                                  .withOpacity(0.3),
                                             ),
                                           ),
                                           Text(
                                             _formatDuration(totalDuration),
                                             style: TextStyle(
-                                              color: Colors.white.withOpacity(0.7),
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
                                               fontSize: 14,
                                             ),
                                           ),
@@ -614,97 +716,334 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                   // Bottom controls
                   Expanded(
                     child: Container(
-                      decoration: BoxDecoration(color: Color(0xFF89B7C2)),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF89B7C2), // Spring Sky
+                            Color(0xFFA8BF8A), // Meadow
+                            Color(0xFFFFCB7C), // Sunshine
+                          ],
+                          stops: [0.0, 0.5, 1.0],
+                        ),
+                        // borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF89B7C2).withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
+                          // Previous Track Button
                           GestureDetector(
                             onTap: (isLoading || isInitialLoading) ? null : _previousTrack,
-                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Icon(
-                              Icons.skip_previous,
-                              color: Colors.white,
-                              size: 30,
-                            ),)
+                            child: AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              child: Container(
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFE37083).withOpacity(0.2), // Raspberry
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Color(0xFFE37083).withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.skip_previous,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
                           ),
+
+                          // Skip Backward Button
                           GestureDetector(
                             onTap: (isLoading || isInitialLoading) ? null : _skipBackward,
-                            child: Opacity(  opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0,child:  Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
+                            child: AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFFF49AA2).withOpacity(0.8), // Ice Cream
+                                      Color(0xFFFFB876).withOpacity(0.8), // Papaya
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFFF49AA2).withOpacity(0.4),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.replay_10,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.replay_10,
-                                    color: Colors.white,
-                                    size: 20,
+                            ),
+                          ),
+
+                          // Main Play/Pause Button
+                          GestureDetector(
+                            onTap: (isLoading || isInitialLoading)
+                                ? null
+                                : isSetSourceError
+                                ? () => _retryLoadAudio()
+                                : _playPause,
+                            child: Container(
+                              padding: EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white,
+                                    Color(0xFFF49AA2).withOpacity(0.1), // Ice Cream tint
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.5),
+                                    blurRadius: 15,
+                                    offset: Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: Color(0xFFE37083).withOpacity(0.2), // Raspberry
+                                    blurRadius: 20,
+                                    offset: Offset(0, 8),
                                   ),
                                 ],
                               ),
-                            ),)
-                          ),
-                          GestureDetector(
-                            onTap:  (isLoading || isInitialLoading) ? null :  isSetSourceError
-                                ? () => _retryLoadAudio() // Retry loading
-                                : _playPause,
-                            child: Container(
-                              padding: EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
                               child: (isLoading || isInitialLoading)
                                   ? SizedBox(
-                                width: 30,
-                                height: 30,
+                                width: 32,
+                                height: 32,
                                 child: CircularProgressIndicator(
-                                  color: Colors.brown.shade700,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFE37083), // Raspberry
+                                  ),
                                   strokeWidth: 3,
                                 ),
                               )
                                   : isSetSourceError
                                   ? Icon(
                                 Icons.refresh,
-                                color: Colors.redAccent,
-                                size: 30,
+                                color: Color(0xFFE37083), // Raspberry
+                                size: 32,
                               )
                                   : Icon(
                                 isPlaying ? Icons.pause : Icons.play_arrow,
-                                color: Colors.brown.shade700,
-                                size: 30,
+                                color: Color(0xFFE37083), // Raspberry
+                                size: 32,
                               ),
                             ),
                           ),
+
+                          // Skip Forward Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading) ? null :  _skipForward,
-                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
+                            onTap: (isLoading || isInitialLoading) ? null : _skipForward,
+                            child: AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFFFFB876).withOpacity(0.8), // Papaya
+                                      Color(0xFFFFCB7C).withOpacity(0.8), // Sunshine
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFFFFB876).withOpacity(0.4),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.forward_10,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.forward_10,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),),
+                            ),
                           ),
+
+                          // Next Track Button
                           GestureDetector(
                             onTap: (isLoading || isInitialLoading) ? null : _nextTrack,
-                            child: Opacity( opacity: (isLoading || isInitialLoading) ? 0.5 : 1.0, child: Icon(
-                              Icons.skip_next,
-                              color: Colors.white,
-                              size: 30,
-                            ),),
+                            child: AnimatedOpacity(
+                              duration: Duration(milliseconds: 200),
+                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              child: Container(
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFFCB7C).withOpacity(0.2), // Sunshine
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Color(0xFFFFCB7C).withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.skip_next,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  )
+                  // Expanded(
+                  //   child: Container(
+                  //     decoration: BoxDecoration(color: Color(0xFF89B7C2)),
+                  //     child: Row(
+                  //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //       children: [
+                  //         GestureDetector(
+                  //           onTap:
+                  //               (isLoading || isInitialLoading)
+                  //                   ? null
+                  //                   : _previousTrack,
+                  //           child: Opacity(
+                  //             opacity:
+                  //                 (isLoading || isInitialLoading) ? 0.5 : 1.0,
+                  //             child: Icon(
+                  //               Icons.skip_previous,
+                  //               color: Colors.white,
+                  //               size: 30,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //         GestureDetector(
+                  //           onTap:
+                  //               (isLoading || isInitialLoading)
+                  //                   ? null
+                  //                   : _skipBackward,
+                  //           child: Opacity(
+                  //             opacity:
+                  //                 (isLoading || isInitialLoading) ? 0.5 : 1.0,
+                  //             child: Container(
+                  //               padding: EdgeInsets.all(8),
+                  //               decoration: BoxDecoration(
+                  //                 color: Colors.white.withOpacity(0.2),
+                  //                 shape: BoxShape.circle,
+                  //               ),
+                  //               child: Row(
+                  //                 mainAxisSize: MainAxisSize.min,
+                  //                 children: [
+                  //                   Icon(
+                  //                     Icons.replay_10,
+                  //                     color: Colors.white,
+                  //                     size: 20,
+                  //                   ),
+                  //                 ],
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //         GestureDetector(
+                  //           onTap:
+                  //               (isLoading || isInitialLoading)
+                  //                   ? null
+                  //                   : isSetSourceError
+                  //                   ? () =>
+                  //                       _retryLoadAudio() // Retry loading
+                  //                   : _playPause,
+                  //           child: Container(
+                  //             padding: EdgeInsets.all(16),
+                  //             decoration: BoxDecoration(
+                  //               color: Colors.white,
+                  //               shape: BoxShape.circle,
+                  //             ),
+                  //             child:
+                  //                 (isLoading || isInitialLoading)
+                  //                     ? SizedBox(
+                  //                       width: 30,
+                  //                       height: 30,
+                  //                       child: CircularProgressIndicator(
+                  //                         color: Colors.brown.shade700,
+                  //                         strokeWidth: 3,
+                  //                       ),
+                  //                     )
+                  //                     : isSetSourceError
+                  //                     ? Icon(
+                  //                       Icons.refresh,
+                  //                       color: Colors.redAccent,
+                  //                       size: 30,
+                  //                     )
+                  //                     : Icon(
+                  //                       isPlaying
+                  //                           ? Icons.pause
+                  //                           : Icons.play_arrow,
+                  //                       color: Colors.brown.shade700,
+                  //                       size: 30,
+                  //                     ),
+                  //           ),
+                  //         ),
+                  //         GestureDetector(
+                  //           onTap:
+                  //               (isLoading || isInitialLoading)
+                  //                   ? null
+                  //                   : _skipForward,
+                  //           child: Opacity(
+                  //             opacity:
+                  //                 (isLoading || isInitialLoading) ? 0.5 : 1.0,
+                  //             child: Container(
+                  //               padding: EdgeInsets.all(8),
+                  //               decoration: BoxDecoration(
+                  //                 color: Colors.white.withOpacity(0.2),
+                  //                 shape: BoxShape.circle,
+                  //               ),
+                  //               child: Icon(
+                  //                 Icons.forward_10,
+                  //                 color: Colors.white,
+                  //                 size: 20,
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //         GestureDetector(
+                  //           onTap:
+                  //               (isLoading || isInitialLoading)
+                  //                   ? null
+                  //                   : _nextTrack,
+                  //           child: Opacity(
+                  //             opacity:
+                  //                 (isLoading || isInitialLoading) ? 0.5 : 1.0,
+                  //             child: Icon(
+                  //               Icons.skip_next,
+                  //               color: Colors.white,
+                  //               size: 30,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             );

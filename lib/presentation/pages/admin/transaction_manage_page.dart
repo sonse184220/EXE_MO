@@ -1,170 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/entities/transaction/transaction_admin_view_model.dart';
+import 'package:inner_child_app/domain/entities/transaction/transaction_detail_model.dart';
+import 'package:inner_child_app/domain/entities/transaction/transaction_detail_transactions_model.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
+import 'package:inner_child_app/domain/usecases/payment_usecase.dart';
+import 'package:intl/intl.dart';
+
+import '../../../domain/entities/transaction/transaction_model.dart';
 
 class TransactionManagePage extends ConsumerStatefulWidget {
   const TransactionManagePage({super.key});
+
   @override
-  ConsumerState<TransactionManagePage> createState() => _TransactionManagePageState();
+  ConsumerState<TransactionManagePage> createState() =>
+      _TransactionManagePageState();
 }
 
 class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
-  late final AuthUsecase _authUsecase;
+  late final PaymentUsecase _paymentUsecase;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  List<TransactionModel> transactions = [
-    TransactionModel(
-      transactionId: '1',
-      transactionPaymentGateway: 'Stripe',
-      transactionAmount: 2999,
-      transactionCurrency: 'USD',
-      transactionStatus: 'completed',
-      transactionPaymentStatus: 'paid',
-      transactionCode: 'TXN_001',
-      transactionCreatedAt: DateTime(2024, 1, 15),
-      subscriptionType: 'Premium',
-      subscriptionDescription: 'Premium subscription with all features',
-      subscriptionId: 'SUB_PREMIUM_001',
-    ),
-    TransactionModel(
-      transactionId: '2',
-      transactionPaymentGateway: 'PayPal',
-      transactionAmount: 1999,
-      transactionCurrency: 'USD',
-      transactionStatus: 'pending',
-      transactionPaymentStatus: 'processing',
-      transactionCode: 'TXN_002',
-      transactionCreatedAt: DateTime(2024, 2, 10),
-      subscriptionType: 'Basic',
-      subscriptionDescription: 'Basic subscription with core features',
-      subscriptionId: 'SUB_BASIC_002',
-    ),
-    TransactionModel(
-      transactionId: '3',
-      transactionPaymentGateway: 'Square',
-      transactionAmount: 4999,
-      transactionCurrency: 'USD',
-      transactionStatus: 'completed',
-      transactionPaymentStatus: 'paid',
-      transactionCode: 'TXN_003',
-      transactionCreatedAt: DateTime(2024, 3, 5),
-      subscriptionType: 'Enterprise',
-      subscriptionDescription: 'Enterprise subscription with advanced features',
-      subscriptionId: 'SUB_ENTERPRISE_003',
-    ),
-    TransactionModel(
-      transactionId: '4',
-      transactionPaymentGateway: 'Stripe',
-      transactionAmount: 2999,
-      transactionCurrency: 'USD',
-      transactionStatus: 'failed',
-      transactionPaymentStatus: 'failed',
-      transactionCode: 'TXN_004',
-      transactionCreatedAt: DateTime(2024, 3, 20),
-      subscriptionType: 'Premium',
-      subscriptionDescription: 'Premium subscription with all features',
-      subscriptionId: 'SUB_PREMIUM_004',
-    ),
-    TransactionModel(
-      transactionId: '5',
-      transactionPaymentGateway: 'PayPal',
-      transactionAmount: 1999,
-      transactionCurrency: 'USD',
-      transactionStatus: 'completed',
-      transactionPaymentStatus: 'paid',
-      transactionCode: 'TXN_005',
-      transactionCreatedAt: DateTime(2024, 4, 12),
-      subscriptionType: 'Basic',
-      subscriptionDescription: 'Basic subscription with core features',
-      subscriptionId: 'SUB_BASIC_005',
-    ),
-  ];
+  // State management
+  List<TransactionAdminViewModel> transactions = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentUsecase = ref.read(
+      paymentUseCaseProvider,
+    ); // Initialize your usecase
+    _fetchTransactions();
+  }
+
+  // Fetch transactions from PaymentUsecase
+  Future<void> _fetchTransactions() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final fetchedTransactions =
+          await _paymentUsecase.getTransactionsForAdmin();
+      setState(() {
+        transactions = fetchedTransactions.data ?? [];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   // Get filtered transactions based on search query
-  List<TransactionModel> get filteredTransactions {
+  List<TransactionAdminViewModel> get filteredTransactions {
     if (_searchQuery.isEmpty) {
       return transactions;
     }
-    return transactions.where((transaction) => _transactionSearchFilter(transaction, _searchQuery)).toList();
+    return transactions
+        .where(
+          (transaction) => _transactionSearchFilter(transaction, _searchQuery),
+        )
+        .toList();
   }
 
-  void _createTransaction() async {
-    final newTransaction = await showDialog<TransactionModel>(
+  // Show transaction detail modal
+  void _showTransactionDetail(TransactionAdminViewModel transaction) async {
+    showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: TransactionForm(
-          onSave: (newTransaction) => Navigator.pop(context, newTransaction),
-        ),
-      ),
-    );
-    if (newTransaction != null) {
-      setState(() => transactions.add(newTransaction));
-    }
-  }
-
-  void _updateTransaction(TransactionModel transaction) async {
-    final updatedTransaction = await showDialog<TransactionModel>(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: TransactionForm(
-          transaction: transaction,
-          onSave: (updated) => Navigator.of(context).pop(updated),
-        ),
-      ),
-    );
-    if (updatedTransaction != null) {
-      setState(() {
-        final index = transactions.indexWhere((t) => t.transactionId == transaction.transactionId);
-        if (index != -1) {
-          transactions[index] = updatedTransaction;
-        }
-      });
-    }
-  }
-
-  void _deleteTransaction(TransactionModel transaction) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete transaction ${transaction.transactionCode}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Cancel'),
+      builder:
+          (context) => TransactionDetailModal(
+            transactionId: transaction.transactionId!,
+            paymentUsecase: _paymentUsecase,
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFFF49AA2).withOpacity(0.1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFE37083))),
-          ),
-        ],
-      ),
     );
-    if (confirmed == true) {
-      setState(() {
-        transactions.removeWhere((t) => t.transactionId == transaction.transactionId);
-      });
-    }
   }
 
-  bool _transactionSearchFilter(TransactionModel transaction, String query) {
+  bool _transactionSearchFilter(
+    TransactionAdminViewModel transaction,
+    String query,
+  ) {
     final searchQuery = query.toLowerCase();
-    return (transaction.transactionCode?.toLowerCase().contains(searchQuery) ?? false) ||
-        (transaction.transactionPaymentGateway?.toLowerCase().contains(searchQuery) ?? false) ||
-        (transaction.subscriptionType?.toLowerCase().contains(searchQuery) ?? false) ||
-        (transaction.transactionStatus?.toLowerCase().contains(searchQuery) ?? false) ||
-        (transaction.transactionPaymentStatus?.toLowerCase().contains(searchQuery) ?? false);
+    return (transaction.transactionCode?.toLowerCase().contains(searchQuery) ??
+            false) ||
+        (transaction.transactionPaymentGateway?.toLowerCase().contains(
+              searchQuery,
+            ) ??
+            false) ||
+        (transaction.subscriptionType?.toLowerCase().contains(searchQuery) ??
+            false) ||
+        (transaction.transactionStatus?.toLowerCase().contains(searchQuery) ??
+            false) ||
+        (transaction.transactionPaymentStatus?.toLowerCase().contains(
+              searchQuery,
+            ) ??
+            false);
   }
 
   void _onSearchChanged(String query) {
@@ -192,6 +129,65 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
     super.dispose();
   }
 
+  // Build error state with retry
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessage ?? 'Failed to load transactions',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _fetchTransactions,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFB876),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build loading state
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFB876)),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Loading transactions...',
+            style: TextStyle(fontSize: 16, color: Color(0xFF7F8C8D)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayedTransactions = filteredTransactions;
@@ -201,10 +197,10 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: const Text(
           'Transaction Management',
           style: TextStyle(
@@ -214,142 +210,148 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFF2C3E50)),
+            onPressed: _fetchTransactions,
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Stats Section
-          Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF89B7C2), Color(0xFFA8BF8A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // Stats Section - Only show when not loading
+          if (!isLoading && errorMessage == null)
+            Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF89B7C2), Color(0xFFA8BF8A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF89B7C2).withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF89B7C2).withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${transactions.length}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Total Transactions',
+                          style: TextStyle(fontSize: 14, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '\$${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Total Revenue',
+                          style: TextStyle(fontSize: 14, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${transactions.length}',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Total Transactions',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '\$${totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Total Revenue',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_wallet_outlined,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // Search Bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search by code, gateway, type, or status...',
-                hintStyle: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 14,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Colors.grey[500],
-                  size: 20,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                  icon: Icon(
-                    Icons.clear,
+          // Search Bar - Only show when not loading
+          if (!isLoading && errorMessage == null)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search by code, gateway, type, or status...',
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  prefixIcon: Icon(
+                    Icons.search,
                     color: Colors.grey[500],
                     size: 20,
                   ),
-                  onPressed: _clearSearch,
-                )
-                    : null,
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  suffixIcon:
+                      _searchQuery.isNotEmpty
+                          ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.grey[500],
+                              size: 20,
+                            ),
+                            onPressed: _clearSearch,
+                          )
+                          : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF89B7C2),
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFF89B7C2), width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
-          ),
 
-          const SizedBox(height: 16),
+          if (!isLoading && errorMessage == null) const SizedBox(height: 16),
 
-          // Search Results Info
-          if (_searchQuery.isNotEmpty)
+          // Search Results Info - Only show when not loading
+          if (_searchQuery.isNotEmpty && !isLoading && errorMessage == null)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -362,107 +364,77 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  if (_searchQuery.isNotEmpty) ...[
-                    Text(
-                      ' for "$_searchQuery"',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 12),
-
-          // Add Transaction Button
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _createTransaction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB876),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-                shadowColor: const Color(0xFFFFB876).withOpacity(0.4),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 20),
-                  SizedBox(width: 8),
                   Text(
-                    'Add New Transaction',
+                    ' for "$_searchQuery"',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
+                      color: Colors.grey[800],
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 20),
 
-          // Transaction List
+          if (!isLoading && errorMessage == null) const SizedBox(height: 20),
+
+          // Main Content Area
           Expanded(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
-              child: displayedTransactions.isEmpty
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _searchQuery.isEmpty ? Icons.account_balance_wallet_outlined : Icons.search_off,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _searchQuery.isEmpty
-                          ? 'No transactions yet'
-                          : 'No transactions found',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+              child:
+                  isLoading
+                      ? _buildLoadingState()
+                      : errorMessage != null
+                      ? _buildErrorState()
+                      : displayedTransactions.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _searchQuery.isEmpty
+                                  ? Icons.account_balance_wallet_outlined
+                                  : Icons.search_off,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'No transactions yet'
+                                  : 'No transactions found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'Transactions will appear here when available'
+                                  : 'Try adjusting your search terms',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: displayedTransactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = displayedTransactions[index];
+                          return TransactionListItem(
+                            transaction: transaction,
+                            onTap: () => _showTransactionDetail(transaction),
+                            searchQuery: _searchQuery,
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _searchQuery.isEmpty
-                          ? 'Add your first transaction to get started'
-                          : 'Try adjusting your search terms',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[500],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              )
-                  : ListView.builder(
-                itemCount: displayedTransactions.length,
-                itemBuilder: (context, index) {
-                  final transaction = displayedTransactions[index];
-                  return TransactionListItem(
-                    transaction: transaction,
-                    onEdit: () => _updateTransaction(transaction),
-                    onDelete: () => _deleteTransaction(transaction),
-                    searchQuery: _searchQuery,
-                  );
-                },
-              ),
             ),
           ),
         ],
@@ -471,79 +443,15 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
   }
 }
 
-class TransactionModel {
-  final String? transactionId;
-  final String? transactionPaymentGateway;
-  final int? transactionAmount;
-  final String? transactionCurrency;
-  final String? transactionStatus;
-  final String? transactionPaymentStatus;
-  final String? transactionCode;
-  final DateTime? transactionCreatedAt;
-  final String? subscriptionType;
-  final String? subscriptionDescription;
-  final String? subscriptionId;
-
-  TransactionModel({
-    this.transactionId,
-    this.transactionPaymentGateway,
-    this.transactionAmount,
-    this.transactionCurrency,
-    this.transactionStatus,
-    this.transactionPaymentStatus,
-    this.transactionCode,
-    this.transactionCreatedAt,
-    this.subscriptionType,
-    this.subscriptionDescription,
-    this.subscriptionId,
-  });
-
-  factory TransactionModel.fromJson(Map<String, dynamic> json) {
-    return TransactionModel(
-      transactionId: json['transactionId'] as String?,
-      transactionPaymentGateway: json['transactionPaymentGateway'] as String?,
-      transactionAmount: json['transactionAmount'] as int?,
-      transactionCurrency: json['transactionCurrency'] as String?,
-      transactionStatus: json['transactionStatus'] as String?,
-      transactionPaymentStatus: json['transactionPaymentStatus'] as String?,
-      transactionCode: json['transactionCode'] as String?,
-      transactionCreatedAt: json['transactionCreatedAt'] != null
-          ? DateTime.tryParse(json['transactionCreatedAt'])
-          : null,
-      subscriptionType: json['subscriptionType'] as String?,
-      subscriptionDescription: json['subscriptionDescription'] as String?,
-      subscriptionId: json['subscriptionId'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'transactionId': transactionId,
-      'transactionPaymentGateway': transactionPaymentGateway,
-      'transactionAmount': transactionAmount,
-      'transactionCurrency': transactionCurrency,
-      'transactionStatus': transactionStatus,
-      'transactionPaymentStatus': transactionPaymentStatus,
-      'transactionCode': transactionCode,
-      'transactionCreatedAt': transactionCreatedAt?.toIso8601String(),
-      'subscriptionType': subscriptionType,
-      'subscriptionDescription': subscriptionDescription,
-      'subscriptionId': subscriptionId,
-    };
-  }
-}
-
 class TransactionListItem extends StatelessWidget {
-  final TransactionModel transaction;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final TransactionAdminViewModel transaction;
+  final VoidCallback onTap;
   final String searchQuery;
 
   const TransactionListItem({
     super.key,
     required this.transaction,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onTap,
     this.searchQuery = '',
   });
 
@@ -624,370 +532,658 @@ class TransactionListItem extends StatelessWidget {
       [const Color(0xFFF49AA2), const Color(0xFFA8BF8A)],
     ];
 
-    final colorIndex = int.parse(transaction.transactionId ?? '0') % transactionColors.length;
+    // final colorIndex =
+    //     int.parse(transaction.transactionId ?? '0') % transactionColors.length;
+    final colorIndex = (transaction.transactionId?.hashCode ?? 0).abs() % transactionColors.length;
     final gradientColors = transactionColors[colorIndex];
     final amount = (transaction.transactionAmount ?? 0) / 100.0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF0F0F0)),
-        boxShadow: [
-          BoxShadow(
-            color: gradientColors[0].withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF0F0F0)),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.receipt_long,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHighlightedText(transaction.transactionCode ?? 'N/A', searchQuery),
-                const SizedBox(height: 4),
-                Text(
-                  '${transaction.transactionPaymentGateway ?? 'N/A'} • \$${amount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF7F8C8D),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(transaction.transactionStatus).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        transaction.transactionStatus?.toUpperCase() ?? 'UNKNOWN',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: _getStatusColor(transaction.transactionStatus),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF89B7C2).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        transaction.subscriptionType ?? 'N/A',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF89B7C2),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF89B7C2).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: Color(0xFF89B7C2), size: 20),
-                  onPressed: onEdit,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE37083).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFE37083), size: 20),
-                  onPressed: onDelete,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TransactionForm extends StatefulWidget {
-  final TransactionModel? transaction;
-  final Function(TransactionModel) onSave;
-
-  const TransactionForm({
-    super.key,
-    this.transaction,
-    required this.onSave,
-  });
-
-  @override
-  State<TransactionForm> createState() => _TransactionFormState();
-}
-
-class _TransactionFormState extends State<TransactionForm> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _transactionCodeController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _subscriptionIdController;
-  late final TextEditingController _subscriptionDescriptionController;
-
-  String _selectedPaymentGateway = 'Stripe';
-  String _selectedCurrency = 'USD';
-  String _selectedStatus = 'pending';
-  String _selectedPaymentStatus = 'processing';
-  String _selectedSubscriptionType = 'Basic';
-  DateTime _transactionDate = DateTime.now();
-
-  final List<String> _paymentGateways = ['Stripe', 'PayPal', 'Square', 'Razorpay'];
-  final List<String> _currencies = ['USD', 'EUR', 'GBP', 'JPY'];
-  final List<String> _statuses = ['pending', 'completed', 'failed', 'cancelled'];
-  final List<String> _paymentStatuses = ['processing', 'paid', 'failed', 'refunded'];
-  final List<String> _subscriptionTypes = ['Basic', 'Premium', 'Enterprise'];
-
-  @override
-  void initState() {
-    super.initState();
-    final transaction = widget.transaction;
-    if (transaction != null) {
-      _transactionCodeController = TextEditingController(text: transaction.transactionCode);
-      _amountController = TextEditingController(
-        text: transaction.transactionAmount != null
-            ? (transaction.transactionAmount! / 100.0).toStringAsFixed(2)
-            : '',
-      );
-      _subscriptionIdController = TextEditingController(text: transaction.subscriptionId);
-      _subscriptionDescriptionController = TextEditingController(text: transaction.subscriptionDescription);
-      _selectedPaymentGateway = transaction.transactionPaymentGateway ?? 'Stripe';
-      _selectedCurrency = transaction.transactionCurrency ?? 'USD';
-      _selectedStatus = transaction.transactionStatus ?? 'pending';
-      _selectedPaymentStatus = transaction.transactionPaymentStatus ?? 'processing';
-      _selectedSubscriptionType = transaction.subscriptionType ?? 'Basic';
-      _transactionDate = transaction.transactionCreatedAt ?? DateTime.now();
-    } else {
-      _transactionCodeController = TextEditingController();
-      _amountController = TextEditingController();
-      _subscriptionIdController = TextEditingController();
-      _subscriptionDescriptionController = TextEditingController();
-    }
-  }
-
-  void _saveForm() {
-    if (_formKey.currentState!.validate()) {
-      final amount = double.tryParse(_amountController.text) ?? 0.0;
-      final transaction = TransactionModel(
-        transactionId: widget.transaction?.transactionId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        transactionCode: _transactionCodeController.text.trim(),
-        transactionPaymentGateway: _selectedPaymentGateway,
-        transactionAmount: (amount * 100).round(),
-        transactionCurrency: _selectedCurrency,
-        transactionStatus: _selectedStatus,
-        transactionPaymentStatus: _selectedPaymentStatus,
-        transactionCreatedAt: _transactionDate,
-        subscriptionType: _selectedSubscriptionType,
-        subscriptionDescription: _subscriptionDescriptionController.text.trim(),
-        subscriptionId: _subscriptionIdController.text.trim(),
-      );
-      widget.onSave(transaction);
-    }
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: value,
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
+          ],
         ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: hint,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
-          validator: validator,
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Form(
-        key: _formKey,
-        child: Column(
+        child: Row(
           children: [
-            _buildFormField(
-              label: 'Transaction Code',
-              controller: _transactionCodeController,
-              hint: 'Enter transaction code',
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            _buildFormField(
-              label: 'Amount (e.g. 9.99)',
-              controller: _amountController,
-              hint: 'Enter amount',
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            _buildDropdown(
-              label: 'Payment Gateway',
-              value: _selectedPaymentGateway,
-              items: _paymentGateways,
-              onChanged: (val) => setState(() => _selectedPaymentGateway = val!),
-            ),
-            _buildDropdown(
-              label: 'Currency',
-              value: _selectedCurrency,
-              items: _currencies,
-              onChanged: (val) => setState(() => _selectedCurrency = val!),
-            ),
-            _buildDropdown(
-              label: 'Transaction Status',
-              value: _selectedStatus,
-              items: _statuses,
-              onChanged: (val) => setState(() => _selectedStatus = val!),
-            ),
-            _buildDropdown(
-              label: 'Payment Status',
-              value: _selectedPaymentStatus,
-              items: _paymentStatuses,
-              onChanged: (val) => setState(() => _selectedPaymentStatus = val!),
-            ),
-            _buildDropdown(
-              label: 'Subscription Type',
-              value: _selectedSubscriptionType,
-              items: _subscriptionTypes,
-              onChanged: (val) => setState(() => _selectedSubscriptionType = val!),
-            ),
-            _buildFormField(
-              label: 'Subscription ID',
-              controller: _subscriptionIdController,
-              hint: 'Enter subscription ID',
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            _buildFormField(
-              label: 'Subscription Description',
-              controller: _subscriptionDescriptionController,
-              hint: 'Enter description',
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFB876),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text(widget.transaction == null ? 'Save' : 'Update'),
-                  ),
-                ),
-              ],
+              ),
+              child: const Center(
+                child: Icon(Icons.receipt_long, color: Colors.white, size: 20),
+              ),
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHighlightedText(
+                    transaction.transactionCode ?? 'N/A',
+                    searchQuery,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${transaction.transactionPaymentGateway ?? 'N/A'} • \$${amount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF7F8C8D),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(
+                            transaction.transactionStatus,
+                          ).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          transaction.transactionStatus?.toUpperCase() ??
+                              'UNKNOWN',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: _getStatusColor(
+                              transaction.transactionStatus,
+                            ),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF89B7C2).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          transaction.subscriptionType ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF89B7C2),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Color(0xFF89B7C2), size: 24),
           ],
         ),
       ),
     );
   }
+}
+
+class TransactionDetailModal extends StatefulWidget {
+  final String transactionId;
+  final PaymentUsecase paymentUsecase;
+
+  const TransactionDetailModal({
+    super.key,
+    required this.transactionId,
+    required this.paymentUsecase,
+  });
 
   @override
-  void dispose() {
-    _transactionCodeController.dispose();
-    _amountController.dispose();
-    _subscriptionIdController.dispose();
-    _subscriptionDescriptionController.dispose();
-    super.dispose();
+  State<TransactionDetailModal> createState() => _TransactionDetailModalState();
+}
+
+class _TransactionDetailModalState extends State<TransactionDetailModal> {
+  TransactionDetailModel? transactionDetail;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTransactionDetail();
+  }
+
+  Future<void> _fetchTransactionDetail() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final detail = await widget.paymentUsecase.getTransactionDetailForAdmin(
+        widget.transactionId,
+      );
+      setState(() {
+        transactionDetail = detail.data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return const Color(0xFFA8BF8A); // MEADOW
+      case 'pending':
+        return const Color(0xFFFFB876); // PAPAYA
+      case 'failed':
+      case 'cancelled':
+        return const Color(0xFFE37083); // RASPBERRY
+      default:
+        return const Color(0xFF89B7C2); // SPRING SKY
+    }
+  }
+
+  Widget _buildDetailRow(String label, String value, {bool isAmount = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              isAmount
+                  ? '\$${(int.parse(value) / 100).toStringAsFixed(2)}'
+                  : value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF2C3E50),
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(TransactionDetailTransactionsModel transaction) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF89B7C2), // SPRING SKY
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  transaction.reference ?? 'N/A',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                    fontFamily: 'LeagueSpartan',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildDetailRow('Amount', transaction.amount?.toString() ?? '0', isAmount: true),
+          _buildDetailRow('Account Number', transaction.accountNumber ?? 'N/A'),
+          _buildDetailRow('Description', transaction.description ?? 'N/A'),
+          _buildDetailRow('Transaction Date', formatDate(transaction.transactionDateTime)),
+          if (transaction.counterAccountName != null)
+            _buildDetailRow('Counter Account', transaction.counterAccountName!),
+          if (transaction.counterAccountNumber != null)
+            _buildDetailRow('Counter Account Number', transaction.counterAccountNumber!),
+          if (transaction.counterAccountBankName != null)
+            _buildDetailRow('Bank Name', transaction.counterAccountBankName!),
+          if (transaction.counterAccountBankId != null)
+            _buildDetailRow('Bank ID', transaction.counterAccountBankId!),
+          if (transaction.virtualAccountName != null)
+            _buildDetailRow('Virtual Account Name', transaction.virtualAccountName!),
+          if (transaction.virtualAccountNumber != null)
+            _buildDetailRow('Virtual Account Number', transaction.virtualAccountNumber!),
+        ],
+      ),
+    );
+  }
+
+  String formatDate(DateTime? date, {String pattern = 'yyyy-MM-dd HH:mm'}) {
+    if (date == null) return 'N/A';
+    return DateFormat(pattern).format(date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.white,
+              const Color(0xFF89B7C2).withOpacity(0.05), // SPRING SKY tint
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF89B7C2), Color(0xFFA8BF8A)],
+                  // SPRING SKY to MEADOW
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'Transaction Details',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'LeagueSpartan',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child:
+                  isLoading
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFB876),
+                                    Color(0xFFFFCB7C),
+                                  ],
+                                  // PAPAYA to SUNSHINE
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                strokeWidth: 3,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Loading transaction details...',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Color(0xFF7F8C8D),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : errorMessage != null
+                      ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFE37083,
+                                  ).withOpacity(0.1),
+                                  // RASPBERRY
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                child: const Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: Color(0xFFE37083), // RASPBERRY
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Failed to load details',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2C3E50),
+                                  fontFamily: 'LeagueSpartan',
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF7F8C8D),
+                                  fontFamily: 'Inter',
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 32),
+                              ElevatedButton(
+                                onPressed: _fetchTransactionDetail,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFB876),
+                                  // PAPAYA
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                    horizontal: 32,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 4,
+                                ),
+                                child: const Text(
+                                  'Retry',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'LeagueSpartan',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      : Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Status Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(
+                                    transactionDetail?.status,
+                                  ).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: _getStatusColor(
+                                      transactionDetail?.status,
+                                    ).withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  transactionDetail?.status?.toUpperCase() ??
+                                      'UNKNOWN',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _getStatusColor(
+                                      transactionDetail?.status,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'LeagueSpartan',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Transaction Overview
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: const Color(0xFFE9ECEF),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFF89B7C2),
+                                                Color(0xFFA8BF8A),
+                                              ], // SPRING SKY to MEADOW
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              3,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          'Transaction Overview',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF2C3E50),
+                                            fontFamily: 'LeagueSpartan',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildDetailRow(
+                                      'Transaction ID',
+                                      transactionDetail?.id ?? 'N/A',
+                                    ),
+                                    _buildDetailRow(
+                                      'Order Code',
+                                      transactionDetail?.orderCode
+                                              ?.toString() ??
+                                          'N/A',
+                                    ),
+                                    _buildDetailRow(
+                                      'Amount',
+                                      transactionDetail?.amount?.toString() ??
+                                          '0',
+                                      isAmount: true,
+                                    ),
+                                    _buildDetailRow(
+                                      'Amount Paid',
+                                      transactionDetail?.amountPaid
+                                              ?.toString() ??
+                                          '0',
+                                      isAmount: true,
+                                    ),
+                                    _buildDetailRow(
+                                      'Amount Remaining',
+                                      transactionDetail?.amountRemaining
+                                              ?.toString() ??
+                                          '0',
+                                      isAmount: true,
+                                    ),
+                                    // _buildDetailRow('Created At', transactionDetail?.createdAt ?? 'N/A'),
+                                    _buildDetailRow(
+                                      'Created At',
+                                      formatDate(transactionDetail?.createdAt),
+                                    ),
+                                    if (transactionDetail?.canceledAt != null)
+                                      _buildDetailRow(
+                                        'Canceled At',
+                                        formatDate(
+                                          transactionDetail?.canceledAt,
+                                        ),
+                                      ),
+                                    if (transactionDetail?.cancellationReason !=
+                                        null)
+                                      _buildDetailRow(
+                                        'Cancellation Reason',
+                                        transactionDetail!.cancellationReason!,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Transaction Items
+                              if (transactionDetail?.transactions != null && transactionDetail!.transactions!.isNotEmpty) ...[
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFFFFB876), Color(0xFFFFCB7C)], // PAPAYA to SUNSHINE
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Transaction Items (${transactionDetail!.transactions!.length})',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2C3E50),
+                                        fontFamily: 'LeagueSpartan',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                ...transactionDetail!.transactions!.map((transaction) => _buildTransactionItem(transaction)),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
