@@ -297,6 +297,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     final screenHeight = MediaQuery.of(context).size.height;
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Color(0xFFF5E6D3),
         floatingActionButton: FloatingActionButton(
           onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => QuizAttemptHistoryPage()));},
           backgroundColor: Color(0xFFFFCB7C),
@@ -307,54 +308,35 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Container(
-                color: Colors.white,
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Header Section
-                      _buildHeader(),
+                width: double.infinity,
+                height: double.infinity,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Header Section
+                    _buildHeader(),
 
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                      // Search and Filter Row
-                      _buildSearchAndFilterRow(),
+                    // Search and Filter Row
+                    _buildSearchAndFilterRow(),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      // Active Filters Display
-                      if (selectedSubCategoryId != null ||
-                          searchQuery.isNotEmpty)
-                        _buildActiveFilters(),
+                    // Active Filters Display
+                    if (selectedSubCategoryId != null ||
+                        searchQuery.isNotEmpty)
+                      _buildActiveFilters(),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      // Quiz List
-                      Expanded(
-                        child:
-                            isLoading ? _buildLoadingState() : _buildQuizList(),
-                      ),
-                    ],
-                  ),
+                    // Quiz List
+                    Expanded(
+                      child:
+                          isLoading ? _buildLoadingState() : _buildQuizList(),
+                    ),
+                  ],
                 ),
-                // Stack(
-                //   children: [
-                //     // Background Image
-                //     Positioned(
-                //       top: 0,
-                //       left: 0,
-                //       right: 0,
-                //       height: (screenHeight * 1 / 2) * 0.6,
-                //       child: Image.asset(
-                //         'assets/images/quiz_background.png',
-                //         fit: BoxFit.cover,
-                //       ),
-                //     ),
-                //
-                //   ],
-                // ),
               ),
             );
           },

@@ -103,31 +103,6 @@ class _QuizAttemptHistoryPageState
     }
   }
 
-  // Future<void> _fetchQuizAttemptDetails(String quizId) async {
-  //   if (_expandedAttempts.containsKey(quizId)) {
-  //     return; // Already loaded
-  //   }
-  //
-  //   setState(() {
-  //     _isLoadingDetails = true;
-  //   });
-  //
-  //   try {
-  //     final result = await _attemptUsecase.getQuizAttemptDetail(quizId);
-  //     if(result.isSuccess) {
-  //       setState(() {
-  //         _expandedAttempts[quizId] = result.data!;
-  //         _isLoadingDetails = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       _isLoadingDetails = false;
-  //     });
-  //     Notify.showFlushbar('Failed to load attempt details: $e', isError: true);
-  //   }
-  // }
-
   void _onFilterChanged(FilterBy? newFilter) {
     if (newFilter != null) {
       setState(() {
@@ -285,56 +260,13 @@ class _QuizAttemptHistoryPageState
     }
   }
 
-
-//   void _showAttemptDetail(QuizAttemptDetailModel attempt) async {
-//     // Show loading dialog
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder:
-//           (_) => const Center(
-//             child: CircularProgressIndicator(color: Colors.orangeAccent),
-//           ),
-//     );
-//
-//     // await _fetchQuizAttemptDetail(attempt.quizUserAttemptId!);
-// _currentAttemptDetail =null;
-//     // Dismiss loading dialog
-//     Navigator.of(context).pop();
-//
-//     if (_currentAttemptDetail == null) {
-//       Notify.showAwesomeDialog(
-//         title: 'Error',
-//         message: 'Failed to load quiz attempt. Please try again.',
-//         dialogType: DialogType.error,
-//         btnOkText: 'Retry',
-//         btnCancelText: 'Close',
-//         onOkPress: () {
-//           _showAttemptDetail(attempt); // Retry
-//         },
-//         onCancelPress: () {
-//           // Optional: do something when closing
-//         },
-//       );
-//       // Notify.showAwesomeDialog(title: 'Fail to get attempt detail', message: 'The error occur while getting attempt detail. Please try again later', dialogType: DialogType.error);
-//       return;
-//     }
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       backgroundColor: Colors.transparent,
-//       builder:
-//           (context) => _QuizAttemptDetailModal(attempt: _currentAttemptDetail!),
-//     );
-//   }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Color(0xFFF5E6D3),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFFF5E6D3),
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
@@ -355,7 +287,7 @@ class _QuizAttemptHistoryPageState
             // Filter dropdown
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.white,
+              color: Color(0xFFF5E6D3),
               child: Row(
                 children: [
                   Text(
@@ -363,7 +295,7 @@ class _QuizAttemptHistoryPageState
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+                      color: Colors.grey[900],
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -371,7 +303,7 @@ class _QuizAttemptHistoryPageState
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: Colors.grey[600]!),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: DropdownButtonHideUnderline(
@@ -525,7 +457,8 @@ class _QuizAttemptHistoryPageState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFFFB876),
+        // color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -559,12 +492,12 @@ class _QuizAttemptHistoryPageState
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF8BC34A).withOpacity(0.2),
+                        color: Color(0xFF89B7C2).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.quiz,
-                        color: Color(0xFF689F38),
+                        color: Color(0xFFE37083), // RASPBERRY
                         size: 24,
                       ),
                     ),
@@ -578,7 +511,7 @@ class _QuizAttemptHistoryPageState
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: Color(0xFF333333),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -586,7 +519,7 @@ class _QuizAttemptHistoryPageState
                             '${quiz.attempts?.length} attempt${quiz.attempts?.length != 1 ? 's' : ''}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Colors.grey[700],
                             ),
                           ),
                         ],
@@ -604,17 +537,6 @@ class _QuizAttemptHistoryPageState
           // Expanded attempts list
           if (isExpanded) ...[
             const Divider(height: 1, color: Colors.grey),
-            // if (_isLoadingDetails)
-            //   const Padding(
-            //     padding: EdgeInsets.all(16),
-            //     child: Center(
-            //       child: CircularProgressIndicator(
-            //         color: Color(0xFF8BC34A),
-            //         strokeWidth: 2,
-            //       ),
-            //     ),
-            //   )
-            // else
             if (quiz.attempts!.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -626,6 +548,7 @@ class _QuizAttemptHistoryPageState
               )
             else
               Container(
+                color: Color(0xFFFFCEA0),
                 constraints: const BoxConstraints(maxHeight: 300),
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -646,10 +569,6 @@ class _QuizAttemptHistoryPageState
   }
 
   Widget _buildAttemptItem(QuizAttemptDetailModel attempt) {
-    // final scorePercentage = attempt.quizMaxScore > 0
-    //     ? (attempt.quizzFinalScore / attempt.quizMaxScore * 100).round()
-    //     : 0;
-
     final scorePercentage =
         (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
             ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
@@ -693,14 +612,6 @@ class _QuizAttemptHistoryPageState
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      'Attempt Id: ${attempt.quizUserAttemptId}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _getScoreColor(scorePercentage),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -711,7 +622,7 @@ class _QuizAttemptHistoryPageState
                     ).format(attempt.quizUserAnswerCreatedAt!)
                     : '-',
                 // DateFormat('dd MMM\nHH:mm').format(attempt.quizUserAnswerCreatedAt),
-                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
                 textAlign: TextAlign.right,
               ),
             ],
@@ -722,10 +633,16 @@ class _QuizAttemptHistoryPageState
   }
 
   Color _getScoreColor(int percentage) {
-    if (percentage >= 80) return Colors.green;
-    if (percentage >= 60) return Colors.orange;
-    return Colors.red;
+    if (percentage >= 80) return Color(0xFFA8BF8A); // MEADOW
+    if (percentage >= 60) return Color(0xFFFFCB7C); // SUNSHINE
+    return Color(0xFFE37083); // RASPBERRY
   }
+
+  // Color _getScoreColor(int percentage) {
+  //   if (percentage >= 80) return Colors.green;
+  //   if (percentage >= 60) return Colors.orange;
+  //   return Colors.red;
+  // }
 }
 
 class _QuizAttemptDetailModal extends StatelessWidget {
@@ -736,17 +653,14 @@ class _QuizAttemptDetailModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scorePercentage =
-        (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
-            ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
-            : 0;
-    // final scorePercentage = attempt.quizMaxScore > 0
-    //     ? (attempt.quizzFinalScore / attempt.quizMaxScore * 100).round()
-    //     : 0;
+    (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
+        ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
+        : 0;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFF5E6D3), // Match your main background
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -760,7 +674,7 @@ class _QuizAttemptDetailModal extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Color(0xFFE37083).withOpacity(0.4), // RASPBERRY with opacity
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -783,15 +697,21 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+                              color: Color(0xFF333333), // Match your existing text color
                             ),
                           ),
                         ),
                         Positioned(
                           right: 0,
-                          child: IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: Icon(Icons.close, color: Colors.grey[600]),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFE37083).withOpacity(0.1), // RASPBERRY background
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: Icon(Icons.close, color: Color(0xFFE37083)), // RASPBERRY
+                            ),
                           ),
                         ),
                       ],
@@ -799,45 +719,69 @@ class _QuizAttemptDetailModal extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Quiz info
-                  _buildDetailRow(
-                    'Quiz',
-                    attempt.quizTitle ?? 'Unknown attempt title',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'Description',
-                    attempt.quizDescription ?? 'Unknown attempt description',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'Status',
-                    attempt.quizStatus ?? 'Unknown attempt status',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'Score',
-                    '${attempt.quizzFinalScore}/${attempt.quizMaxScore} ($scorePercentage%)',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'Date',
-                    // DateFormat('dd MMM yyyy HH:mm a').format(attempt.quizUserAnswerCreatedAt),
-                    attempt.quizUserAnswerCreatedAt != null
-                        ? DateFormat(
-                          'dd MMM yyyy HH:mm a',
-                        ).format(attempt.quizUserAnswerCreatedAt!)
-                        : '-',
+                  // Quiz info card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFB876), // PAPAYA - match your quiz card
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildDetailRow(
+                          'Quiz',
+                          attempt.quizTitle ?? 'Unknown attempt title',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          'Description',
+                          attempt.quizDescription ?? 'Unknown attempt description',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          'Status',
+                          attempt.quizStatus ?? 'Unknown attempt status',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          'Score',
+                          '${attempt.quizzFinalScore}/${attempt.quizMaxScore} ($scorePercentage%)',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          'Date',
+                          attempt.quizUserAnswerCreatedAt != null
+                              ? DateFormat(
+                            'dd MMM yyyy HH:mm a',
+                          ).format(attempt.quizUserAnswerCreatedAt!)
+                              : '-',
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Questions section
-                  Text(
-                    'Questions & Answers',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
+                  // Questions section header
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF89B7C2).withOpacity(0.2), // SPRING SKY with opacity
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Questions & Answers',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF89B7C2).withOpacity(0.8), // SPRING SKY
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -872,14 +816,17 @@ class _QuizAttemptDetailModal extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: Color(0xFF333333), // Match your existing text color
             ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF333333), // Match your existing text color
+            ),
           ),
         ),
       ],
@@ -887,33 +834,23 @@ class _QuizAttemptDetailModal extends StatelessWidget {
   }
 
   Widget _buildQuestionCard(QuizQuestionAttemptModel question) {
-    // final correctOption = question.options?.firstWhere(
-    //   (option) => option.quizScoreValue == 1,
-    //   orElse: () => question.options!.first,
-    // );
     final userSelectedOption = question.options?.firstWhere(
-      (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
+          (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
       orElse: () => question.options!.first,
     );
-    // final isCorrect = userSelectedOption?.quizScoreValue == 1;
-
-    // final userSelectedOption = question.options?.firstWhere(
-    //       (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
-    //   orElse: () => null,
-    // );
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-color: Colors.blueGrey.withOpacity(0.3),
-          // color:
-          //     isCorrect
-          //         ? Colors.green.withOpacity(0.3)
-          //         : Colors.red.withOpacity(0.3),
-        ),
+        color: Color(0xFFFFCEA0), // Match your expanded attempts background
+        borderRadius: BorderRadius.circular(16), // Match your card border radius
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -921,49 +858,31 @@ color: Colors.blueGrey.withOpacity(0.3),
           // Question header
           Row(
             children: [
-              const Icon(Icons.question_answer, color: Colors.blueAccent, size: 20),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Color(0xFFE37083).withOpacity(0.2), // RASPBERRY background
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                    Icons.quiz,
+                    color: Color(0xFFE37083), // RASPBERRY
+                    size: 20
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Question ${question.quizQuestionOrder}',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Color(0xFF333333),
                   ),
                 ),
               ),
             ],
           ),
-          // // Question header
-          // Row(
-          //   children: [
-          //     Container(
-          //       width: 24,
-          //       height: 24,
-          //       decoration: BoxDecoration(
-          //         color: isCorrect ? Colors.green : Colors.red,
-          //         shape: BoxShape.circle,
-          //       ),
-          //       child: Icon(
-          //         isCorrect ? Icons.check : Icons.close,
-          //         color: Colors.white,
-          //         size: 16,
-          //       ),
-          //     ),
-          //     const SizedBox(width: 8),
-          //     Expanded(
-          //       child: Text(
-          //         'Question ${question.quizQuestionOrder}',
-          //         style: const TextStyle(
-          //           fontSize: 14,
-          //           fontWeight: FontWeight.w600,
-          //           color: Colors.black87,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
           const SizedBox(height: 12),
 
           // Question content
@@ -971,7 +890,7 @@ color: Colors.blueGrey.withOpacity(0.3),
             question.quizQuestionContent ?? 'Unknown question content',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[800],
+              color: Color(0xFF333333),
               height: 1.4,
             ),
           ),
@@ -982,17 +901,28 @@ color: Colors.blueGrey.withOpacity(0.3),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
+                color: Color(0xFFA8BF8A).withOpacity(0.2), // MEADOW with opacity
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.blueAccent.withOpacity(0.3),
+                  color: Color(0xFFA8BF8A).withOpacity(0.5), // MEADOW border
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.blueAccent),
-                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFA8BF8A), // MEADOW
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1002,25 +932,33 @@ color: Colors.blueGrey.withOpacity(0.3),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Colors.grey[600],
+                            color: Color(0xFF333333),
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           userSelectedOption.quizContent ?? 'Unknown answer',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[800],
+                            color: Color(0xFF333333),
                           ),
                         ),
                         if (userSelectedOption.quizScoreValue != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              'Score: ${userSelectedOption.quizScoreValue}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                fontStyle: FontStyle.italic,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFFFCB7C).withOpacity(0.3), // SUNSHINE with opacity
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Score: ${userSelectedOption.quizScoreValue}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF333333),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ),
@@ -1030,95 +968,264 @@ color: Colors.blueGrey.withOpacity(0.3),
                 ],
               ),
             ),
-
-          // // User's answer
-          // Container(
-          //   padding: const EdgeInsets.all(12),
-          //   decoration: BoxDecoration(
-          //     color:
-          //         isCorrect
-          //             ? Colors.green.withOpacity(0.1)
-          //             : Colors.red.withOpacity(0.1),
-          //     borderRadius: BorderRadius.circular(8),
-          //     border: Border.all(
-          //       color: isCorrect ? Colors.green : Colors.red,
-          //       width: 1,
-          //     ),
-          //   ),
-          //   child: Row(
-          //     children: [
-          //       Icon(
-          //         isCorrect ? Icons.check_circle : Icons.cancel,
-          //         color: isCorrect ? Colors.green : Colors.red,
-          //         size: 20,
-          //       ),
-          //       const SizedBox(width: 8),
-          //       Expanded(
-          //         child: Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             Text(
-          //               'Your Answer:',
-          //               style: TextStyle(
-          //                 fontSize: 12,
-          //                 fontWeight: FontWeight.w500,
-          //                 color: Colors.grey[600],
-          //               ),
-          //             ),
-          //             Text(
-          //               question.userSelectedAnswerText ?? 'Unknown answer',
-          //               style: TextStyle(fontSize: 14, color: Colors.grey[800]),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          //
-          // // Correct answer (if user was wrong)
-          // if (!isCorrect) ...[
-          //   const SizedBox(height: 8),
-          //   Container(
-          //     padding: const EdgeInsets.all(12),
-          //     decoration: BoxDecoration(
-          //       color: Colors.green.withOpacity(0.1),
-          //       borderRadius: BorderRadius.circular(8),
-          //       border: Border.all(color: Colors.green, width: 1),
-          //     ),
-          //     child: Row(
-          //       children: [
-          //         const Icon(Icons.lightbulb, color: Colors.green, size: 20),
-          //         const SizedBox(width: 8),
-          //         Expanded(
-          //           child: Column(
-          //             crossAxisAlignment: CrossAxisAlignment.start,
-          //             children: [
-          //               Text(
-          //                 'Correct Answer:',
-          //                 style: TextStyle(
-          //                   fontSize: 12,
-          //                   fontWeight: FontWeight.w500,
-          //                   color: Colors.grey[600],
-          //                 ),
-          //               ),
-          //               Text(
-          //                 correctOption?.quizContent ??
-          //                     'Unknown correct content',
-          //                 style: TextStyle(
-          //                   fontSize: 14,
-          //                   color: Colors.grey[800],
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ],
         ],
       ),
     );
   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final scorePercentage =
+//         (attempt.quizMaxScore ?? 0) > 0 && attempt.quizzFinalScore != null
+//             ? ((attempt.quizzFinalScore! / attempt.quizMaxScore!) * 100).round()
+//             : 0;
+//
+//     return Container(
+//       height: MediaQuery.of(context).size.height * 0.85,
+//       decoration: const BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.only(
+//           topLeft: Radius.circular(20),
+//           topRight: Radius.circular(20),
+//         ),
+//       ),
+//       child: Column(
+//         children: [
+//           // Handle bar
+//           Container(
+//             margin: const EdgeInsets.symmetric(vertical: 8),
+//             width: 40,
+//             height: 4,
+//             decoration: BoxDecoration(
+//               color: Colors.grey[300],
+//               borderRadius: BorderRadius.circular(2),
+//             ),
+//           ),
+//           Expanded(
+//             child: Padding(
+//               padding: const EdgeInsets.all(20),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Header
+//                   SizedBox(
+//                     height: 56,
+//                     width: double.infinity,
+//                     child: Stack(
+//                       alignment: Alignment.center,
+//                       children: [
+//                         Center(
+//                           child: Text(
+//                             'Quiz Attempt Detail',
+//                             style: TextStyle(
+//                               fontSize: 20,
+//                               fontWeight: FontWeight.bold,
+//                               color: Colors.grey[800],
+//                             ),
+//                           ),
+//                         ),
+//                         Positioned(
+//                           right: 0,
+//                           child: IconButton(
+//                             onPressed: () => Navigator.pop(context),
+//                             icon: Icon(Icons.close, color: Colors.grey[600]),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   const SizedBox(height: 20),
+//
+//                   // Quiz info
+//                   _buildDetailRow(
+//                     'Quiz',
+//                     attempt.quizTitle ?? 'Unknown attempt title',
+//                   ),
+//                   const SizedBox(height: 12),
+//                   _buildDetailRow(
+//                     'Description',
+//                     attempt.quizDescription ?? 'Unknown attempt description',
+//                   ),
+//                   const SizedBox(height: 12),
+//                   _buildDetailRow(
+//                     'Status',
+//                     attempt.quizStatus ?? 'Unknown attempt status',
+//                   ),
+//                   const SizedBox(height: 12),
+//                   _buildDetailRow(
+//                     'Score',
+//                     '${attempt.quizzFinalScore}/${attempt.quizMaxScore} ($scorePercentage%)',
+//                   ),
+//                   const SizedBox(height: 12),
+//                   _buildDetailRow(
+//                     'Date',
+//                     // DateFormat('dd MMM yyyy HH:mm a').format(attempt.quizUserAnswerCreatedAt),
+//                     attempt.quizUserAnswerCreatedAt != null
+//                         ? DateFormat(
+//                           'dd MMM yyyy HH:mm a',
+//                         ).format(attempt.quizUserAnswerCreatedAt!)
+//                         : '-',
+//                   ),
+//                   const SizedBox(height: 20),
+//
+//                   // Questions section
+//                   Text(
+//                     'Questions & Answers',
+//                     style: TextStyle(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w600,
+//                       color: Colors.grey[700],
+//                     ),
+//                   ),
+//                   const SizedBox(height: 12),
+//                   Expanded(
+//                     child: ListView.separated(
+//                       itemCount: attempt.questions!.length,
+//                       separatorBuilder:
+//                           (context, index) => const SizedBox(height: 16),
+//                       itemBuilder: (context, index) {
+//                         final question = attempt.questions?[index];
+//                         return _buildQuestionCard(question!);
+//                       },
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildDetailRow(String label, String value) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SizedBox(
+//           width: 80,
+//           child: Text(
+//             '$label:',
+//             style: TextStyle(
+//               fontSize: 14,
+//               fontWeight: FontWeight.w600,
+//               color: Colors.grey[600],
+//             ),
+//           ),
+//         ),
+//         Expanded(
+//           child: Text(
+//             value,
+//             style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildQuestionCard(QuizQuestionAttemptModel question) {
+//     final userSelectedOption = question.options?.firstWhere(
+//       (option) => option.quizAnswerOptionId == question.userSelectedOptionId,
+//       orElse: () => question.options!.first,
+//     );
+//
+//     return Container(
+//       padding: const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: Colors.grey[50],
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(
+// color: Colors.blueGrey.withOpacity(0.3),
+//         ),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Question header
+//           Row(
+//             children: [
+//               const Icon(Icons.question_answer, color: Colors.blueAccent, size: 20),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 child: Text(
+//                   'Question ${question.quizQuestionOrder}',
+//                   style: const TextStyle(
+//                     fontSize: 14,
+//                     fontWeight: FontWeight.w600,
+//                     color: Colors.black87,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 12),
+//
+//           // Question content
+//           Text(
+//             question.quizQuestionContent ?? 'Unknown question content',
+//             style: TextStyle(
+//               fontSize: 14,
+//               color: Colors.grey[800],
+//               height: 1.4,
+//             ),
+//           ),
+//           const SizedBox(height: 12),
+//
+//           // User's answer
+//           if (userSelectedOption != null)
+//             Container(
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: Colors.blueAccent.withOpacity(0.05),
+//                 borderRadius: BorderRadius.circular(8),
+//                 border: Border.all(
+//                   color: Colors.blueAccent.withOpacity(0.3),
+//                 ),
+//               ),
+//               child: Row(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const Icon(Icons.check_circle, color: Colors.blueAccent),
+//                   const SizedBox(width: 8),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           'Your Answer:',
+//                           style: TextStyle(
+//                             fontSize: 12,
+//                             fontWeight: FontWeight.w500,
+//                             color: Colors.grey[600],
+//                           ),
+//                         ),
+//                         Text(
+//                           userSelectedOption.quizContent ?? 'Unknown answer',
+//                           style: TextStyle(
+//                             fontSize: 14,
+//                             color: Colors.grey[800],
+//                           ),
+//                         ),
+//                         if (userSelectedOption.quizScoreValue != null)
+//                           Padding(
+//                             padding: const EdgeInsets.only(top: 4),
+//                             child: Text(
+//                               'Score: ${userSelectedOption.quizScoreValue}',
+//                               style: TextStyle(
+//                                 fontSize: 12,
+//                                 color: Colors.grey[600],
+//                                 fontStyle: FontStyle.italic,
+//                               ),
+//                             ),
+//                           ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//         ],
+//       ),
+//     );
+//   }
 }

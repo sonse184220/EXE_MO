@@ -57,7 +57,7 @@ class _AllAudioPageState extends ConsumerState<AllAudioPage> {
     });
 
     try {
-      final audioResult = await _audioUseCase.getAllAudios();
+      final audioResult = await _audioUseCase.getAllAudiosUser();
       final loadedCategories = await _loadCategories();
       final loadedSubCategories = await _loadSubCategories();
 

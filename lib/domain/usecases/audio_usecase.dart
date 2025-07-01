@@ -12,6 +12,10 @@ class AudioUseCase {
     return iAudioRepository.getAllAudios();
   }
 
+  Future<Result<List<AudioModel>>> getAllAudiosUser() {
+    return iAudioRepository.getAllAudiosUser();
+  }
+
   Future<Result<AudioModel>> getAudioDetail(String audioId) {
     return iAudioRepository.getAudioDetail(audioId);
   }

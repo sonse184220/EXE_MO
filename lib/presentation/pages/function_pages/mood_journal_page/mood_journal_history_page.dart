@@ -51,9 +51,10 @@ class _MoodJournalHistoryPageState
         _isLoadingTypes = false;
       });
       // Handle error - show snackbar or dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load journal types: $e')),
-      );
+      Notify.showFlushbar('Failed to load journal types', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Failed to load journal types: $e')),
+      // );
     }
   }
 
@@ -838,30 +839,34 @@ class _EditableMoodJournalModalState extends State<_EditableMoodJournalModal> {
   Future<void> _saveChanges() async {
     // Validation
     if (_selectedMood == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a mood')));
+      Notify.showFlushbar('Please select a mood', isError: true);
+      // ScaffoldMessenger.of(
+      //   context,
+      // ).showSnackBar(const SnackBar(content: Text('Please select a mood')));
       return;
     }
 
     if (_selectedJournalType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a journal type')),
-      );
+      Notify.showFlushbar('Please select a journal type', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please select a journal type')),
+      // );
       return;
     }
 
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a journal title')),
-      );
+      Notify.showFlushbar('Please enter a journal title', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please enter a journal title')),
+      // );
       return;
     }
 
     if (_descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write your journal content')),
-      );
+      Notify.showFlushbar('Please write your journal content', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text('Please write your journal content')),
+      // );
       return;
     }
 
@@ -925,45 +930,6 @@ class _EditableMoodJournalModalState extends State<_EditableMoodJournalModal> {
       );
     });
   }
-
-  // Future<void> _saveChanges() async {
-  //   setState(() {
-  //     _isSaving = true;
-  //   });
-  //
-  //   try {
-  //     final updateData = {
-  //       "moodJournalTitle": _titleController.text,
-  //       "moodJournalEmotion": _emotionController.text,
-  //       "moodJournalDescription": _descriptionController.text,
-  //       "moodJournalTypeId": _typeIdController.text,
-  //     };
-  //
-  //     // Call your update method from usecase
-  //     final result = await widget.moodJournalUsecase.updateMoodJournal(widget.journal.moodJournalId, updateData);
-  //
-  //     widget.onUpdated();
-  //     Navigator.pop(context);
-  //
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: const Text('Mood journal updated successfully'),
-  //         backgroundColor: const Color(0xFF8BC34A),
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Error updating mood journal: $e'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       _isSaving = false;
-  //     });
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

@@ -11,6 +11,10 @@ class AudioApiService {
     return await _client.get('innerchild/audio/all');
   }
 
+  Future<Response> getAllAudiosUser() async {
+    return await _client.get('innerchild/audio/get/user-audio');
+  }
+
   Future<Response> getAudioDetail(String audioId) async {
     return await _client.get('innerchild/audio/detail/$audioId');
   }

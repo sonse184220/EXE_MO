@@ -345,4 +345,21 @@ class AuthRepository implements IAuthRepository {
       return Result.failure('An error occurred while getting user detail: $e');
     }
   }
+
+  @override
+  Future<Result<String>> resendEmailConfirm(String email) async {
+    try {
+      final response = await _apiService.resendEmailConfirm(email);
+
+      if (response.statusCode == 200) {
+        final data = response.data!;
+
+        return Result.success(data);
+      }else{
+        return Result.failure('Resend email confirm fail');
+      }
+    } catch (e) {
+      return Result.failure('An error occurred while resend email confirm');
+    }
+  }
 }

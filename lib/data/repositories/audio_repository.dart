@@ -11,70 +11,88 @@ class AudioRepository implements IAudioRepository {
 
   @override
   Future<Result<List<AudioModel>>> getAllAudios() async {
-      try{
-        final response = await audioApiService.getAllAudios();
+    try {
+      final response = await audioApiService.getAllAudios();
 
-        if(response.statusCode == 200) {
-          final data = response.data;
+      if (response.statusCode == 200) {
+        final data = response.data;
 
-          final audios =
-          (data as List<dynamic>)
-              .map((e) => AudioModel.fromJson(e))
-              .toList();
-          return Result.success(audios);
-        }
-
-        return Result.failure('Failed to fetch audios: ${response.statusCode}');
-      }catch(e){
-        return Result.failure('Fetch audios error: $e');
+        final audios =
+            (data as List<dynamic>).map((e) => AudioModel.fromJson(e)).toList();
+        return Result.success(audios);
       }
+
+      return Result.failure('Failed to fetch audios: ${response.statusCode}');
+    } catch (e) {
+      return Result.failure('Fetch audios error: $e');
     }
+  }
+
+  @override
+  Future<Result<List<AudioModel>>> getAllAudiosUser() async {
+    try {
+      final response = await audioApiService.getAllAudiosUser();
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final audios =
+        (data as List<dynamic>).map((e) => AudioModel.fromJson(e)).toList();
+        return Result.success(audios);
+      }
+
+      return Result.failure('Failed to fetch audios user: ${response.statusCode}');
+    } catch (e) {
+      return Result.failure('Fetch audios user error: $e');
+    }
+  }
 
   @override
   Future<Result<AudioModel>> getAudioDetail(String audioId) async {
-    try{
+    try {
       final response = await audioApiService.getAudioDetail(audioId);
 
-      if(response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final data = response.data;
 
-        final audioDetail =
-       AudioModel.fromJson(data);
+        final audioDetail = AudioModel.fromJson(data);
         return Result.success(audioDetail);
       }
 
-      return Result.failure('Failed to fetch audio detail: ${response.statusCode}');
-    }catch(e){
+      return Result.failure(
+        'Failed to fetch audio detail: ${response.statusCode}',
+      );
+    } catch (e) {
       return Result.failure('Fetch audio detail error: $e');
     }
   }
 
   @override
   Future<Result<String>> createAudio(CreateAudioModel audio) async {
-    try{
+    try {
       final response = await audioApiService.createAudio(audio);
 
-      if(response.statusCode == 201) {
+      if (response.statusCode == 201) {
         return Result.success('Audio created successfully');
       }
 
       return Result.failure('Failed to create audio: ${response.statusCode}');
-    }catch(e){
+    } catch (e) {
       return Result.failure('Create audio error: $e');
     }
   }
 
   @override
   Future<Result<String>> updateAudio(String id, CreateAudioModel audio) async {
-    try{
+    try {
       final response = await audioApiService.updateAudio(id, audio);
 
-      if(response.statusCode == 200) {
+      if (response.statusCode == 200) {
         return Result.success('Audio uodated successfully');
       }
 
       return Result.failure('Failed to update audio: ${response.statusCode}');
-    }catch(e){
+    } catch (e) {
       return Result.failure('Update audio error: $e');
     }
   }

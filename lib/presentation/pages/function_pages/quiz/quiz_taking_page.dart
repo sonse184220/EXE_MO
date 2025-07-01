@@ -7,31 +7,6 @@ import 'package:inner_child_app/domain/entities/quiz/quiz_question_model.dart';
 import 'package:inner_child_app/domain/entities/quiz/quiz_user_answer_model.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
 
-// // Models
-// class Quiz {
-//   final String id;
-//   final String title;
-//   final List<Question> questions;
-//
-//   Quiz({required this.id, required this.title, required this.questions});
-// }
-//
-// class Question {
-//   final String id;
-//   final String questionText;
-//   final List<String> options;
-//   // final int correctAnswerIndex;
-//   final String explanation;
-//
-//   Question({
-//     required this.id,
-//     required this.questionText,
-//     required this.options,
-//     // required this.correctAnswerIndex,
-//     required this.explanation,
-//   });
-// }
-//
 class UserAnswer {
   final String questionId;
   final int selectedIndex;
@@ -341,17 +316,11 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
               child: ExpandableOptionButton(
                 text: option.quizContent ?? 'Unknown',
                 isSelected: isSelected,
-                // isCorrect: isCorrect,
-                // showResult: showResult,
-                // isDisabled: false, // Disable if already answered
                 onTap: () => _selectAnswer(option.quizAnswerOptionId!),
               ),
             );
           }),
           const SizedBox(height: 16),
-          // Explanation (if answer is selected)
-          // if (userAnswer != null)
-          //   _buildExplanation(question.explanation),
         ],
       ),
     );
@@ -433,27 +402,6 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
                 ),
               ),
             ),
-            // Expanded(
-            //   child: ElevatedButton(
-            //     onPressed: () {
-            //       // Handle quiz completion
-            //       // _showQuizResults();
-            //       _submitQuiz();
-            //     },
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: const Color(0xFF4CAF50),
-            //       foregroundColor: Colors.white,
-            //       padding: const EdgeInsets.symmetric(vertical: 12),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //     ),
-            //     child: const Text(
-            //       "Finish",
-            //       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            //     ),
-            //   ),
-            // ),
         ],
       ),
     );
@@ -497,31 +445,6 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
     }
   }
 
-  // void _showQuizResults() async {
-  //
-  //   final correctAnswers = userAnswers.length;
-  //   final totalQuestions = quiz!.questions?.length;
-  //
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text("Quiz Completed!"),
-  //       content: Text(
-  //         "You answered $correctAnswers out of $totalQuestions questions correctly.",
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.of(context).pop();
-  //             Navigator.of(context).pop();
-  //           },
-  //           child: const Text("OK"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   void dispose() {
     pageController.dispose();
@@ -533,18 +456,12 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
 class ExpandableOptionButton extends StatefulWidget {
   final String text;
   final bool isSelected;
-  // final bool isCorrect;
-  // final bool showResult;
-  // final bool isDisabled;
   final VoidCallback onTap;
 
   const ExpandableOptionButton({
     super.key,
     required this.text,
     required this.isSelected,
-    // required this.isCorrect,
-    // required this.showResult,
-    // required this.isDisabled,
     required this.onTap,
   });
 
@@ -565,34 +482,9 @@ class _ExpandableOptionButtonState extends State<ExpandableOptionButton> {
 
   @override
   Widget build(BuildContext context) {
-    // Color backgroundColor;
-    // Color textColor;
-    // Widget? trailingIcon;
 
     final backgroundColor = widget.isSelected ? const Color(0xFF4CAF50) : const Color(0xFFFFB74D);
     final textColor = widget.isSelected ? Colors.white : const Color(0xFF8B4513);
-
-    // if (widget.showResult) {
-    //   if (widget.isSelected && widget.isCorrect) {
-    //     backgroundColor = const Color(0xFF4CAF50);
-    //     textColor = Colors.white;
-    //     trailingIcon = const Icon(Icons.check, color: Colors.white, size: 20);
-    //   } else if (widget.isSelected && !widget.isCorrect) {
-    //     backgroundColor = const Color(0xFFFF5722);
-    //     textColor = Colors.white;
-    //     trailingIcon = const Icon(Icons.close, color: Colors.white, size: 20);
-    //   } else if (widget.isCorrect) {
-    //     backgroundColor = const Color(0xFF4CAF50);
-    //     textColor = Colors.white;
-    //     trailingIcon = const Icon(Icons.check, color: Colors.white, size: 20);
-    //   } else {
-    //     backgroundColor = const Color(0xFFFFB74D);
-    //     textColor = const Color(0xFF8B4513);
-    //   }
-    // } else {
-    //   backgroundColor = const Color(0xFFFFB74D);
-    //   textColor = const Color(0xFF8B4513);
-    // }
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -923,33 +815,3 @@ class QuestionNavigationModal extends StatelessWidget {
     );
   }
 }
-//
-// // Usage Example (how to navigate to the quiz page)
-// class QuizListPage extends StatelessWidget {
-//   const QuizListPage({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("Available Quizzes"),
-//       ),
-//       body: ListView(
-//         children: [
-//           ListTile(
-//             title: const Text("Math Quiz"),
-//             subtitle: const Text("5 questions"),
-//             onTap: () {
-//               Navigator.push(
-//                 context,
-//                 MaterialPageRoute(
-//                   builder: (context) => const QuizTakingPage(quizId: "math_quiz_1"),
-//                 ),
-//               );
-//             },
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

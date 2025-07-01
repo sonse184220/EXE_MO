@@ -136,4 +136,8 @@ class AuthApiService {
   Future<Response> getUserDetail(String userId) async {
     return await _client.get('innerchild/auth/get-user-detail/$userId');
   }
+
+  Future<Response> resendEmailConfirm(String email)  async {
+    return await _client.get('innerchild/auth/resend-email-confirmation?email=$email');
+  }
 }

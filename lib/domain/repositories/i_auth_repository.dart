@@ -19,4 +19,5 @@ abstract class IAuthRepository {
   Future<Result<ProfileEditModel>> getPersonalDetail();
   Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword);
   Future<Result<UserDetailModel>> getUserDetail(String userId);
+  Future<Result<String>> resendEmailConfirm(String email);
 }

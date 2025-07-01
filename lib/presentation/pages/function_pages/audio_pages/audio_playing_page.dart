@@ -127,7 +127,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     try {
       // throw Exception();
       // Replace with your actual API endpoint
-      final result = await _audioUseCase.getAllAudios();
+      final result = await _audioUseCase.getAllAudiosUser();
 
       if (result.isSuccess) {
         final data = result.data!;
@@ -484,32 +484,32 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                               ),
                               child: Transform.scale(
                                 scale: 1.2,
-                                child:Image.asset(
+                                child: Image.asset(
                                   'assets/images/all_audio_background.png',
                                   fit: BoxFit.cover,
-                                )
-                                    // currentAudio?.audioThumbnail != null &&
-                                    //         currentAudio!
-                                    //             .audioThumbnail!
-                                    //             .isNotEmpty
-                                    //     ? Image.network(
-                                    //       currentAudio!.audioThumbnail!,
-                                    //       fit: BoxFit.cover,
-                                    //       errorBuilder: (
-                                    //         context,
-                                    //         error,
-                                    //         stackTrace,
-                                    //       ) {
-                                    //         return Image.asset(
-                                    //           'assets/images/audio_playing.png',
-                                    //           fit: BoxFit.cover,
-                                    //         );
-                                    //       },
-                                    //     )
-                                    //     : Image.asset(
-                                    //       'assets/images/audio_playing.png',
-                                    //       fit: BoxFit.cover,
-                                    //     ),
+                                ),
+                                // currentAudio?.audioThumbnail != null &&
+                                //         currentAudio!
+                                //             .audioThumbnail!
+                                //             .isNotEmpty
+                                //     ? Image.network(
+                                //       currentAudio!.audioThumbnail!,
+                                //       fit: BoxFit.cover,
+                                //       errorBuilder: (
+                                //         context,
+                                //         error,
+                                //         stackTrace,
+                                //       ) {
+                                //         return Image.asset(
+                                //           'assets/images/audio_playing.png',
+                                //           fit: BoxFit.cover,
+                                //         );
+                                //       },
+                                //     )
+                                //     : Image.asset(
+                                //       'assets/images/audio_playing.png',
+                                //       fit: BoxFit.cover,
+                                //     ),
                               ),
                             ),
                           ),
@@ -571,10 +571,13 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
                                 // Meditation image and title
                                 Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      AnimatedBuilder(
+                                  child:
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    AspectRatio(
+                                      aspectRatio: 1,
+                                      child: AnimatedBuilder(
                                         animation: _rotationController,
                                         builder: (context, child) {
                                           return Transform.rotate(
@@ -632,78 +635,76 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                           );
                                         },
                                       ),
-                                      SizedBox(height: 20),
-                                      Text(
-                                        currentAudio?.audioTitle ??
-                                            'Loading...',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w600,
+                                    ),
+                                    SizedBox(height: 20),
+                                    Text(
+                                      currentAudio?.audioTitle ?? 'Loading...',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      currentAudio?.subAudioCategoryName ?? '',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          _formatDuration(currentPosition),
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.7,
+                                            ),
+                                            fontSize: 14,
+                                          ),
                                         ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        currentAudio?.subAudioCategoryName ??
-                                            '',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.7),
-                                          fontSize: 14,
+                                        Expanded(
+                                          child: Slider(
+                                            value:
+                                                totalDuration.inMilliseconds > 0
+                                                    ? currentPosition
+                                                            .inMilliseconds /
+                                                        totalDuration
+                                                            .inMilliseconds
+                                                    : 0.0,
+                                            onChanged: (value) {
+                                              final position = Duration(
+                                                milliseconds:
+                                                    (value *
+                                                            totalDuration
+                                                                .inMilliseconds)
+                                                        .round(),
+                                              );
+                                              _seekTo(position);
+                                            },
+                                            activeColor: Colors.white,
+                                            inactiveColor: Colors.white
+                                                .withOpacity(0.3),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 16),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            _formatDuration(currentPosition),
-                                            style: TextStyle(
-                                              color: Colors.white.withOpacity(
-                                                0.7,
-                                              ),
-                                              fontSize: 14,
+                                        Text(
+                                          _formatDuration(totalDuration),
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.7,
                                             ),
+                                            fontSize: 14,
                                           ),
-                                          Expanded(
-                                            child: Slider(
-                                              value:
-                                                  totalDuration.inMilliseconds >
-                                                          0
-                                                      ? currentPosition
-                                                              .inMilliseconds /
-                                                          totalDuration
-                                                              .inMilliseconds
-                                                      : 0.0,
-                                              onChanged: (value) {
-                                                final position = Duration(
-                                                  milliseconds:
-                                                      (value *
-                                                              totalDuration
-                                                                  .inMilliseconds)
-                                                          .round(),
-                                                );
-                                                _seekTo(position);
-                                              },
-                                              activeColor: Colors.white,
-                                              inactiveColor: Colors.white
-                                                  .withOpacity(0.3),
-                                            ),
-                                          ),
-                                          Text(
-                                            _formatDuration(totalDuration),
-                                            style: TextStyle(
-                                              color: Colors.white.withOpacity(
-                                                0.7,
-                                              ),
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                                 ),
                               ],
                             ),
@@ -736,20 +737,28 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                           ),
                         ],
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 16,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           // Previous Track Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading) ? null : _previousTrack,
+                            onTap:
+                                (isLoading || isInitialLoading)
+                                    ? null
+                                    : _previousTrack,
                             child: AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              opacity:
+                                  (isLoading || isInitialLoading) ? 0.4 : 1.0,
                               child: Container(
                                 padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFE37083).withOpacity(0.2), // Raspberry
+                                  color: Color(0xFFE37083).withOpacity(0.2),
+                                  // Raspberry
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Color(0xFFE37083).withOpacity(0.3),
@@ -767,17 +776,23 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
                           // Skip Backward Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading) ? null : _skipBackward,
+                            onTap:
+                                (isLoading || isInitialLoading)
+                                    ? null
+                                    : _skipBackward,
                             child: AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              opacity:
+                                  (isLoading || isInitialLoading) ? 0.4 : 1.0,
                               child: Container(
                                 padding: EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Color(0xFFF49AA2).withOpacity(0.8), // Ice Cream
-                                      Color(0xFFFFB876).withOpacity(0.8), // Papaya
+                                      Color(0xFFF49AA2).withOpacity(0.8),
+                                      // Ice Cream
+                                      Color(0xFFFFB876).withOpacity(0.8),
+                                      // Papaya
                                     ],
                                   ),
                                   shape: BoxShape.circle,
@@ -800,11 +815,12 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
                           // Main Play/Pause Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading)
-                                ? null
-                                : isSetSourceError
-                                ? () => _retryLoadAudio()
-                                : _playPause,
+                            onTap:
+                                (isLoading || isInitialLoading)
+                                    ? null
+                                    : isSetSourceError
+                                    ? () => _retryLoadAudio()
+                                    : _playPause,
                             child: Container(
                               padding: EdgeInsets.all(18),
                               decoration: BoxDecoration(
@@ -813,7 +829,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                   end: Alignment.bottomRight,
                                   colors: [
                                     Colors.white,
-                                    Color(0xFFF49AA2).withOpacity(0.1), // Ice Cream tint
+                                    Color(0xFFF49AA2).withOpacity(0.1),
+                                    // Ice Cream tint
                                   ],
                                 ),
                                 shape: BoxShape.circle,
@@ -824,50 +841,61 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                                     offset: Offset(0, 4),
                                   ),
                                   BoxShadow(
-                                    color: Color(0xFFE37083).withOpacity(0.2), // Raspberry
+                                    color: Color(0xFFE37083).withOpacity(0.2),
+                                    // Raspberry
                                     blurRadius: 20,
                                     offset: Offset(0, 8),
                                   ),
                                 ],
                               ),
-                              child: (isLoading || isInitialLoading)
-                                  ? SizedBox(
-                                width: 32,
-                                height: 32,
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFFE37083), // Raspberry
-                                  ),
-                                  strokeWidth: 3,
-                                ),
-                              )
-                                  : isSetSourceError
-                                  ? Icon(
-                                Icons.refresh,
-                                color: Color(0xFFE37083), // Raspberry
-                                size: 32,
-                              )
-                                  : Icon(
-                                isPlaying ? Icons.pause : Icons.play_arrow,
-                                color: Color(0xFFE37083), // Raspberry
-                                size: 32,
-                              ),
+                              child:
+                                  (isLoading || isInitialLoading)
+                                      ? SizedBox(
+                                        width: 32,
+                                        height: 32,
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Color(0xFFE37083), // Raspberry
+                                              ),
+                                          strokeWidth: 3,
+                                        ),
+                                      )
+                                      : isSetSourceError
+                                      ? Icon(
+                                        Icons.refresh,
+                                        color: Color(0xFFE37083), // Raspberry
+                                        size: 32,
+                                      )
+                                      : Icon(
+                                        isPlaying
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        color: Color(0xFFE37083), // Raspberry
+                                        size: 32,
+                                      ),
                             ),
                           ),
 
                           // Skip Forward Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading) ? null : _skipForward,
+                            onTap:
+                                (isLoading || isInitialLoading)
+                                    ? null
+                                    : _skipForward,
                             child: AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              opacity:
+                                  (isLoading || isInitialLoading) ? 0.4 : 1.0,
                               child: Container(
                                 padding: EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Color(0xFFFFB876).withOpacity(0.8), // Papaya
-                                      Color(0xFFFFCB7C).withOpacity(0.8), // Sunshine
+                                      Color(0xFFFFB876).withOpacity(0.8),
+                                      // Papaya
+                                      Color(0xFFFFCB7C).withOpacity(0.8),
+                                      // Sunshine
                                     ],
                                   ),
                                   shape: BoxShape.circle,
@@ -890,14 +918,19 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
                           // Next Track Button
                           GestureDetector(
-                            onTap: (isLoading || isInitialLoading) ? null : _nextTrack,
+                            onTap:
+                                (isLoading || isInitialLoading)
+                                    ? null
+                                    : _nextTrack,
                             child: AnimatedOpacity(
                               duration: Duration(milliseconds: 200),
-                              opacity: (isLoading || isInitialLoading) ? 0.4 : 1.0,
+                              opacity:
+                                  (isLoading || isInitialLoading) ? 0.4 : 1.0,
                               child: Container(
                                 padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFFCB7C).withOpacity(0.2), // Sunshine
+                                  color: Color(0xFFFFCB7C).withOpacity(0.2),
+                                  // Sunshine
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: Color(0xFFFFCB7C).withOpacity(0.3),
@@ -915,7 +948,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                         ],
                       ),
                     ),
-                  )
+                  ),
                   // Expanded(
                   //   child: Container(
                   //     decoration: BoxDecoration(color: Color(0xFF89B7C2)),
