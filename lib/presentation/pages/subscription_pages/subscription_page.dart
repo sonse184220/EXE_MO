@@ -380,7 +380,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
@@ -434,7 +434,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
         ),
       )
           : _buildMainContent(),
-    );
+    ));
   }
 
   Widget _buildPurchaseUI() {

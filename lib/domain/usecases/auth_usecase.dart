@@ -47,25 +47,35 @@ class AuthUsecase {
     return repository.resetPassword(password, confirmPassword);
   }
 
-  Future<Result<bool>> logout(
-      ) {
+  Future<Result<bool>> logout() {
     return repository.logout();
   }
 
-  Future<Result<bool>> switchToProfileChoosing(
-      ) {
+  Future<Result<bool>> switchToProfileChoosing() {
     return repository.switchToProfileChoosing();
   }
 
-  Future<Result<ProfileEditModel>> getPersonalDetail(){
+  Future<Result<ProfileEditModel>> getPersonalDetail() {
     return repository.getPersonalDetail();
   }
 
-  Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword){
-    return repository.changePassword(currentPassword, newPassword, confirmPassword);
+  Future<Result<String>> changePassword(
+    String currentPassword,
+    String newPassword,
+    String confirmPassword,
+  ) {
+    return repository.changePassword(
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    );
   }
 
-  Future<Result<UserDetailModel>> getUserDetail(String userId){
+  Future<Result<UserDetailModel>> getUserDetail(String userId) {
     return repository.getUserDetail(userId);
+  }
+
+  Future<Result<String>> resendEmailConfirm(String email) {
+    return repository.resendEmailConfirm(email);
   }
 }

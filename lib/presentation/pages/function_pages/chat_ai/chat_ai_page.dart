@@ -38,7 +38,8 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
     if (!_scrollController.hasClients) return;
 
     final offsetFromBottom =
-        _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
+        _scrollController.position.maxScrollExtent -
+        _scrollController.position.pixels;
 
     final shouldShow = offsetFromBottom > 300;
 
@@ -135,7 +136,6 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
   //     _scrollController.jumpTo(target);
   //   }
   // }
-
 
   // void _onScroll() {
   //   final shouldShow = !_scrollController.position.atEdge &&
@@ -278,7 +278,7 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
         _isError = false;
       });
 
-       // _scrollToBottom();
+      // _scrollToBottom();
 
       // WidgetsBinding.instance.addPostFrameCallback((_) {
       //   Future.delayed(Duration.zero, () {
@@ -287,7 +287,6 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
       //     }
       //   });
       // });
-
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
@@ -460,11 +459,14 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
 
                                       return ListView.builder(
                                         controller: _scrollController,
-                                        itemCount: combinedMessages.length + (_isWaitingForResponse ? 1 : 0),
+                                        itemCount:
+                                            combinedMessages.length +
+                                            (_isWaitingForResponse ? 1 : 0),
                                         itemBuilder: (context, index) {
                                           // Show loading bubble if waiting for AI response
-                                          if (
-                                              _isWaitingForResponse&& index == combinedMessages.length) {
+                                          if (_isWaitingForResponse &&
+                                              index ==
+                                                  combinedMessages.length) {
                                             return const AILoadingBubble();
                                           }
 
@@ -499,81 +501,6 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
                                     },
                                   ),
                         ),
-                        // Expanded(
-                        //   child: ListView(
-                        //     children: [
-                        //       // Time indicator
-                        //       const Center(
-                        //         child: Padding(
-                        //           padding: EdgeInsets.symmetric(vertical: 12),
-                        //           child: Text(
-                        //             "9:41",
-                        //             style: TextStyle(
-                        //               fontSize: 12,
-                        //               color: Colors.grey,
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //
-                        //       // User message 1
-                        //       const UserMessageBubble(
-                        //         message: "How can I reduce stress?",
-                        //         timeStamp: "12:45 PM",
-                        //       ),
-                        //
-                        //       // AI response 1
-                        //       const AIResponseBubble(
-                        //         message:
-                        //             "Try deep breathing, meditation, or light exercise. Would you like some guided breathing tips?",
-                        //         timeStamp: "12:46 PM",
-                        //       ),
-                        //
-                        //       // User message 2
-                        //       const UserMessageBubble(
-                        //         message: "What foods boost immunity?",
-                        //         timeStamp: "12:51 PM",
-                        //       ),
-                        //
-                        //       // AI response 2
-                        //       const AIResponseBubble(
-                        //         message: "Foods rich in vitamin C",
-                        //         timeStamp: "12:53 PM",
-                        //       ),
-                        //
-                        //       const UserMessageBubble(
-                        //         message: "What foods boost immunity?",
-                        //         timeStamp: "12:51 PM",
-                        //       ),
-                        //
-                        //       // AI response 2
-                        //       const AIResponseBubble(
-                        //         message: "Foods rich in vitamin C",
-                        //         timeStamp: "12:53 PM",
-                        //       ),
-                        //       const UserMessageBubble(
-                        //         message: "What foods boost immunity?",
-                        //         timeStamp: "12:51 PM",
-                        //       ),
-                        //
-                        //       // AI response 2
-                        //       const AIResponseBubble(
-                        //         message: "Foods rich in vitamin C",
-                        //         timeStamp: "12:53 PM",
-                        //       ),
-                        //       const UserMessageBubble(
-                        //         message: "What foods boost immunity?",
-                        //         timeStamp: "12:51 PM",
-                        //       ),
-                        //
-                        //       // AI response 2
-                        //       const AIResponseBubble(
-                        //         message: "Foods rich in vitamin C",
-                        //         timeStamp: "12:53 PM",
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
 
                         // Message input field
                         Container(
@@ -582,60 +509,63 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: Colors.grey.shade300),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          // padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: Row(
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.link),
-                                // color: Colors.grey,
-                                color:
-                                    _isSending
-                                        ? Colors.grey.shade400
-                                        : Colors.grey,
-                                onPressed: _isSending ? null : () {},
-                                // onPressed: () {},
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.refresh),
-                                color:
-                                    _isSending
-                                        ? Colors.grey.shade400
-                                        : Colors.grey,
-                                onPressed: _isSending ? null : () {},
-                                // color: Colors.grey,
-                                // onPressed: () {},
-                              ),
+                              // IconButton(
+                              //   icon: const Icon(Icons.link),
+                              //   // color: Colors.grey,
+                              //   color:
+                              //       _isSending
+                              //           ? Colors.grey.shade400
+                              //           : Colors.grey,
+                              //   onPressed: _isSending ? null : () {},
+                              //   // onPressed: () {},
+                              // ),
+                              // IconButton(
+                              //   icon: const Icon(Icons.refresh),
+                              //   color:
+                              //       _isSending
+                              //           ? Colors.grey.shade400
+                              //           : Colors.grey,
+                              //   onPressed: _isSending ? null : () {},
+                              //   // color: Colors.grey,
+                              //   // onPressed: () {},
+                              // ),
                               Expanded(
-                                child: TextField(
-                                  controller: _textController,
-                                  enabled: !_isSending,
-                                  // onTap: (){
-                                  //   final text = _textController.text.trim();
-                                  //   if (text.isNotEmpty) {
-                                  //     _textController.clear();
-                                  //     // _sendMessage(text);
-                                  //   }
-                                  // },
-                                  decoration: InputDecoration(
-                                    // hintText: "Enter your text here",
-                                    hintText:
-                                        _isSending
-                                            ? "Sending..."
-                                            : "Enter your text here",
-                                    border: InputBorder.none,
-                                    hintStyle: TextStyle(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 12),
+                                  child: TextField(
+                                    controller: _textController,
+                                    enabled: !_isSending,
+                                    // onTap: (){
+                                    //   final text = _textController.text.trim();
+                                    //   if (text.isNotEmpty) {
+                                    //     _textController.clear();
+                                    //     // _sendMessage(text);
+                                    //   }
+                                    // },
+                                    decoration: InputDecoration(
+                                      // hintText: "Enter your text here",
+                                      hintText:
+                                          _isSending
+                                              ? "Sending..."
+                                              : "Enter your text here",
+                                      border: InputBorder.none,
+                                      hintStyle: TextStyle(
+                                        color:
+                                            _isSending
+                                                ? Colors.grey.shade400
+                                                : Colors.grey,
+                                      ),
+                                      // hintStyle: TextStyle(color: Colors.grey),
+                                    ),
+                                    style: TextStyle(
                                       color:
                                           _isSending
-                                              ? Colors.grey.shade400
-                                              : Colors.grey,
+                                              ? Colors.grey.shade600
+                                              : Colors.black,
                                     ),
-                                    // hintStyle: TextStyle(color: Colors.grey),
-                                  ),
-                                  style: TextStyle(
-                                    color:
-                                        _isSending
-                                            ? Colors.grey.shade600
-                                            : Colors.black,
                                   ),
                                 ),
                               ),
@@ -678,6 +608,13 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
                                           },
                                 ),
                               ),
+                              // Expanded(
+                              //   child: Row(
+                              //     children: [
+                              //
+                              //     ],
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
@@ -689,30 +626,33 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
             ),
             // Scroll to bottom button
             if (_showScrollToBottomButton)
-    Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 100, right: 30),
-        child: FloatingActionButton.small(
-          onPressed: _scrollToBottom,
-          // onPressed: _scrollToBottomAfterBuild,
-          backgroundColor: Colors.brown,
-          child: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-        ),
-      ),
-    ),
-              // Positioned(
-              //   bottom: 100,
-              //   right: 0,
-              //   child: FloatingActionButton.small(
-              //     onPressed: _scrollToBottom,
-              //     backgroundColor: Colors.brown,
-              //     child: const Icon(
-              //       Icons.keyboard_arrow_down,
-              //       color: Colors.white,
-              //     ),
-              //   ),
-              // ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 100, right: 30),
+                  child: FloatingActionButton.small(
+                    onPressed: _scrollToBottom,
+                    // onPressed: _scrollToBottomAfterBuild,
+                    backgroundColor: Colors.brown,
+                    child: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            // Positioned(
+            //   bottom: 100,
+            //   right: 0,
+            //   child: FloatingActionButton.small(
+            //     onPressed: _scrollToBottom,
+            //     backgroundColor: Colors.brown,
+            //     child: const Icon(
+            //       Icons.keyboard_arrow_down,
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/auth_utils/google_authentication.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/forgot_password_1.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/profile_choosing_page.dart';
@@ -20,10 +21,12 @@ class Login extends ConsumerStatefulWidget {
 class LoginPage extends ConsumerState<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _resendEmailController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _isEmailLoginLoading = false;
   bool _isGoogleLoginLoading = false;
+  bool _isResendLoading = false;
 
   late final AuthUsecase _authUseCase;
 
@@ -32,6 +35,161 @@ class LoginPage extends ConsumerState<Login> {
     super.initState();
     // Initialize the authUseCase once
     _authUseCase = ref.read(authUseCaseProvider);
+  }
+
+  Future<void> _handleResendEmailConfirmation() async {
+    final email = _resendEmailController.text.trim();
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    if (email.isEmpty) {
+      Notify.showFlushbar(
+        'Please enter your email address',
+        isError: true,
+      );
+      return;
+    }
+
+    if (!emailRegex.hasMatch(email)) {
+      Notify.showFlushbar('Please enter a valid email address.', isError: true);
+      return;
+    }
+
+    setState(() {
+      _isResendLoading = true;
+    });
+
+    try {
+      // Replace this with your actual API method call
+      final result = await _authUseCase.resendEmailConfirm(email);
+      // final result = new Result.success('');
+
+      if (result.isSuccess) {
+        Notify.showFlushbar(
+          result.data!,
+          // 'Confirmation email sent successfully!',
+          isError: false,
+        );
+        Navigator.of(context).pop(); // Close the dialog
+        _resendEmailController.clear();
+      } else {
+        Notify.showFlushbar(
+          result.error ?? 'Failed to send confirmation email. Please try again.',
+          isError: true,
+        );
+      }
+    } catch (e) {
+      Notify.showFlushbar(
+        'An error occur while sending confirmation email. Please try again.',
+        // e.toString(),
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResendLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showResendEmailDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: !_isResendLoading,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Resend Email Confirmation'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Enter your email address to resend the confirmation email.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _resendEmailController,
+                    enabled: !_isResendLoading,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your email',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: _isResendLoading ? Colors.grey[300] : Color(0xFFEBEBEB),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: _isResendLoading ? null : () {
+                    Navigator.of(context).pop();
+                    _resendEmailController.clear();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: _isResendLoading ? Colors.grey : Colors.black54,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isResendLoading ? Colors.grey : Color(0xFFE37083),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _isResendLoading ? null : () async {
+                    setDialogState(() {
+                      _isResendLoading = true;
+                    });
+                    await _handleResendEmailConfirmation();
+                    if (mounted) {
+                      setDialogState(() {
+                        _isResendLoading = false;
+                      });
+                    }
+                  },
+                  child: _isResendLoading
+                      ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Sending...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  )
+                      : const Text(
+                    'Send',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _handleLoginWithGoogle() async {
@@ -44,6 +202,7 @@ class LoginPage extends ConsumerState<Login> {
     try {
       var userCredential = await signInWithGoogle();
       final idToken = await userCredential.user?.getIdToken();
+      print('cl nè id token: $idToken con cc');
       final result = await _authUseCase.loginWithGoogle(idToken!);
       if (result.isSuccess) {
         Notify.showFlushbar(
@@ -132,6 +291,7 @@ class LoginPage extends ConsumerState<Login> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _resendEmailController.dispose();
     super.dispose();
   }
 
@@ -269,25 +429,38 @@ class LoginPage extends ConsumerState<Login> {
                               ),
                             ),
 
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed:  isAnyLoading ? null : () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ForgotPassword1(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                  onPressed: isAnyLoading ? null : _showResendEmailDialog,
+                                  child: Text(
+                                    'RESEND EMAIL CONFIRM',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isAnyLoading ? Colors.grey : Colors.black,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  );
-                                },
-                                child: Text(
-                                  'FORGET PASSWORD?',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color:  isAnyLoading ? Colors.grey: Colors.black,
                                   ),
                                 ),
-                              ),
+                                TextButton(
+                                  onPressed: isAnyLoading ? null : () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ForgotPassword1(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'FORGET PASSWORD?',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isAnyLoading ? Colors.grey: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
