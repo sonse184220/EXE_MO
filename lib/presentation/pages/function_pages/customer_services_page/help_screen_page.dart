@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/utils/result_model.dart';
-import '../../../domain/entities/help/help_category_model.dart';
-import '../../../domain/entities/help/help_model.dart';
+import '../../../../core/utils/result_model.dart';
+import '../../../../domain/entities/help/help_category_model.dart';
+import '../../../../domain/entities/help/help_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreenPage extends StatefulWidget {

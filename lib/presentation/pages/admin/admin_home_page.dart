@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -9,570 +10,675 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
+  // Sample data - replace with your actual API data
+  List<RevenueData> revenueData = [
+    RevenueData(time: "01/2024", revenue: 64450),
+    RevenueData(time: "02/2024", revenue: 63680),
+    RevenueData(time: "03/2024", revenue: 52120),
+    RevenueData(time: "04/2024", revenue: 78900),
+    RevenueData(time: "05/2024", revenue: 85600),
+    RevenueData(time: "06/2024", revenue: 92300),
+  ];
+
+  OverviewData overviewData = OverviewData(
+    totalRevenue: 165365,
+    totalTransactions: 6,
+    successfulTransactions: 6,
+    failedTransactions: 0,
+    subscriptionStats: [
+      SubscriptionStat(
+        subscriptionId: "0c09447f-c97e-4503-8715-d21385be6d92",
+        subscriptionName: "PremiumPlan",
+        revenue: 79327,
+        purchasesCount: 3,
+      ),
+      SubscriptionStat(
+        subscriptionId: "8e269444-3ffb-4b01-b52b-04ae9c305553",
+        subscriptionName: "FamilyPlan",
+        revenue: 86038,
+        purchasesCount: 3,
+      ),
+    ],
+  );
+
+  bool isLoading = false;
+  DateTime startDate = DateTime(2024, 10, 1);
+  DateTime endDate = DateTime(2025, 5, 1);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // TODO: Replace with your actual API calls
+      // await _fetchRevenueData();
+      // await _fetchOverviewData();
+
+      // Simulate API delay
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String formatVND(double amount) {
+    final formatter = NumberFormat('#,###', 'vi_VN');
+    return '${formatter.format(amount)} VND';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header with Title and Profile
-                    _buildHeader(),
-
-                    // User Management Section
-                    _buildUserManagementSection(),
-
-                    // Stats Cards
-                    _buildStatsCardsSection(),
-
-                    // Line Chart Section
-                    _buildLineChartSection(),
-
-                    // Pie Charts Section
-                    _buildPieChartsSection(),
-                  ],
-                ),
-              ),
-            ),);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          "Overview",
+      backgroundColor: const Color(0xFFFCFBF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Revenue Dashboard',
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/images/profile.jpg'),
-            ),
-            const SizedBox(width: 10),
-            const Icon(Icons.more_vert),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUserManagementSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Last updated 1 hour ago",
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 10),
-        UserManagementCard(
-          title: "User Management",
-          viewAllAction: () {
-            // Handle view all action
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsCardsSection() {
-    return Column(
-      children: [
-        StatsCard(
-          title: "2K",
-          subtitle: "Total subscription",
-          iconBackgroundColor: Colors.amber.shade100,
-          iconData: Icons.people_outline,
-          value: "50",
-          showPlus: true,
-        ),
-        const SizedBox(height: 10),
-        StatsCard(
-          title: "3M",
-          subtitle: "Revenue",
-          iconBackgroundColor: Colors.red.shade300,
-          iconData: Icons.attach_money,
-          value: "800K",
-          showPlus: true,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLineChartSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Chart",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 5),
-        const Text(
-          "Lorem ipsum dolor sit amet, consectetur",
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "496",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        centerTitle: true,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: const Color(0xFF89B7C2).withOpacity(0.15),
+              child: const Icon(
+                Icons.person_outline,
+                color: Color(0xFF89B7C2),
+                size: 20,
               ),
             ),
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.file_download_outlined, size: 16),
-              label: const Text("Save Report"),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                side: BorderSide(color: Colors.blue.shade300),
-                foregroundColor: Colors.blue.shade300,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 200,
-          child: LineChartWidget(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPieChartsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Pie Chart",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            PieChartWidget(
-              percentage: 81,
-              title: "Total Sales",
-              color: Colors.red.shade300,
-            ),
-            PieChartWidget(
-              percentage: 23,
-              title: "Customer Growth",
-              color: Colors.green.shade300,
-            ),
-            PieChartWidget(
-              percentage: 62,
-              title: "Total Revenue",
-              color: Colors.blue.shade300,
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildChartLegend("Chart"),
-            const SizedBox(width: 20),
-            _buildChartLegend("Show Value"),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChartLegend(String title) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            shape: BoxShape.rectangle,
-            border: Border.all(color: Colors.grey),
-          ),
-          child: title == "Chart"
-              ? const Icon(Icons.check, size: 12, color: Colors.black)
-              : null,
-        ),
-        const SizedBox(width: 5),
-        Text(title),
-      ],
-    );
-  }
-}
-
-class UserManagementCard extends StatelessWidget {
-  final String title;
-  final VoidCallback viewAllAction;
-
-  const UserManagementCard({
-    super.key,
-    required this.title,
-    required this.viewAllAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade200,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: viewAllAction,
-                child: const Text(
-                  "View all",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.person, size: 16),
-              ),
-            ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class StatsCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color iconBackgroundColor;
-  final IconData iconData;
-  final String value;
-  final bool showPlus;
-
-  const StatsCard({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.iconBackgroundColor,
-    required this.iconData,
-    required this.value,
-    this.showPlus = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: iconBackgroundColor.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconBackgroundColor.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  showPlus ? "+$value" : value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: iconBackgroundColor.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.arrow_upward,
-                  size: 14,
-                  color: iconBackgroundColor.withOpacity(0.8),
-                ),
+                // Overview Stats Section
+                _buildOverviewSection(),
+                const SizedBox(height: 24),
+
+                // Revenue Chart Section
+                _buildRevenueChartSection(),
+                const SizedBox(height: 24),
+
+                // Subscription Stats Section
+                _buildSubscriptionStatsSection(),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF89B7C2), Color(0xFFA8BF8A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF89B7C2).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Revenue Overview',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.trending_up,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  title: formatVND(overviewData.totalRevenue.toDouble()),
+                  subtitle: 'Total Revenue',
+                  icon: Icons.attach_money,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildOverviewCard(
+                  title: '${overviewData.totalTransactions}',
+                  subtitle: 'Total Transactions',
+                  icon: Icons.receipt_long,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  title: '${overviewData.successfulTransactions}',
+                  subtitle: 'Successful',
+                  icon: Icons.check_circle,
+                  color: const Color(0xFFA8BF8A),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildOverviewCard(
+                  title: '${overviewData.failedTransactions}',
+                  subtitle: 'Failed',
+                  icon: Icons.cancel,
+                  color: const Color(0xFFE37083),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    Color? color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: color ?? Colors.white,
+            size: 16,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRevenueChartSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Revenue Trend',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Monthly revenue performance',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89B7C2).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Color(0xFF89B7C2),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '6 months',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF89B7C2),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: RevenueLineChart(data: revenueData),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionStatsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Subscription Performance',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Revenue breakdown by subscription plans',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 120,
+                  child: SubscriptionPieChart(
+                    subscriptions: overviewData.subscriptionStats,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  children: overviewData.subscriptionStats.map((sub) {
+                    final index = overviewData.subscriptionStats.indexOf(sub);
+                    final colors = [
+                      const Color(0xFFFFB876),
+                      const Color(0xFF89B7C2),
+                      const Color(0xFFE37083),
+                      const Color(0xFFA8BF8A),
+                    ];
+                    final color = colors[index % colors.length];
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sub.subscriptionName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2C3E50),
+                                  ),
+                                ),
+                                Text(
+                                  formatVND(sub.revenue.toDouble()),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${sub.purchasesCount}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class LineChartWidget extends StatelessWidget {
-  const LineChartWidget({super.key});
+class RevenueLineChart extends StatelessWidget {
+  final List<RevenueData> data;
+
+  const RevenueLineChart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
+    final spots = data.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.revenue.toDouble());
+    }).toList();
+
+    final maxY = data.map((e) => e.revenue).reduce((a, b) => a > b ? a : b).toDouble();
+    final minY = data.map((e) => e.revenue).reduce((a, b) => a < b ? a : b).toDouble();
+
     return LineChart(
       LineChartData(
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 50,
+          horizontalInterval: (maxY - minY) / 4,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey.shade300,
+              color: Colors.grey.shade200,
               strokeWidth: 1,
             );
           },
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles: AxisTitles(
+          rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          topTitles: AxisTitles(
+          topTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 22,
+              reservedSize: 30,
               interval: 1,
-              getTitlesWidget: bottomTitleWidgets,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() >= 0 && value.toInt() < data.length) {
+                  return SideTitleWidget(
+                    space: 8,
+                    meta: meta,
+                    child: Text(
+                      data[value.toInt()].time,
+                      style: const TextStyle(
+                        color: Color(0xFF7F8C8D),
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
             ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 100,
-              reservedSize: 40,
-              getTitlesWidget: leftTitleWidgets,
+              interval: (maxY - minY) / 4,
+              reservedSize: 60,
+              getTitlesWidget: (value, meta) {
+                return SideTitleWidget(
+                  space: 8,
+                  meta: meta,
+                  child: Text(
+                    '${(value / 1000).toStringAsFixed(0)}K',
+                    style: const TextStyle(
+                      color: Color(0xFF7F8C8D),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
-        borderData: FlBorderData(
-          show: false,
-        ),
+        borderData: FlBorderData(show: false),
         minX: 0,
-        maxX: 6,
-        minY: 0,
-        maxY: 500,
+        maxX: (data.length - 1).toDouble(),
+        minY: minY * 0.9,
+        maxY: maxY * 1.1,
         lineBarsData: [
           LineChartBarData(
-            spots: [
-              FlSpot(0, 150),
-              FlSpot(1, 200),
-              FlSpot(2, 350),
-              FlSpot(3, 250),
-              FlSpot(4, 400),
-              FlSpot(5, 300),
-              FlSpot(6, 410),
-            ],
+            spots: spots,
             isCurved: true,
-            color: Colors.blue.shade400,
+            color: const Color(0xFF89B7C2),
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
-              show: false,
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: const Color(0xFF89B7C2),
+                  strokeWidth: 2,
+                  strokeColor: Colors.white,
+                );
+              },
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blue.shade100.withOpacity(0.3),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF89B7C2).withOpacity(0.3),
+                  const Color(0xFF89B7C2).withOpacity(0.1),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Colors.black54,
-      fontSize: 10,
-    );
-    Widget text;
-    switch (value.toInt()) {
-      case 0:
-        text = const Text('Sunday', style: style);
-        break;
-      case 1:
-        text = const Text('Monday', style: style);
-        break;
-      case 2:
-        text = const Text('Tuesday', style: style);
-        break;
-      case 3:
-        text = const Text('Wednesday', style: style);
-        break;
-      case 4:
-        text = const Text('Thursday', style: style);
-        break;
-      case 5:
-        text = const Text('Friday', style: style);
-        break;
-      case 6:
-        text = const Text('Saturday', style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
-    }
+class SubscriptionPieChart extends StatelessWidget {
+  final List<SubscriptionStat> subscriptions;
 
-    return SideTitleWidget(
-      meta: meta,
-      // axisSide: meta.axisSide,
-      child: text,
-    );
-  }
+  const SubscriptionPieChart({super.key, required this.subscriptions});
 
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Colors.black54,
-      fontSize: 10,
-    );
+  @override
+  Widget build(BuildContext context) {
+    final colors = [
+      const Color(0xFFFFB876),
+      const Color(0xFF89B7C2),
+      const Color(0xFFE37083),
+      const Color(0xFFA8BF8A),
+    ];
 
-    return SideTitleWidget(
-      // axisSide: meta.axisSide,
-      meta: meta,
-      child: Text('${value.toInt()}', style: style),
+    final totalRevenue = subscriptions.fold(0, (sum, sub) => sum + sub.revenue);
+
+    return PieChart(
+      PieChartData(
+        sectionsSpace: 4,
+        centerSpaceRadius: 30,
+        sections: subscriptions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final sub = entry.value;
+          final percentage = (sub.revenue / totalRevenue * 100);
+
+          return PieChartSectionData(
+            color: colors[index % colors.length],
+            value: sub.revenue.toDouble(),
+            title: '${percentage.toStringAsFixed(1)}%',
+            radius: 25,
+            titleStyle: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
 
-class PieChartWidget extends StatelessWidget {
-  final int percentage;
-  final String title;
-  final Color color;
+// Data Models
+class RevenueData {
+  final String time;
+  final int revenue;
 
-  const PieChartWidget({
-    super.key,
-    required this.percentage,
-    required this.title,
-    required this.color,
+  RevenueData({required this.time, required this.revenue});
+}
+
+class OverviewData {
+  final int totalRevenue;
+  final int totalTransactions;
+  final int successfulTransactions;
+  final int failedTransactions;
+  final List<SubscriptionStat> subscriptionStats;
+
+  OverviewData({
+    required this.totalRevenue,
+    required this.totalTransactions,
+    required this.successfulTransactions,
+    required this.failedTransactions,
+    required this.subscriptionStats,
   });
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 80,
-          width: 80,
-          child: PieChart(
-            PieChartData(
-              sectionsSpace: 0,
-              centerSpaceRadius: 30,
-              sections: [
-                PieChartSectionData(
-                  color: color,
-                  value: percentage.toDouble(),
-                  title: '$percentage%',
-                  radius: 15,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: Colors.grey.shade300,
-                  value: (100 - percentage).toDouble(),
-                  title: '',
-                  radius: 15,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.black54,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
+class SubscriptionStat {
+  final String subscriptionId;
+  final String subscriptionName;
+  final int revenue;
+  final int purchasesCount;
+
+  SubscriptionStat({
+    required this.subscriptionId,
+    required this.subscriptionName,
+    required this.revenue,
+    required this.purchasesCount,
+  });
 }

@@ -164,7 +164,7 @@ class _CommunityPostDetailPageState
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
+      return SafeArea(child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
           backgroundColor: cardBackground,
@@ -185,11 +185,11 @@ class _CommunityPostDetailPageState
         body: const Center(
           child: CircularProgressIndicator(color: primaryOrange),
         ),
-      );
+      ));
     }
 
     if (postDetail == null) {
-      return Scaffold(
+      return SafeArea(child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
           backgroundColor: cardBackground,
@@ -205,10 +205,10 @@ class _CommunityPostDetailPageState
             style: TextStyle(color: textBlack, fontSize: 16),
           ),
         ),
-      );
+      ));
     }
 
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: cardBackground,
@@ -278,7 +278,7 @@ class _CommunityPostDetailPageState
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildPostContent() {

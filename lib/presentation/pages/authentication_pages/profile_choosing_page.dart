@@ -20,6 +20,7 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
 
   List<AccountProfile> profileList = [];
 
+  String? deviceToken;
   bool isLoading = false;
   bool isProfileLoggingIn = false;
 
@@ -29,6 +30,8 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
   void initState() {
     super.initState();
     _authUseCase = ref.read(authUseCaseProvider);
+    deviceToken = ref.read(fcmTokenProvider);
+
     fetchProfiles();
   }
 
@@ -67,7 +70,7 @@ class _ProfileChoosingPageState extends ConsumerState<ProfileChoosingPage> {
       isProfileLoggingIn = true;
     });
     try {
-      final result = await _authUseCase.loginWithProfile(profile.profileToken);
+      final result = await _authUseCase.loginWithProfile(profile.profileToken, deviceToken);
 
       if (!mounted) return;
 
