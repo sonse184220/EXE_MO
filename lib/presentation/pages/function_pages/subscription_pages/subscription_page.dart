@@ -34,20 +34,28 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
   void initState() {
     super.initState();
     _subscriptionUsecase = ref.read(subscriptionUseCaseProvider);
-    _paymentUsecase = ref.read(paymentUseCaseProvider); // Initialize payment usecase
+    _paymentUsecase = ref.read(
+      paymentUseCaseProvider,
+    ); // Initialize payment usecase
     _loadSubscriptions();
   }
 
-  String formatCurrency(double amount, {String currency = "VND", bool withSpace = false}) {
+  String formatCurrency(
+    double amount, {
+    String currency = "VND",
+    bool withSpace = false,
+  }) {
     final formatter = NumberFormat("#,##0", "en_US");
     final formattedNumber = formatter.format(amount.toInt());
-    return withSpace ? "$formattedNumber $currency" : "$formattedNumber$currency";
+    return withSpace
+        ? "$formattedNumber $currency"
+        : "$formattedNumber$currency";
   }
 
   PurchasePlan? stringToPurchasePlan(String? value) {
     if (value == null) return null;
     return PurchasePlan.values.firstWhere(
-          (e) => e.name == value,
+      (e) => e.name == value,
       orElse: () => PurchasePlan.FreePlan, // default if no match, or throw
     );
   }
@@ -63,12 +71,13 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
       currentUserPlan = stringToPurchasePlan(userInfo?.purchasePlan);
 
       final result = await _subscriptionUsecase.getAllSubscriptions();
-// final result = Result.success('');
+      // final result = Result.success('');
       if (result.isSuccess && result.data != null) {
         setState(() {
           subscriptions = result.data!;
           // Set first subscription as default selected if available
-          if (subscriptions.isNotEmpty  && currentUserPlan == PurchasePlan.FreePlan) {
+          if (subscriptions.isNotEmpty &&
+              currentUserPlan == PurchasePlan.FreePlan) {
             selectedSubscription = subscriptions.first;
           }
           isLoading = false;
@@ -89,29 +98,33 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
 
   Future<bool> _showPurchaseConfirmationDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Purchase'),
-          content: Text(
-              'This ${selectedSubscription?.subscriptionType} plan will last for 30 days before expiring. Do you want to continue?'
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F3422),
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Confirm Purchase'),
+              content: Text(
+                'This ${selectedSubscription?.subscriptionType} plan will last for 30 days before expiring. Do you want to continue?',
               ),
-              child: const Text('Continue', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    ) ?? false;
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F3422),
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   Future<void> _handleSubscriptionPurchase() async {
@@ -128,13 +141,14 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
       if (!confirmed) return;
     }
 
-
     setState(() {
       isProcessingPayment = true;
     });
 
     try {
-      final result = await _paymentUsecase.createPayment(selectedSubscription!.subscriptionId!);
+      final result = await _paymentUsecase.createPayment(
+        selectedSubscription!.subscriptionId!,
+      );
 
       if (result.isSuccess && result.data != null) {
         // Assuming the result.data contains the payment URL
@@ -144,7 +158,9 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
           // Launch the QR payment URL
           await _launchPaymentUrl(paymentUrl);
 
-          Notify.showFlushbar('Payment QR opened. Complete payment to activate subscription.');
+          Notify.showFlushbar(
+            'Payment QR opened. Complete payment to activate subscription.',
+          );
 
           // ScaffoldMessenger.of(context).showSnackBar(
           //   const SnackBar(
@@ -162,7 +178,10 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
           // );
         }
       } else {
-        Notify.showFlushbar(result.error ?? 'Payment failed. Please try again.', isError: true);
+        Notify.showFlushbar(
+          result.error ?? 'Payment failed. Please try again.',
+          isError: true,
+        );
         // ScaffoldMessenger.of(context).showSnackBar(
         //   SnackBar(
         //     content: Text(result.error ?? 'Payment failed. Please try again.'),
@@ -196,10 +215,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
         );
       } else {
         // Fallback: try to launch in web view
-        await launchUrl(
-          paymentUri,
-          mode: LaunchMode.inAppWebView,
-        );
+        await launchUrl(paymentUri, mode: LaunchMode.inAppWebView);
       }
     } catch (e) {
       Notify.showFlushbar('Could not open payment page');
@@ -212,229 +228,237 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
     }
   }
 
-//   Future<void> _handleSubscriptionPurchase() async {
-//     if (selectedSubscription == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Please select a subscription plan')),
-//       );
-//       return;
-//     }
-//
-//     setState(() {
-//       isProcessingPayment = true;
-//     });
-//
-//     try {
-//       // final result = await _paymentUsecase.processPayment(selectedSubscription!.subscriptionId);
-// final result = Result.success('data');
-//       if (result.isSuccess) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(
-//             content: Text('Payment successful! Subscription activated.'),
-//             backgroundColor: Colors.green,
-//           ),
-//         );
-//         // Navigate back or to success page
-//         Navigator.pop(context);
-//       } else {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(
-//             content: Text(result.error ?? 'Payment failed. Please try again.'),
-//             backgroundColor: Colors.red,
-//           ),
-//         );
-//       }
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text('An error occurred: $e'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//     } finally {
-//       setState(() {
-//         isProcessingPayment = false;
-//       });
-//     }
-//   }
+  //   Future<void> _handleSubscriptionPurchase() async {
+  //     if (selectedSubscription == null) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Please select a subscription plan')),
+  //       );
+  //       return;
+  //     }
+  //
+  //     setState(() {
+  //       isProcessingPayment = true;
+  //     });
+  //
+  //     try {
+  //       // final result = await _paymentUsecase.processPayment(selectedSubscription!.subscriptionId);
+  // final result = Result.success('data');
+  //       if (result.isSuccess) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text('Payment successful! Subscription activated.'),
+  //             backgroundColor: Colors.green,
+  //           ),
+  //         );
+  //         // Navigate back or to success page
+  //         Navigator.pop(context);
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(
+  //             content: Text(result.error ?? 'Payment failed. Please try again.'),
+  //             backgroundColor: Colors.red,
+  //           ),
+  //         );
+  //       }
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('An error occurred: $e'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     } finally {
+  //       setState(() {
+  //         isProcessingPayment = false;
+  //       });
+  //     }
+  //   }
 
   void _showSubscriptionDetails(SubscriptionModel subscription) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              const SizedBox(height: 20),
-              Text(
-                subscription.subscriptionType ?? 'N/A',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                  subscription.subscriptionPrice == null ? 'N/A' : formatCurrency(subscription.subscriptionPrice!),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF9BB168),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Description',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subscription.subscriptionDescription ?? 'N/A',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              if (subscription.purchases!.isNotEmpty) ...[
-                Text(
-                  'Features Included',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...?subscription.purchases?.map((purchase) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Color(0xFF9BB168),
-                        size: 20,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          purchase.toString(),
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              ],
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      selectedSubscription = subscription;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F3422),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Select This Plan',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  const SizedBox(height: 20),
+                  Text(
+                    subscription.subscriptionType ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    subscription.subscriptionPrice == null
+                        ? 'N/A'
+                        : formatCurrency(subscription.subscriptionPrice!),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF9BB168),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Description',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    subscription.subscriptionDescription ?? 'N/A',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 20),
+                  if (subscription.purchases!.isNotEmpty) ...[
+                    Text(
+                      'Features Included',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...?subscription.purchases?.map(
+                      (purchase) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF9BB168),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                purchase.toString(),
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          selectedSubscription = subscription;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F3422),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Select This Plan',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Subscription',
-          style: TextStyle(fontWeight: FontWeight.w500),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text(
+            'Subscription',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+          ),
         ),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back),
-        ),
+        body:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : errorMessage != null
+                ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: Colors.red[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Oops! Something went wrong',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _loadSubscriptions,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4F3422),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                : _buildMainContent(),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 60,
-              color: Colors.red[300],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Oops! Something went wrong',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _loadSubscriptions,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F3422),
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      )
-          : _buildMainContent(),
-    ));
+    );
   }
 
   Widget _buildPurchaseUI() {
@@ -462,8 +486,8 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                // Subscription cards and benefits here...
 
+                // Subscription cards and benefits here...
                 SizedBox(
                   height: 300, // Set height as per your layout needs
                   child: ListView.separated(
@@ -473,14 +497,19 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
                       final subscription = subscriptions[index];
                       return SubscriptionPlanCard(
                         subscription: subscription,
-                        isSelected: selectedSubscription?.subscriptionId == subscription.subscriptionId,
+                        isSelected:
+                            selectedSubscription?.subscriptionId ==
+                            subscription.subscriptionId,
                         onTap: () {
                           setState(() {
                             selectedSubscription = subscription;
                           });
                         },
-                        onDetailsPressed: () => _showSubscriptionDetails(subscription),
-                        isRecommended: subscription.subscriptionType?.toLowerCase() == 'premium',
+                        onDetailsPressed:
+                            () => _showSubscriptionDetails(subscription),
+                        isRecommended:
+                            subscription.subscriptionType?.toLowerCase() ==
+                            'premium',
                       );
                     },
                   ),
@@ -527,9 +556,10 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: ElevatedButton(
-              onPressed: selectedSubscription == null || isProcessingPayment
-                  ? null
-                  : _handleSubscriptionPurchase,
+              onPressed:
+                  selectedSubscription == null || isProcessingPayment
+                      ? null
+                      : _handleSubscriptionPurchase,
               // ... your existing button styling ...
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4F3422),
@@ -539,53 +569,56 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
                 ),
                 minimumSize: const Size(0, 60),
               ),
-              child: isProcessingPayment
-                  ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Processing...',
-                    style: TextStyle(
-                        color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              )
-                  : Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Text(
-                        selectedSubscription != null
-                            ? 'Buy ${selectedSubscription!.subscriptionType} - ${formatCurrency(selectedSubscription!.subscriptionPrice!)}'
-                            : 'Select a subscription plan',
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 16),
-                        textAlign: TextAlign.center,
+              child:
+                  isProcessingPayment
+                      ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Processing...',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      )
+                      : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 16),
+                              child: Text(
+                                selectedSubscription != null
+                                    ? 'Buy ${selectedSubscription!.subscriptionType} - ${formatCurrency(selectedSubscription!.subscriptionPrice!)}'
+                                    : 'Select a subscription plan',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(right: 16),
+                            child: Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(right: 16),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -825,10 +858,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
             const SizedBox(height: 8),
             Text(
               'Please check back later for available plans',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -887,10 +917,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
                 const SizedBox(height: 8),
                 const Text(
                   'Enjoy all premium features',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -898,10 +925,7 @@ class _SubscriptionPageState extends ConsumerState<SubscriptionPage> {
           const SizedBox(height: 24),
           const Text(
             'Your subscription includes:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 16),
           _buildBenefitItem(
@@ -942,10 +966,16 @@ class SubscriptionPlanCard extends StatelessWidget {
     this.isRecommended,
   });
 
-  String formatCurrency(double amount, {String currency = "VND", bool withSpace = false}) {
+  String formatCurrency(
+    double amount, {
+    String currency = "VND",
+    bool withSpace = false,
+  }) {
     final formatter = NumberFormat("#,##0", "en_US");
     final formattedNumber = formatter.format(amount.toInt());
-    return withSpace ? "$formattedNumber $currency" : "$formattedNumber$currency";
+    return withSpace
+        ? "$formattedNumber $currency"
+        : "$formattedNumber$currency";
   }
 
   @override
@@ -1006,7 +1036,10 @@ class SubscriptionPlanCard extends StatelessWidget {
                 GestureDetector(
                   onTap: onDetailsPressed,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       border: Border.all(color: const Color(0xFF9BB168)),
@@ -1061,11 +1094,7 @@ Widget _buildBenefitItem({required IconData icon, required String text}) {
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              color: Colors.black,
-              size: 20,
-            ),
+            Icon(icon, color: Colors.black, size: 20),
             const SizedBox(width: 16),
             Expanded(
               child: Text(

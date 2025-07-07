@@ -51,8 +51,11 @@ class AuthApiService {
     );
   }
 
-  Future<Response> loginWithProfile(String profileToken) async {
-    var tokenObject = {"token": profileToken};
+  Future<Response> loginWithProfile(String profileToken, String? deviceToken) async {
+    var tokenObject = {
+      "token": profileToken,
+      "deviceId": deviceToken, // null if deviceToken is null
+    };
 
     return await _client.post('innerchild/auth/login', data: tokenObject);
   }
@@ -139,5 +142,9 @@ class AuthApiService {
 
   Future<Response> resendEmailConfirm(String email)  async {
     return await _client.get('innerchild/auth/resend-email-confirmation?email=$email');
+  }
+
+  Future<Response> getAllUsersForAdmin()  async {
+    return await _client.get('innerchild/auth/get-all-users');
   }
 }

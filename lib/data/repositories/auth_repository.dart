@@ -5,6 +5,7 @@ import 'package:inner_child_app/core/constants/app_constants.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_notifier.dart';
 import 'package:inner_child_app/core/utils/auth_utils/auth_util_methods.dart';
 import 'package:inner_child_app/core/utils/secure_storage_utils.dart';
+import 'package:inner_child_app/domain/entities/admin_view_user_model.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
 import 'package:inner_child_app/domain/entities/auth/token_model.dart';
@@ -148,9 +149,9 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Result<String>> loginWithProfile(String profileToken) async {
+  Future<Result<String>> loginWithProfile(String profileToken, String? deviceToken) async {
     try {
-      final response = await _apiService.loginWithProfile(profileToken);
+      final response = await _apiService.loginWithProfile(profileToken, deviceToken);
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -360,6 +361,28 @@ class AuthRepository implements IAuthRepository {
       }
     } catch (e) {
       return Result.failure('An error occurred while resend email confirm');
+    }
+  }
+
+  @override
+  Future<Result<List<AdminViewUserModel>>> getAllUsersForAdmin() async {
+    try {
+      final response = await _apiService.getAllUsersForAdmin();
+
+      if (response.statusCode == 200) {
+        final data = response.data!;
+
+        final users =
+        (data as List<dynamic>)
+            .map((e) => AdminViewUserModel.fromJson(e))
+            .toList();
+
+        return Result.success(users);
+      }else{
+        return Result.failure('Get user list for admin fail');
+      }
+    } catch (e) {
+      return Result.failure('An error occurred while get user list for admin');
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:inner_child_app/domain/entities/admin_view_user_model.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
@@ -10,7 +11,7 @@ abstract class IAuthRepository {
   Future<Result<void>> loginWithCredentials(UserLoginModel user);
   Future<Result<void>> loginWithGoogle(String firebaseToken);
   Future<Result<List<AccountProfile>>> getAvailableProfiles();
-  Future<Result<String>> loginWithProfile(String profileToken);
+  Future<Result<String>> loginWithProfile(String profileToken, String? deviceToken);
   Future<Result<String>> editProfile(ProfileEditModel profile);
   Future<Result<String>> forgotPassword(String email);
   Future<Result<String>> resetPassword(String password, String confirmPassword);
@@ -20,4 +21,5 @@ abstract class IAuthRepository {
   Future<Result<String>> changePassword(String currentPassword, String newPassword, String confirmPassword);
   Future<Result<UserDetailModel>> getUserDetail(String userId);
   Future<Result<String>> resendEmailConfirm(String email);
+  Future<Result<List<AdminViewUserModel>>> getAllUsersForAdmin();
 }

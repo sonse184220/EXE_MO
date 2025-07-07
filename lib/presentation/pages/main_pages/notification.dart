@@ -251,14 +251,14 @@ class NotificationState extends ConsumerState<NotificationPage> {
                         ),
                         Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.filter_list),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              onPressed: () {},
-                            ),
+                            // IconButton(
+                            //   icon: const Icon(Icons.filter_list),
+                            //   onPressed: () {},
+                            // ),
+                            // IconButton(
+                            //   icon: const Icon(Icons.more_vert),
+                            //   onPressed: () {},
+                            // ),
                           ],
                         ),
                       ],

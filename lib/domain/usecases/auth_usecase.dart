@@ -1,3 +1,4 @@
+import 'package:inner_child_app/domain/entities/admin_view_user_model.dart';
 import 'package:inner_child_app/domain/entities/auth/account_profile.dart';
 import 'package:inner_child_app/domain/entities/auth/profile_edit_model.dart';
 import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
@@ -28,8 +29,8 @@ class AuthUsecase {
     return repository.getAvailableProfiles();
   }
 
-  Future<Result<String>> loginWithProfile(String profileToken) {
-    return repository.loginWithProfile(profileToken);
+  Future<Result<String>> loginWithProfile(String profileToken, String? deviceToken) {
+    return repository.loginWithProfile(profileToken, deviceToken);
   }
 
   Future<Result<String>> editProfile(ProfileEditModel profile) {
@@ -77,5 +78,9 @@ class AuthUsecase {
 
   Future<Result<String>> resendEmailConfirm(String email) {
     return repository.resendEmailConfirm(email);
+  }
+
+  Future<Result<List<AdminViewUserModel>>> getAllUsersForAdmin() {
+    return repository.getAllUsersForAdmin();
   }
 }
