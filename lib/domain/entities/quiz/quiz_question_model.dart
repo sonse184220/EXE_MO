@@ -36,4 +36,20 @@ class QuizQuestionModel {
       'options': options?.map((e) => e.toJson()).toList(),
     };
   }
+
+  QuizQuestionModel copyWith({
+    String? quizQuestionId,
+    String? quizQuestionContent,
+    int? quizQuestionOrder,
+    String? quizId,
+    List<QuizAnswerOptionModel>? options,
+  }) {
+    return QuizQuestionModel(
+      quizQuestionId: quizQuestionId ?? this.quizQuestionId,
+      quizQuestionContent: quizQuestionContent ?? this.quizQuestionContent,
+      quizQuestionOrder: quizQuestionOrder ?? this.quizQuestionOrder,
+      quizId: quizId ?? this.quizId,
+      options: options ?? this.options,
+    );
+  }
 }

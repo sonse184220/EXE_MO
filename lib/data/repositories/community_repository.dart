@@ -2,6 +2,7 @@ import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
+import 'package:inner_child_app/domain/entities/community/create_comment_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 
@@ -27,7 +28,7 @@ class CommunityRepository implements ICommunityRepository {
 
       return Result.success(null);
     } catch (e) {
-      return Result.failure('Fetch community groups error: $e');
+      return Result.failure('Fetch community groups error');
     }
   }
 
@@ -44,7 +45,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.success(null);
     } catch (e) {
-      return Result.failure('Fetch community group by Id error: $e');
+      return Result.failure('Fetch community group by Id error');
     }
   }
 
@@ -61,7 +62,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to create community post. Please try again');
     } catch (e) {
-      return Result.failure('Create community post error: $e');
+      return Result.failure('Create community post error');
     }
   }
 
@@ -78,7 +79,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to Join community. Please try again');
     } catch (e) {
-      return Result.failure('Join community error: $e');
+      return Result.failure('Join community error');
     }
   }
 
@@ -95,7 +96,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to leave community. Please try again');
     } catch (e) {
-      return Result.failure('Leave community error: $e');
+      return Result.failure('Leave community error');
     }
   }
 
@@ -112,7 +113,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to update post. Please try again');
     } catch (e) {
-      return Result.failure('Update post error: $e');
+      return Result.failure('Update post error');
     }
   }
 
@@ -129,7 +130,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to get post detail. Please try again');
     } catch (e) {
-      return Result.failure('Get post detail error: $e');
+      return Result.failure('Get post detail error');
     }
   }
 
@@ -146,7 +147,7 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to create community group. Please try again');
     } catch (e) {
-      return Result.failure('Create community group error: $e');
+      return Result.failure('Create community group error');
     }
   }
 
@@ -163,7 +164,109 @@ class CommunityRepository implements ICommunityRepository {
       }
       return Result.failure('Fail to update community group. Please try again');
     } catch (e) {
-      return Result.failure('Update community group error: $e');
+      return Result.failure('Update community group error');
+    }
+  }
+
+  @override
+  Future<Result<String>> likePost(String postId) async {
+    try {
+      final response = await _apiService.likePost(postId);
+
+      if (response.statusCode == 200) {
+        // final data = response.data;
+
+        // final community = CommunityGroupModel.fromJson(data);
+        return Result.success('Like post succesfully');
+      }
+      return Result.failure('Fail to like post. Please try again');
+    } catch (e) {
+      return Result.failure('Like post error');
+    }
+  }
+
+  @override
+  Future<Result<String>> unlikePost(String postId) async {
+    try {
+      final response = await _apiService.unlikePost(postId);
+
+      if (response.statusCode == 200) {
+        return Result.success('Post unliked successfully');
+      }
+      return Result.failure('Fail to unlike post. Please try again');
+    } catch (e) {
+      return Result.failure('Unlike post error');
+    }
+  }
+
+  @override
+  Future<Result<String>> likeComment(String commentId) async {
+    try {
+      final response = await _apiService.likeComment(commentId);
+
+      if (response.statusCode == 200) {
+        return Result.success('Comment liked successfully');
+      }
+      return Result.failure('Fail to like comment. Please try again');
+    } catch (e) {
+      return Result.failure('Like comment error');
+    }
+  }
+
+  @override
+  Future<Result<String>> unlikeComment(String commentId) async {
+    try {
+      final response = await _apiService.unlikeComment(commentId);
+
+      if (response.statusCode == 200) {
+        return Result.success('Comment unliked successfully');
+      }
+      return Result.failure('Fail to unlike comment. Please try again');
+    } catch (e) {
+      return Result.failure('Unlike comment error');
+    }
+  }
+
+  @override
+  Future<Result<String>> createComment(CreateCommentModel comment) async {
+    try {
+      final response = await _apiService.createComment(comment);
+
+      if (response.statusCode == 200) {
+        return Result.success('Comment created successfully');
+      }
+      return Result.failure('Fail to create comment. Please try again');
+    } catch (e) {
+      return Result.failure('Create comment error');
+    }
+  }
+
+  // @override
+  // Future<Result<String>> updateComment(
+  //     String commentId, CreateCommentModel comment) async {
+  //   try {
+  //     final response = await _apiService.updateComment(commentId, comment);
+  //
+  //     if (response.statusCode == 204) {
+  //       return Result.success('Comment updated successfully');
+  //     }
+  //     return Result.failure('Fail to update comment. Please try again');
+  //   } catch (e) {
+  //     return Result.failure('Update comment error: $e');
+  //   }
+  // }
+
+  @override
+  Future<Result<String>> deleteComment(String commentId) async {
+    try {
+      final response = await _apiService.deleteComment(commentId);
+
+      if (response.statusCode == 200) {
+        return Result.success('Comment deleted successfully');
+      }
+      return Result.failure('Fail to delete comment. Please try again');
+    } catch (e) {
+      return Result.failure('Delete comment error');
     }
   }
 }

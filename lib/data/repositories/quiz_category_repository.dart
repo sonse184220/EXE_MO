@@ -17,14 +17,58 @@ class QuizCategoryRepository implements IQuizCategoryRepository {
         final data = response.data;
 
         final quizCategories =
-        (data as List<dynamic>)
-            .map((e) => QuizCategoryModel.fromJson(e))
-            .toList();
+            (data as List<dynamic>)
+                .map((e) => QuizCategoryModel.fromJson(e))
+                .toList();
         return Result.success(quizCategories);
       }
-      return Result.failure('Fail to get all quiz categories. Please try again');
+      return Result.failure(
+        'Fail to get all quiz categories. Please try again',
+      );
     } catch (e) {
       return Result.failure('Get all quiz categories error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> createQuizCategory(
+    String quizCategoryName,
+    String quizCategoryDescription,
+  ) async {
+    try {
+      final response = await _quizCategoryApiService.createQuizCategory(
+        quizCategoryName,
+        quizCategoryDescription,
+      );
+
+      if (response.statusCode == 201) {
+        return Result.success(null);
+      }
+      return Result.failure('Failed to create quiz category.');
+    } catch (e) {
+      return Result.failure('Create quiz category error: $e');
+    }
+  }
+
+  @override
+  Future<Result<String>> updateQuizCategory(
+    String quizCategoryId,
+    String quizCategoryName,
+    String quizCategoryDescription,
+  ) async {
+    try {
+      final response = await _quizCategoryApiService.updateQuizCategory(
+        quizCategoryId,
+        quizCategoryName,
+        quizCategoryDescription,
+      );
+
+      if (response.statusCode == 204) {
+        return Result.success(null);
+      }
+      return Result.failure('Failed to update quiz category.');
+    } catch (e) {
+      return Result.failure('Update quiz category error: $e');
     }
   }
 }

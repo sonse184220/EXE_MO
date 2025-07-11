@@ -1,6 +1,7 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
+import 'package:inner_child_app/domain/entities/community/create_comment_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 
 abstract class ICommunityRepository{
@@ -13,4 +14,11 @@ abstract class ICommunityRepository{
   Future<Result<CommunityPostModel>> getCommunityPostDetail(String postId);
   Future<Result<String>> createCommunityGroup(String name, String description, String status);
   Future<Result<String>> updateCommunityGroup(String groupId, String name, String description, String status);
+  Future<Result<String>> likePost(String postId);
+  Future<Result<String>> unlikePost(String postId);
+  Future<Result<String>> likeComment(String commentId);
+  Future<Result<String>> unlikeComment(String commentId);
+  Future<Result<String>> createComment(CreateCommentModel comment);
+  // Future<Result<String>> updateComment(String commentId, CreateCommentModel comment);
+  Future<Result<String>> deleteComment(String commentId);
 }

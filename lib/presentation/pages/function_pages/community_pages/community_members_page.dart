@@ -29,13 +29,20 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
   bool isLoading = true;
   String? error;
 
-  // Color scheme
-  static const Color primaryOrange = Color(0xFFFF6B35);
-  static const Color secondaryBrown = Color(0xFF8B4513);
-  static const Color darkBrown = Color(0xFF654321);
-  static const Color lightOrange = Color(0xFFFFE5D9);
-  static const Color textBlack = Color(0xFF1A1A1A);
-  static const Color lightGray = Color(0xFFF5F5F5);
+  // Beautiful color scheme based on ICE CREAM harmony
+  static const Color primaryIceCream = Color(0xFFF49AA2);
+  static const Color primaryIceCreamDark = Color(0xFFE37083);
+  static const Color primaryIceCreamLight = Color(0xFFFCE4E6);
+  static const Color accentPapaya = Color(0xFFFFB876);
+  static const Color accentMeadow = Color(0xFFA8BF8A);
+  static const Color accentSpringSky = Color(0xFF89B7C2);
+  static const Color accentSunshine = Color(0xFFFFCB7C);
+  static const Color textDark = Color(0xFF2C2C2C);
+  static const Color textMedium = Color(0xFF5A5A5A);
+  static const Color textLight = Color(0xFF8A8A8A);
+  static const Color backgroundLight = Color(0xFFFAFAFA);
+  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color shadowColor = Color(0x1A000000);
 
   @override
   void initState() {
@@ -90,35 +97,130 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double toolbarHeight = 80;
+    final double iconBoxSize = toolbarHeight * 0.5; // e.g. 40 if toolbar is 80
+
     return SafeArea(
       child: Scaffold(
-        backgroundColor: lightGray,
+        backgroundColor: backgroundLight,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          toolbarHeight: toolbarHeight,
           elevation: 0,
-          leading: IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: textBlack),
-          ),
-          title: Text(
-            '${widget.communityName} Members',
-            style: const TextStyle(
-              color: textBlack,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  primaryIceCream,
+                  primaryIceCreamDark,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryIceCream.withOpacity(0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 12,
+                ),
+              ],
             ),
           ),
+          leadingWidth: iconBoxSize + 24, // padding left + box size
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Material(
+                  color: Colors.white.withOpacity(0.2),
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: SizedBox(
+                      width: iconBoxSize,
+                      height: iconBoxSize,
+                      child: Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                        size: iconBoxSize * 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.communityName,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: toolbarHeight * 0.25,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              Text(
+                'Members',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: toolbarHeight * 0.175,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
           centerTitle: true,
+          actions: [
+            SizedBox(width: iconBoxSize + 24),
+          ],
         ),
         body: _buildBody(),
       ),
     );
   }
 
+
+
+
   Widget _buildBody() {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: primaryOrange),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cardBackground,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: CircularProgressIndicator(
+                color: primaryIceCream,
+                strokeWidth: 3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Loading members...',
+              style: TextStyle(
+                color: textMedium,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -135,64 +237,138 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
 
   Widget _buildErrorState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load members',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: cardBackground,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            error ?? 'Unknown error occurred',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _fetchMembers,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryOrange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primaryIceCreamLight,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: primaryIceCreamDark,
               ),
             ),
-            child: const Text('Retry'),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 20,
+                color: textDark,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              error ?? 'Unknown error occurred',
+              style: TextStyle(
+                fontSize: 14,
+                color: textMedium,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _fetchMembers,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryIceCream,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+                shadowColor: primaryIceCream.withOpacity(0.3),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.refresh_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Try Again',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'No members found',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: cardBackground,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'This community doesn\'t have any members yet',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: accentMeadow.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.people_outline_rounded,
+                size: 64,
+                color: accentMeadow,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No members yet',
+              style: TextStyle(
+                fontSize: 20,
+                color: textDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This community is waiting for its first members to join',
+              style: TextStyle(
+                fontSize: 14,
+                color: textMedium,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -202,19 +378,57 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
       children: [
         // Members count header
         Container(
-          color: Colors.white,
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accentSpringSky.withOpacity(0.1),
+                accentMeadow.withOpacity(0.1),
+              ],
+            ),
+            // borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: accentSpringSky.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
           child: Row(
             children: [
-              Icon(Icons.people, color: primaryOrange, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                '${members.length} Members',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textBlack,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: accentSpringSky,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(
+                  Icons.people_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${members.length} Members',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: textDark,
+                    ),
+                  ),
+                  Text(
+                    'Active community members',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: textMedium,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -223,7 +437,7 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
         // Members list
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: members.length,
             itemBuilder: (context, index) {
               final member = members[index];
@@ -237,65 +451,117 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
 
   Widget _buildMemberCard(CommunityMemberModel member) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: shadowColor,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          radius: 24,
-          backgroundColor: member.profilePicture != null
-              ? Colors.transparent
-              : primaryOrange.withOpacity(0.2),
-          backgroundImage: member.profilePicture != null
-              ? NetworkImage(member.profilePicture!)
-              : null,
-          child: member.profilePicture == null
-              ? Text(
-            (member.userName ?? 'U')[0].toUpperCase(),
-            style: const TextStyle(
-              color: primaryOrange,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (member.userId != null) {
+              _showMemberDetails(member.userId!);
+            }
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                // Profile picture with gradient border
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryIceCream, primaryIceCreamDark],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: member.profilePicture != null
+                        ? Colors.transparent
+                        : primaryIceCreamLight,
+                    backgroundImage: member.profilePicture != null
+                        ? NetworkImage(member.profilePicture!)
+                        : null,
+                    child: member.profilePicture == null
+                        ? Text(
+                      (member.userName ?? 'U')[0].toUpperCase(),
+                      style: TextStyle(
+                        color: primaryIceCreamDark,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Member info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        member.userName ?? 'Unknown User',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getMemberStatusColor(member.communityMemberStatus).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _getMemberStatusText(member.communityMemberStatus),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _getMemberStatusColor(member.communityMemberStatus),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Arrow with subtle background
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: textLight.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: textLight,
+                  ),
+                ),
+              ],
             ),
-          )
-              : null,
-        ),
-        title: Text(
-          member.userName ?? 'Unknown User',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: textBlack,
           ),
         ),
-        subtitle: Text(
-          _getMemberStatusText(member.communityMemberStatus),
-          style: TextStyle(
-            fontSize: 14,
-            color: _getMemberStatusColor(member.communityMemberStatus),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.grey,
-        ),
-        onTap: () {
-          if (member.userId != null) {
-            _showMemberDetails(member.userId!);
-          }
-        },
       ),
     );
   }
@@ -316,13 +582,13 @@ class _CommunityMembersPageState extends ConsumerState<CommunityMembersPage> {
   Color _getMemberStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'admin':
-        return Colors.red;
+        return primaryIceCreamDark;
       case 'moderator':
-        return primaryOrange;
+        return accentPapaya;
       case 'active':
-        return Colors.green;
+        return accentMeadow;
       default:
-        return Colors.grey;
+        return textMedium;
     }
   }
 }
@@ -346,8 +612,19 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
   bool isLoading = true;
   String? error;
 
-  static const Color primaryOrange = Color(0xFFFF6B35);
-  static const Color textBlack = Color(0xFF1A1A1A);
+  // Beautiful color scheme
+  static const Color primaryIceCream = Color(0xFFF49AA2);
+  static const Color primaryIceCreamDark = Color(0xFFE37083);
+  static const Color primaryIceCreamLight = Color(0xFFFCE4E6);
+  static const Color accentPapaya = Color(0xFFFFB876);
+  static const Color accentMeadow = Color(0xFFA8BF8A);
+  static const Color accentSpringSky = Color(0xFF89B7C2);
+  static const Color textDark = Color(0xFF2C2C2C);
+  static const Color textMedium = Color(0xFF5A5A5A);
+  static const Color textLight = Color(0xFF8A8A8A);
+  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color shadowColor = Color(0x1A000000);
+  static const Color primaryIceCreamLightest = Color(0xFFFCEEEF);
 
   @override
   void initState() {
@@ -386,50 +663,86 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+      height: MediaQuery
+          .of(context)
+          .size
+          .height * 0.8,
+      decoration: BoxDecoration(
+        color: primaryIceCreamLightest,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 20,
+            offset: const Offset(0, -8),
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Handle bar
           Container(
-            margin: const EdgeInsets.only(top: 12),
+            margin: const EdgeInsets.only(top: 16),
             height: 4,
-            width: 40,
+            width: 50,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: textLight.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
 
-          // Header
-          Padding(
+          // Header with gradient
+          Container(
+            // margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
+            // decoration: BoxDecoration(
+            //   gradient: LinearGradient(
+            //     begin: Alignment.topLeft,
+            //     end: Alignment.bottomRight,
+            //     colors: [
+            //       primaryIceCream.withOpacity(0.1),
+            //       primaryIceCreamDark.withOpacity(0.1),
+            //     ],
+            //   ),
+            //   borderRadius: BorderRadius.circular(20),
+            //   border: Border.all(
+            //     color: primaryIceCream.withOpacity(0.3),
+            //     width: 1,
+            //   ),
+            // ),
             child: Row(
               children: [
-                const Text(
+                Icon(
+                  Icons.person_rounded,
+                  color: primaryIceCream,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
                   'Member Details',
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textBlack,
+                    fontWeight: FontWeight.w700,
+                    color: textDark,
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.grey),
+                Container(
+                  decoration: BoxDecoration(
+                    color: textLight.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close_rounded, color: textMedium),
+                  ),
                 ),
               ],
             ),
           ),
-
-          const Divider(height: 1),
 
           // Content
           Expanded(
@@ -442,8 +755,32 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
 
   Widget _buildContent() {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: primaryOrange),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: primaryIceCreamLight,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: CircularProgressIndicator(
+                color: primaryIceCream,
+                strokeWidth: 3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Loading user details...',
+              style: TextStyle(
+                color: textMedium,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -460,59 +797,118 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
 
   Widget _buildErrorContent() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load user details',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: cardBackground,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: primaryIceCreamDark.withOpacity(0.3),
+            width: 1,
           ),
-          const SizedBox(height: 8),
-          Text(
-            error ?? 'Unknown error occurred',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _fetchUserDetail,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryOrange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primaryIceCreamLight,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: primaryIceCreamDark,
               ),
             ),
-            child: const Text('Retry'),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'Failed to load details',
+              style: TextStyle(
+                fontSize: 18,
+                color: textDark,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              error ?? 'Unknown error occurred',
+              style: TextStyle(
+                fontSize: 14,
+                color: textMedium,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _fetchUserDetail,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryIceCream,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.refresh_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Retry'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyContent() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.person_outline, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'No user details found',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: cardBackground,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: accentMeadow.withOpacity(0.3),
+            width: 1,
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: accentMeadow.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.person_outline_rounded,
+                size: 64,
+                color: accentMeadow,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No user details found',
+              style: TextStyle(
+                fontSize: 18,
+                color: textDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -522,73 +918,131 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Profile Picture
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: userDetail!.profilePicture != null
-                ? Colors.transparent
-                : primaryOrange.withOpacity(0.2),
-            backgroundImage: userDetail!.profilePicture != null
-                ? NetworkImage(userDetail!.profilePicture!)
-                : null,
-            child: userDetail!.profilePicture == null
-                ? Text(
-              (userDetail!.fullName ?? 'U')[0].toUpperCase(),
-              style: const TextStyle(
-                color: primaryOrange,
-                fontWeight: FontWeight.bold,
-                fontSize: 32,
+          // Profile Picture with enhanced design
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryIceCream, primaryIceCreamDark],
               ),
-            )
-                : null,
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: CircleAvatar(
+              radius: 56,
+              backgroundColor: userDetail!.profilePicture != null
+                  ? Colors.transparent
+                  : primaryIceCreamLight,
+              backgroundImage: userDetail!.profilePicture != null
+                  ? NetworkImage(userDetail!.profilePicture!)
+                  : null,
+              child: userDetail!.profilePicture == null
+                  ? Text(
+                (userDetail!.fullName ?? 'U')[0].toUpperCase(),
+                style: TextStyle(
+                  color: primaryIceCreamDark,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 36,
+                ),
+              )
+                  : null,
+            ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // User Details
-          _buildDetailCard('Full Name', userDetail!.fullName ?? 'N/A'),
-          _buildDetailCard('Email', userDetail!.email ?? 'N/A'),
-          _buildDetailCard('Phone Number', userDetail!.phoneNumber ?? 'N/A'),
-          _buildDetailCard('Gender', userDetail!.gender ?? 'N/A'),
-          _buildDetailCard('Date of Birth', _formatDate(userDetail!.dateOfBirth)),
-          _buildDetailCard('User ID', userDetail!.userId ?? 'N/A'),
+          // User name with enhanced styling
+          Text(
+            userDetail!.fullName ?? 'Unknown User',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: textDark,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 24),
+
+          // User Details with beautiful cards
+          _buildDetailCard(
+              'Email', userDetail!.email ?? 'N/A', Icons.email_rounded,
+              accentSpringSky),
+          _buildDetailCard(
+              'Phone', userDetail!.phoneNumber ?? 'N/A', Icons.phone_rounded,
+              accentPapaya),
+          _buildDetailCard(
+              'Gender', userDetail!.gender ?? 'N/A', Icons.person_rounded,
+              accentMeadow),
+          _buildDetailCard('Birthday', _formatDate(userDetail!.dateOfBirth),
+              Icons.cake_rounded, primaryIceCream),
+          // _buildDetailCard(
+          //     'User ID', userDetail!.userId ?? 'N/A', Icons.fingerprint_rounded,
+          //     primaryIceCreamDark),
         ],
       ),
     );
   }
 
-  Widget _buildDetailCard(String label, String value) {
+  Widget _buildDetailCard(String label,
+      String value,
+      IconData icon,
+      Color accentColor,) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accentColor.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: accentColor,
+              size: 24,
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textBlack,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: textLight,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: textDark,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -605,4 +1059,5 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
       return 'N/A';
     }
   }
+
 }

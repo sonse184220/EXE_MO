@@ -193,7 +193,7 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
                               child: Icon(
                                 Icons.lock_reset,
                                 size: 60,
-                                color: Colors.deepOrangeAccent,
+                                color:   Color(0xFF89B7C2),
                               ),
                             ),
                             SizedBox(height: 24),
@@ -314,7 +314,7 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
                         Container(
                           padding: EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color: const Color(0xFF89B7C2).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -325,44 +325,63 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
+                                  color: const Color(0xFF89B7C2),
                                 ),
                               ),
                               SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    size: 16,
-                                    color: Colors.green,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text('At least 8 characters'),
-                                ],
+                              _buildRequirementItem(
+                                "Password must match Confirm Password",
+                                _passwordController.text == _confirmPasswordController.text,
                               ),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    size: 16,
-                                    color: Colors.green,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text('Include uppercase & lowercase letters'),
-                                ],
+                              _buildRequirementItem(
+                                "At least 5 characters",
+                                _passwordController.text.length >= 5 && _confirmPasswordController.text.length >=5,
                               ),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    size: 16,
-                                    color: Colors.green,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text('Include at least one number'),
-                                ],
+                              _buildRequirementItem(
+                                "Maximum 100 characters",
+                                _passwordController.text.length <= 100 && _confirmPasswordController.text.length <= 100,
                               ),
+                              // _buildRequirementItem(
+                              //     'At least 8 characters', _passwordController.leng),
+                              // _buildRequirementItem(
+                              //     'Include uppercase & lowercase letters', isUpperLowerValid),
+                              // _buildRequirementItem(
+                              //     'Include at least one number', isNumberValid),
+                              // Row(
+                              //   children: [
+                              //     Icon(
+                              //       Icons.check_circle,
+                              //       size: 16,
+                              //       color: Color(0xFF89B7C2),
+                              //     ),
+                              //     SizedBox(width: 8),
+                              //     Text('At least 8 characters'),
+                              //   ],
+                              // ),
+                              // SizedBox(height: 4),
+                              // Row(
+                              //   children: [
+                              //     Icon(
+                              //       Icons.check_circle,
+                              //       size: 16,
+                              //       color: Color(0xFF89B7C2),
+                              //     ),
+                              //     SizedBox(width: 8),
+                              //     Text('Include uppercase & lowercase letters'),
+                              //   ],
+                              // ),
+                              // SizedBox(height: 4),
+                              // Row(
+                              //   children: [
+                              //     Icon(
+                              //       Icons.check_circle,
+                              //       size: 16,
+                              //       color: Color(0xFF89B7C2),
+                              //     ),
+                              //     SizedBox(width: 8),
+                              //     Text('Include at least one number'),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),
@@ -380,42 +399,13 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
                       height: 55,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleResetPassword,
-                        // onPressed:
-                        //     _isLoading
-                        //         ? null
-                        //         : () async {
-                        //           if (_formKey.currentState!.validate()) {
-                        //             setState(() => _isLoading = true);
-                        //             await Future.delayed(Duration(seconds: 2));
-                        //             setState(() => _isLoading = false);
-                        //
-                        //             showDialog(
-                        //               context: context,
-                        //               builder:
-                        //                   (context) => AlertDialog(
-                        //                     title: Text('Email Sent'),
-                        //                     // content: Text(
-                        //                     //   'We\'ve sent a password reset link to ${_emailController.text}. Please check your inbox.',
-                        //                     // ),
-                        //                     actions: [
-                        //                       TextButton(
-                        //                         onPressed:
-                        //                             () =>
-                        //                                 Navigator.pop(context),
-                        //                         child: Text('OK'),
-                        //                       ),
-                        //                     ],
-                        //                   ),
-                        //             );
-                        //           }
-                        //         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.brown,
+                          backgroundColor:   Color(0xFF89B7C2),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          disabledBackgroundColor: Colors.blue.withOpacity(0.5),
+                          disabledBackgroundColor: Colors.grey.withOpacity(0.5),
                         ),
                         child:
                             _isLoading
@@ -455,4 +445,43 @@ class _ForgotPassword2State extends ConsumerState<ForgotPassword2>
       ),
     );
   }
+
+  Widget _buildRequirementItem(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: isMet
+                  ? const Color(0xFF89B7C2) // your brand color
+                  : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              isMet ? Icons.check : Icons.circle_outlined,
+              color: Colors.white,
+              size: 14,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isMet
+                    ? const Color(0xFF89B7C2)
+                    : Colors.grey.shade600,
+                fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 14,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

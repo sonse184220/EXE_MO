@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:inner_child_app/core/constants/app_constants.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
@@ -44,6 +45,15 @@ class SignalRService {
     print("📌 Registered connection on server");
   }
 
+  Future<void> stopConnection() async {
+    if (_connection != null) {
+      await _connection!.stop();
+      if (kDebugMode) {
+        print('🛑 SignalR connection stopped.');
+      }
+    }
+  }
+
   // Generic message handler
   void onMessage(Function(List<Object?>?) handler) {
     _connection.on('ReceiveMessage', handler);
@@ -83,10 +93,24 @@ class SignalRService {
     await _connection.invoke('LeaveGroup', args: [groupName]);
   }
 
-  Future<void> stopConnection() async {
-    await _connection.stop();
-    print("🛑 SignalR stopped");
+  Future<void> registerPostConnection(String postId) async {
+    await _connection.invoke("RegisterPostConnection", args: [postId]);
+    debugPrint("✅ Registered post connection: $postId");
   }
+
+  Future<void> unregisterPostConnection() async {
+    await _connection.invoke("UnregisterPostConnection");
+    debugPrint("✅ Unregistered post connection");
+  }
+
+  void onPostUpdate(Function(List<Object?>?) handler) {
+    _connection.on('post_update', handler);
+  }
+
+  // Future<void> stopConnection() async {
+  //   await _connection.stop();
+  //   print("🛑 SignalR stopped");
+  // }
 }
 
 // import 'package:inner_child_app/core/constants/app_constants.dart';

@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/chat_ai/chat_message_model.dart';
 import 'package:inner_child_app/domain/entities/chat_ai/local_chat_message_model.dart';
 import 'package:inner_child_app/domain/usecases/chat_ai_usecase.dart';
@@ -16,8 +17,13 @@ class ChatAiPage extends ConsumerStatefulWidget {
   ConsumerState<ChatAiPage> createState() => _ChatAiPageState();
 }
 
-class _ChatAiPageState extends ConsumerState<ChatAiPage> {
+class _ChatAiPageState extends ConsumerState<ChatAiPage>
+    with TickerProviderStateMixin {
   late final ChatAIUseCase _chatAIUseCase;
+  late AnimationController _fadeAnimationController;
+  late AnimationController _slideAnimationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   List<LocalChatMessageModel> _localMessages = [];
   final TextEditingController _textController = TextEditingController();
@@ -33,6 +39,55 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
   bool _showScrollToBottomButton = false;
   bool _showLoadingSpinner = false;
   bool _isLoadingMore = false;
+
+  bool _showDeleteDropdown = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _chatAIUseCase = ref.read(chatAiUseCaseProvider);
+
+    // Initialize animations
+    _fadeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _slideAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _fadeAnimationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _slideAnimationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _loadChatMessages();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _fadeAnimationController.dispose();
+    _slideAnimationController.dispose();
+    _scrollController.dispose();
+    _textController.dispose();
+    super.dispose();
+  }
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
@@ -69,106 +124,10 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
         _scrollController.jumpTo(currentMax);
       }
 
-      // Wait a bit for list to render new items and update scroll extent
       await Future.delayed(const Duration(milliseconds: 100));
-
       currentMax = _scrollController.position.maxScrollExtent;
     }
   }
-
-  // void _scrollToBottom({bool animate = true}) {
-  //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-  //     await Future.delayed(const Duration(milliseconds: 150));
-  //
-  //     if (!_scrollController.hasClients) return;
-  //
-  //     final maxScroll = _scrollController.position.maxScrollExtent;
-  //     final currentPos = _scrollController.position.pixels;
-  //
-  //     if ((maxScroll - currentPos).abs() < 10) {
-  //       // Already near bottom, no need to scroll
-  //       return;
-  //     }
-  //
-  //     if (animate) {
-  //       _scrollController.animateTo(
-  //         maxScroll,
-  //         duration: const Duration(milliseconds: 300),
-  //         curve: Curves.easeOut,
-  //       );
-  //     } else {
-  //       _scrollController.jumpTo(maxScroll);
-  //     }
-  //
-  //     print('Current: ${_scrollController.position.pixels}');
-  //     print('Max: ${_scrollController.position.maxScrollExtent}');
-  //   });
-  // }
-
-  // Future<void> _scrollToBottomAfterBuild({bool animate = true}) async {
-  //   await SchedulerBinding.instance.endOfFrame;
-  //   if (!_scrollController.hasClients) return;
-  //   final position = _scrollController.position.maxScrollExtent;
-  //
-  //   if (animate) {
-  //     _scrollController.animateTo(
-  //       position,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeOut,
-  //     );
-  //   } else {
-  //     _scrollController.jumpTo(position);
-  //   }
-  // }
-
-  // void _scrollToBottom({bool animate = true}) {
-  //   if (!_scrollController.hasClients) return;
-  //
-  //   final target = _scrollController.position.maxScrollExtent;
-  //
-  //   if (animate) {
-  //     _scrollController.animateTo(
-  //       target,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeOut,
-  //     );
-  //   } else {
-  //     _scrollController.jumpTo(target);
-  //   }
-  // }
-
-  // void _onScroll() {
-  //   final shouldShow = !_scrollController.position.atEdge &&
-  //       _scrollController.position.pixels <
-  //           _scrollController.position.maxScrollExtent - 100;
-  //
-  //   if (_showScrollToBottomButton != shouldShow) {
-  //     setState(() {
-  //       _showScrollToBottomButton = shouldShow;
-  //     });
-  //   }
-  //   // final isAtBottom =
-  //   //     _scrollController.position.pixels >=
-  //   //     _scrollController.position.maxScrollExtent - 100;
-  //   //
-  //   // if (_showScrollToBottomButton == isAtBottom) {
-  //   //   setState(() {
-  //   //     _showScrollToBottomButton = !isAtBottom;
-  //   //   });
-  //   // }
-  // }
-  //
-  // void _scrollToBottom({bool animate = true}) {
-  //   if (animate) {
-  //     _scrollController.animateTo(
-  //       _scrollController.position.maxScrollExtent,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeOut,
-  //     );
-  //   } else {
-  //     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-  //   }
-  // }
 
   void _retryMessage(LocalChatMessageModel failedMessage) {
     setState(() {
@@ -197,16 +156,6 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
     });
 
     _scrollToBottom();
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   Future.delayed(Duration.zero, () {
-    //     _scrollToBottom();
-    //   });
-    // });
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _scrollToBottom();
-    // });
 
     final result = await _chatAIUseCase.sendChatMessage(
       text,
@@ -237,23 +186,8 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
       setState(() {
         _localMessages.add(aiMessage);
       });
-      // await _loadChatMessages(); // Refresh from server
 
       _scrollToBottom();
-
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   Future.delayed(Duration.zero, () {
-      //     if (!_showScrollToBottomButton) {
-      //       _scrollToBottom();
-      //     }
-      //   });
-      // });
-
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   if (!_showScrollToBottomButton) {
-      //     _scrollToBottom();
-      //   }
-      // });
     } else {
       setState(() {
         message.status = MessageStatus.failed;
@@ -266,6 +200,7 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
       _isLoading = true;
       _isError = false;
     });
+
     final result = await _chatAIUseCase.getChatSessionById(
       widget.chatSessionId,
     );
@@ -278,15 +213,9 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
         _isError = false;
       });
 
-      // _scrollToBottom();
-
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   Future.delayed(Duration.zero, () {
-      //     if (_scrollController.hasClients) {
-      //       _scrollToBottom(animate: false);
-      //     }
-      //   });
-      // });
+      // Start animations
+      _fadeAnimationController.forward();
+      _slideAnimationController.forward();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
@@ -294,7 +223,6 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
         }
       });
     } else {
-      // Handle failure UI here
       setState(() {
         _isLoading = false;
         _isError = true;
@@ -303,359 +231,455 @@ class _ChatAiPageState extends ConsumerState<ChatAiPage> {
     }
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    _chatAIUseCase = ref.read(chatAiUseCaseProvider);
-    _loadChatMessages();
-
-    _scrollController.addListener(_onScroll);
+  Future<Result<String>> _deleteSession(String sessionId) async {
+    try {
+      final result = await _chatAIUseCase.deleteChatSession(sessionId);
+      if (result.isSuccess) {
+        return Result.success('Session deleted successfully!');
+      } else {
+        final error = result.error ?? 'Failed to delete session';
+        return Result.failure(error);
+      }
+    } catch (e) {
+      return Result.failure('Error while deleting chat session');
+    }
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _textController.dispose();
-    // TODO: implement dispose
-    super.dispose();
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              // ... existing dialog code ...
+              content: Text(
+                'Are you sure you want to delete "$_chatTitle"? This action cannot be undone.',
+                style: const TextStyle(color: Color(0xFF6B7280)),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Color(0xFF6B7280)),
+                  ),
+                ),
+                ElevatedButton(
+                  // ... existing button styling ...
+                  onPressed:
+                      isLoading
+                          ? null
+                          : () async {
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            final result = await _deleteSession(
+                              widget.chatSessionId,
+                            );
+
+                            if (result.isSuccess) {
+                              Notify.showFlushbar(result.data!);
+                              Navigator.pop(context); // Close dialog
+                              Navigator.pop(context, true); // Go back to previous page
+                            } else {
+                              Notify.showFlushbar(
+                                result.error ?? "Failed to delete session.",
+                                isError: true,
+                              );
+                              Navigator.pop(
+                                context,
+                              ); // Close dialog even on error
+                            }
+                          },
+                  child:
+                      isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
+
+  // Future<void> _deleteSession() async {
+  //   try {
+  //     final result = await _chatAIUseCase.deleteChatSession(widget.chatSessionId);
+  //     if (result.isSuccess) {
+  //       Notify.showFlushbar('Session deleted!');
+  //       if (mounted) {
+  //         Navigator.pop(context); // Go back to previous page
+  //       }
+  //     } else {
+  //       Notify.showFlushbar('Failed to delete session', isError: true);
+  //     }
+  //   } catch (e) {
+  //     Notify.showFlushbar('Error deleting session', isError: true);
+  //   }
+  // }
+  //
+  // void _showDeleteConfirmation() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(16),
+  //         ),
+  //         title: const Text(
+  //           'Delete Session',
+  //           style: TextStyle(
+  //             color: Color(0xFF1F2937),
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //         content: Text(
+  //           'Are you sure you want to delete "$_chatTitle"? This action cannot be undone.',
+  //           style: const TextStyle(color: Color(0xFF6B7280)),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text(
+  //               'Cancel',
+  //               style: TextStyle(color: Color(0xFF6B7280)),
+  //             ),
+  //           ),
+  //           ElevatedButton(
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: Colors.red,
+  //               foregroundColor: Colors.white,
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(8),
+  //               ),
+  //             ),
+  //             onPressed: () {
+  //               Navigator.pop(context);
+  //               _deleteSession();
+  //             },
+  //             child: const Text('Delete'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Container(
-                    width: double.infinity,
-                    // height: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
+        backgroundColor: const Color(0xFFF5F7F0),
+        // Meadow background
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          shape: const Border(
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          ),
+          elevation: 2,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFA8BF8A)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          centerTitle: true,
+          title: Text(
+            _chatTitle,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Color(0xFFA8BF8A)),
+              onSelected: (String value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmation();
+                }
+              },
+              itemBuilder:
+                  (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Delete Session',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Header with back button and title
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
+                  ],
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Chat messages list
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child:
+                      _isLoading
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFA8BF8A),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              // "Inner Child AI",
-                              _chatTitle,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Chat messages list
-                        Expanded(
-                          child:
-                              _isLoading
-                                  ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                  : _isError
-                                  ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          'Load chat session fail',
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        ElevatedButton(
-                                          onPressed: _loadChatMessages,
-                                          child: const Text("Retry"),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                  : _messages.isEmpty && _localMessages.isEmpty
-                                  ? const Center(
-                                    child: Text(
-                                      "No messages yet.\nStart the conversation below.",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  )
-                                  : Builder(
-                                    builder: (context) {
-                                      // final combinedMessages = [
-                                      //   ..._messages.map(
-                                      //     (msg) => LocalChatMessageModel(
-                                      //       content: msg.content,
-                                      //       senderType: msg.senderType,
-                                      //       sentAt: msg.sentAt,
-                                      //       status: MessageStatus.sent,
-                                      //     ),
-                                      //   ),
-                                      //   ..._localMessages,
-                                      // ];
-
-                                      final combinedMap =
-                                          <String, LocalChatMessageModel>{};
-
-                                      for (final msg in _messages) {
-                                        final key =
-                                            '${msg.content}_${msg.sentAt.toIso8601String()}';
-                                        combinedMap[key] =
-                                            LocalChatMessageModel(
-                                              content: msg.content,
-                                              senderType: msg.senderType,
-                                              sentAt: msg.sentAt,
-                                              status: MessageStatus.sent,
-                                            );
-                                      }
-
-                                      for (final localMsg in _localMessages) {
-                                        final key =
-                                            '${localMsg.content}_${localMsg.sentAt.toIso8601String()}';
-                                        combinedMap[key] =
-                                            localMsg; // local messages can overwrite duplicates if needed
-                                      }
-
-                                      final combinedMessages =
-                                          combinedMap.values.toList()..sort(
-                                            (a, b) =>
-                                                a.sentAt.compareTo(b.sentAt),
-                                          );
-
-                                      // combinedMessages.sort(
-                                      //   (a, b) => a.sentAt.compareTo(b.sentAt),
-                                      // );
-
-                                      return ListView.builder(
-                                        controller: _scrollController,
-                                        itemCount:
-                                            combinedMessages.length +
-                                            (_isWaitingForResponse ? 1 : 0),
-                                        itemBuilder: (context, index) {
-                                          // Show loading bubble if waiting for AI response
-                                          if (_isWaitingForResponse &&
-                                              index ==
-                                                  combinedMessages.length) {
-                                            return const AILoadingBubble();
-                                          }
-
-                                          // final msg = _messages[index];
-                                          final msg = combinedMessages[index];
-                                          final time = TimeOfDay.fromDateTime(
-                                            msg.sentAt,
-                                          ).format(context);
-
-                                          if (msg.senderType == "User") {
-                                            return UserMessageBubble(
-                                              message: msg.content,
-                                              timeStamp: time,
-                                              isFailed:
-                                                  msg.status ==
-                                                  MessageStatus.failed,
-                                              onRetry: () {
-                                                final text =
-                                                    _textController.text.trim();
-                                                // _sendMessage(text);
-                                                _retryMessage(msg);
-                                              },
-                                            );
-                                          } else {
-                                            return AIResponseBubble(
-                                              message: msg.content,
-                                              timeStamp: time,
-                                            );
-                                          }
-                                        },
-                                      );
-                                    },
+                          )
+                          : _isError
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: Color(0xFFEF4444),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Failed to load chat session',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFFEF4444),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                        ),
-
-                        // Message input field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          // padding: const EdgeInsets.symmetric(horizontal: 5),
-                          child: Row(
-                            children: [
-                              // IconButton(
-                              //   icon: const Icon(Icons.link),
-                              //   // color: Colors.grey,
-                              //   color:
-                              //       _isSending
-                              //           ? Colors.grey.shade400
-                              //           : Colors.grey,
-                              //   onPressed: _isSending ? null : () {},
-                              //   // onPressed: () {},
-                              // ),
-                              // IconButton(
-                              //   icon: const Icon(Icons.refresh),
-                              //   color:
-                              //       _isSending
-                              //           ? Colors.grey.shade400
-                              //           : Colors.grey,
-                              //   onPressed: _isSending ? null : () {},
-                              //   // color: Colors.grey,
-                              //   // onPressed: () {},
-                              // ),
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 12),
-                                  child: TextField(
-                                    controller: _textController,
-                                    enabled: !_isSending,
-                                    // onTap: (){
-                                    //   final text = _textController.text.trim();
-                                    //   if (text.isNotEmpty) {
-                                    //     _textController.clear();
-                                    //     // _sendMessage(text);
-                                    //   }
-                                    // },
-                                    decoration: InputDecoration(
-                                      // hintText: "Enter your text here",
-                                      hintText:
-                                          _isSending
-                                              ? "Sending..."
-                                              : "Enter your text here",
-                                      border: InputBorder.none,
-                                      hintStyle: TextStyle(
-                                        color:
-                                            _isSending
-                                                ? Colors.grey.shade400
-                                                : Colors.grey,
-                                      ),
-                                      // hintStyle: TextStyle(color: Colors.grey),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _loadChatMessages,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFA8BF8A),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
+                                  ),
+                                  child: const Text("Retry"),
+                                ),
+                              ],
+                            ),
+                          )
+                          : _messages.isEmpty && _localMessages.isEmpty
+                          ? FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline,
+                                    size: 64,
+                                    color: Color(0xFFA8BF8A),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    "No messages yet.\nStart the conversation below.",
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color:
-                                          _isSending
-                                              ? Colors.grey.shade600
-                                              : Colors.black,
+                                      fontSize: 16,
+                                      color: Color(0xFF6B7280),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color:
-                                      _isSending
-                                          ? Colors.grey.shade400
-                                          : Colors.brown,
-                                  // color: Colors.brown,
-                                ),
-                                child: IconButton(
-                                  icon:
-                                      _isSending
-                                          ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          )
-                                          : const Icon(Icons.arrow_forward),
-                                  // const Icon(Icons.arrow_forward),
-                                  color: Colors.white,
-                                  onPressed:
-                                      _isSending
-                                          ? null
-                                          : () {
-                                            final text =
-                                                _textController.text.trim();
-                                            if (text.isNotEmpty) {
-                                              // _textController.clear();
-                                              _sendMessage(text);
-                                            }
-                                          },
-                                ),
-                              ),
-                              // Expanded(
-                              //   child: Row(
-                              //     children: [
-                              //
-                              //     ],
-                              //   ),
-                              // ),
-                            ],
+                            ),
+                          )
+                          : FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: _buildMessagesList(),
+                            ),
+                          ),
+                ),
+              ),
+            ),
+
+            // Message input field
+            Container(
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        controller: _textController,
+                        enabled: !_isSending,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                          hintText:
+                              _isSending
+                                  ? "Sending..."
+                                  : "Type your message here...",
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(
+                            color:
+                                _isSending
+                                    ? const Color(0xFF9CA3AF)
+                                    : const Color(0xFF6B7280),
                           ),
                         ),
-                      ],
+                        style: TextStyle(
+                          color:
+                              _isSending
+                                  ? const Color(0xFF9CA3AF)
+                                  : const Color(0xFF1F2937),
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
-                );
-              },
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          _isSending
+                              ? const Color(0xFF9CA3AF)
+                              : const Color(0xFFA8BF8A),
+                    ),
+                    child: IconButton(
+                      icon:
+                          _isSending
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : const Icon(Icons.send, color: Colors.white),
+                      onPressed:
+                          _isSending
+                              ? null
+                              : () {
+                                final text = _textController.text.trim();
+                                if (text.isNotEmpty) {
+                                  _sendMessage(text);
+                                }
+                              },
+                    ),
+                  ),
+                ],
+              ),
             ),
-            // Scroll to bottom button
-            if (_showScrollToBottomButton)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 100, right: 30),
+          ],
+        ),
+        floatingActionButton:
+            _showScrollToBottomButton
+                ? Padding(
+                  padding: const EdgeInsets.only(bottom: 70),
                   child: FloatingActionButton.small(
                     onPressed: _scrollToBottom,
-                    // onPressed: _scrollToBottomAfterBuild,
-                    backgroundColor: Colors.brown,
+                    backgroundColor: const Color(0xFFA8BF8A),
                     child: const Icon(
                       Icons.keyboard_arrow_down,
                       color: Colors.white,
                     ),
                   ),
-                ),
-              ),
-            // Positioned(
-            //   bottom: 100,
-            //   right: 0,
-            //   child: FloatingActionButton.small(
-            //     onPressed: _scrollToBottom,
-            //     backgroundColor: Colors.brown,
-            //     child: const Icon(
-            //       Icons.keyboard_arrow_down,
-            //       color: Colors.white,
-            //     ),
-            //   ),
-            // ),
-          ],
-        ),
+                )
+                : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
+    );
+  }
+
+  Widget _buildMessagesList() {
+    final combinedMap = <String, LocalChatMessageModel>{};
+
+    for (final msg in _messages) {
+      final key = '${msg.content}_${msg.sentAt.toIso8601String()}';
+      combinedMap[key] = LocalChatMessageModel(
+        content: msg.content,
+        senderType: msg.senderType,
+        sentAt: msg.sentAt,
+        status: MessageStatus.sent,
+      );
+    }
+
+    for (final localMsg in _localMessages) {
+      final key = '${localMsg.content}_${localMsg.sentAt.toIso8601String()}';
+      combinedMap[key] = localMsg;
+    }
+
+    final combinedMessages =
+        combinedMap.values.toList()
+          ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: combinedMessages.length + (_isWaitingForResponse ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (_isWaitingForResponse && index == combinedMessages.length) {
+          return const AILoadingBubble();
+        }
+
+        final msg = combinedMessages[index];
+        final time = TimeOfDay.fromDateTime(msg.sentAt).format(context);
+
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 300 + (index * 50)),
+          curve: Curves.easeOutBack,
+          child:
+              msg.senderType == "User"
+                  ? UserMessageBubble(
+                    message: msg.content,
+                    timeStamp: time,
+                    isFailed: msg.status == MessageStatus.failed,
+                    onRetry: () => _retryMessage(msg),
+                  )
+                  : AIResponseBubble(message: msg.content, timeStamp: time),
+        );
+      },
     );
   }
 }
@@ -700,16 +724,23 @@ class _AILoadingBubbleState extends State<AILoadingBubble>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.orange,
+              color: const Color(0xFFA8BF8A),
               border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Icon(Icons.favorite, color: Colors.white, size: 18),
+            child: const Icon(Icons.psychology, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
@@ -717,12 +748,19 @@ class _AILoadingBubbleState extends State<AILoadingBubble>
                 opacity: _animation.value,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 16,
+                    vertical: 14,
+                    horizontal: 18,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(18),
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -758,7 +796,7 @@ class _AILoadingBubbleState extends State<AILoadingBubble>
             height: 8,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.grey.shade600,
+              color: const Color(0xFFA8BF8A),
             ),
           ),
         );
@@ -783,65 +821,98 @@ class UserMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: isFailed ? 0.4 : 1,
+    return AnimatedOpacity(
+      opacity: isFailed ? 0.6 : 1.0,
+      duration: const Duration(milliseconds: 300),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade200,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(
-                    message,
-                    style: const TextStyle(color: Colors.black87, fontSize: 16),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timeStamp,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                if (isFailed && onRetry != null) ...[
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: onRetry,
-                    child: const Icon(
-                      Icons.refresh,
-                      size: 16,
-                      color: Colors.red,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFA8BF8A),
+                          const Color(0xFF9FB380),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isFailed && onRetry != null) ...[
+                        GestureDetector(
+                          onTap: onRetry,
+                          child: const Icon(
+                            Icons.refresh,
+                            size: 16,
+                            color: Color(0xFFEF4444),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        timeStamp,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              ],
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Container(
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                image: const DecorationImage(
-                  image: AssetImage('assets/user_avatar.png'),
-                  // Replace with your asset
-                  fit: BoxFit.cover,
-                ),
+                color: const Color(0xFFA8BF8A),
                 border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
+              child: const Icon(Icons.person, color: Colors.white, size: 20),
             ),
           ],
         ),
@@ -869,42 +940,65 @@ class AIResponseBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.orange,
+              color: const Color(0xFFA8BF8A),
               border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Icon(Icons.favorite, color: Colors.white, size: 18),
+            child: const Icon(Icons.psychology, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.7,
+          const SizedBox(width: 12),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Color(0xFF1F2937),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 16,
+                const SizedBox(height: 6),
+                Text(
+                  timeStamp,
+                  style: const TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 12,
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Text(
-                  message,
-                  style: const TextStyle(color: Colors.black87, fontSize: 16),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                timeStamp,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

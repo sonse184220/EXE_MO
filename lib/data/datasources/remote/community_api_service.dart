@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:inner_child_app/core/utils/dio_instance.dart';
+import 'package:inner_child_app/domain/entities/community/create_comment_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 
 class CommunityApiService {
@@ -58,5 +59,53 @@ class CommunityApiService {
       'communityStatus': status,
     });
     return await _client.put('innerchild/community/update-community/$groupId', data: formData);
+  }
+
+  Future<Response> likePost(String postId) async {
+    return await _client.post(
+      'innerchild/community/post-like/$postId',
+    );
+  }
+
+  Future<Response> unlikePost(String postId) async {
+    return await _client.delete(
+      'innerchild/community/post-unlike/$postId',
+    );
+  }
+
+  Future<Response> likeComment(String commentId) async {
+    return await _client.post(
+      'innerchild/community/comment-like/$commentId',
+    );
+  }
+
+  Future<Response> unlikeComment(String commentId) async {
+    return await _client.delete(
+      'innerchild/community/comment-unlike/$commentId',
+    );
+  }
+
+  Future<Response> createComment(CreateCommentModel comment) async {
+    final formData = await comment.toFormData();
+    return await _client.post(
+      'innerchild/community/comment',
+      data: formData,
+    );
+  }
+
+  Future<Response> updateComment(
+      String commentId,
+      Map<String, dynamic> body,
+      ) async {
+    return await _client.put(
+      'innerchild/community/comment-update/$commentId',
+      data: body,
+    );
+  }
+
+  Future<Response> deleteComment(String commentId) async {
+    return await _client.delete(
+      'innerchild/community/comment-delete/$commentId',
+    );
   }
 }

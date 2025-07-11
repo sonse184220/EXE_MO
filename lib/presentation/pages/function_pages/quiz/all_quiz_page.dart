@@ -298,6 +298,41 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Color(0xFFF5E6D3),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF5E6D3),
+          elevation: 2,
+          centerTitle: true, // center the title
+          leading: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(
+              Icons.arrow_back, // standard Android back icon
+              color: Colors.black87,
+              size: 24,
+            ),
+          ),
+          title: const Text(
+            'Quiz Library',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          actions: [
+            if (selectedSubCategoryId != null || searchQuery.isNotEmpty)
+              TextButton(
+                onPressed: _clearFilters,
+                child: const Text(
+                  'Clear All',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => QuizAttemptHistoryPage()));},
           backgroundColor: Color(0xFFFFCB7C),
@@ -314,7 +349,7 @@ class _AllQuizPageState extends ConsumerState<AllQuizPage> {
                 child: Column(
                   children: [
                     // Header Section
-                    _buildHeader(),
+                    // _buildHeader(),
 
                     const SizedBox(height: 20),
 

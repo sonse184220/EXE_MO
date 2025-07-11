@@ -274,6 +274,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<bool>> logout() async {
     try {
+      await _authNotifier.stopConnection();
       await _authNotifier.logout();
       return Result.success(true);
     } catch (e) {

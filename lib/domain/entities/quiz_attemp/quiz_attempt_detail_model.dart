@@ -12,6 +12,9 @@ class QuizAttemptDetailModel {
   final String? quizUserAttemptId;
   final DateTime? quizUserAnswerCreatedAt;
   final String? profileId;
+  final String? resultLabel;
+  final String? resultDescription;
+  final String? resultColor;
 
   QuizAttemptDetailModel({
     this.quizId,
@@ -25,6 +28,9 @@ class QuizAttemptDetailModel {
     this.quizUserAttemptId,
     this.quizUserAnswerCreatedAt,
     this.profileId,
+    this.resultLabel,
+    this.resultDescription,
+    this.resultColor,
   });
 
   factory QuizAttemptDetailModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +50,9 @@ class QuizAttemptDetailModel {
           ? DateTime.tryParse(json['quizUserAnswerCreatedAt'])
           : null,
       profileId: json['profileId'] as String?,
+      resultLabel: json['resultLabel'] as String?,
+      resultDescription: json['resultDescription'] as String?,
+      resultColor: json['resultColor'] as String?,
     );
   }
 
@@ -59,5 +68,8 @@ class QuizAttemptDetailModel {
     'quizUserAttemptId': quizUserAttemptId,
     'quizUserAnswerCreatedAt': quizUserAnswerCreatedAt?.toIso8601String(),
     'profileId': profileId,
+    'resultLabel': resultLabel,
+    'resultDescription': resultDescription,
+    'resultColor': resultColor,
   };
 }

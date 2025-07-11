@@ -28,4 +28,8 @@ class ChatAiApiService {
     };
     return await _client.post('innerchild/aichat/send-chat', data: dataObject);
   }
+
+  Future<Response>  deleteChatSession(String chatSessionId) async {
+    return await _client.delete('innerchild/aichat/delete-session/$chatSessionId');
+  }
 }

@@ -6,7 +6,7 @@ class LoadingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       backgroundColor: const Color(0xFF89B7C2), // SPRING SKY
       body: Container(
         decoration: const BoxDecoration(
@@ -129,6 +129,6 @@ class LoadingPage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

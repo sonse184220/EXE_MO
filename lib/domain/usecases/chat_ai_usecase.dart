@@ -22,4 +22,8 @@ class ChatAIUseCase {
   Future<Result<String>> sendChatMessage(String message, String chatSessionId) {
     return _chatAiRepository.sendChatMessage(message, chatSessionId);
   }
+
+  Future<Result<String>> deleteChatSession(String chatSessionId) {
+    return _chatAiRepository.deleteChatSession(chatSessionId);
+  }
 }
