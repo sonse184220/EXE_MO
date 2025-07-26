@@ -746,6 +746,21 @@ class LoginPage extends ConsumerState<Login>
                 ),
 
                 // Sign-up Section
+                GestureDetector(
+                  onTap:
+                  isAnyLoading
+                      ? null
+                      : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => const RegisterPage(),
+                      ),
+                    );
+                  },
+                  child:
+
                 Container(
                   padding: EdgeInsets.all(20),
                   margin: const EdgeInsets.only(top: 20, bottom: 20),
@@ -763,29 +778,16 @@ class LoginPage extends ConsumerState<Login>
                             ),
                           ),
                           const SizedBox(height: 4),
-                          GestureDetector(
-                            onTap:
-                                isAnyLoading
-                                    ? null
-                                    : () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => const RegisterPage(),
-                                        ),
-                                      );
-                                    },
-                            child: Text(
-                              'SIGN UP',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color:
-                                    isAnyLoading ? Colors.grey : Colors.black,
-                              ),
+
+                          Text(
+                            'SIGN UP',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color:
+                              isAnyLoading ? Colors.grey : Colors.black,
                             ),
-                          ),
+                          )
                         ],
                       ),
                       Icon(
@@ -795,6 +797,7 @@ class LoginPage extends ConsumerState<Login>
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             );

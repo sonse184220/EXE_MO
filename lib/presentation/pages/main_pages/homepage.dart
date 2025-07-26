@@ -30,7 +30,8 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends ConsumerState<HomePage>
+    with TickerProviderStateMixin {
   late AnimationController _slideController;
   late AnimationController _fadeController;
   late Animation<Offset> _titleSlideAnimation;
@@ -80,34 +81,32 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
     _titleSlideAnimation = Tween<Offset>(
       begin: const Offset(-1.0, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+      ),
+    );
 
     _subtitleSlideAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: const Interval(0.3, 0.9, curve: Curves.easeOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: const Interval(0.3, 0.9, curve: Curves.easeOutCubic),
+      ),
+    );
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
     _scaleAnimation = Tween<double>(
       begin: 1.1,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
     // Start animations
     _fadeController.forward();
@@ -187,200 +186,201 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              //   FadeTransition(
-              //   opacity: _fadeAnimation,
-              //   child: Container(
-              //     width: double.infinity,
-              //     height: 300,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(24),
-              //       boxShadow: [
-              //         BoxShadow(
-              //           color: Colors.black.withOpacity(0.3),
-              //           blurRadius: 20,
-              //           offset: const Offset(0, 10),
-              //         ),
-              //       ],
-              //     ),
-              //     child: ClipRRect(
-              //       borderRadius: BorderRadius.circular(24),
-              //       child: Stack(
-              //         children: [
-              //           // Background Image with scale animation
-              //           ScaleTransition(
-              //             scale: _scaleAnimation,
-              //             child: Container(
-              //               width: double.infinity,
-              //               height: double.infinity,
-              //               decoration: const BoxDecoration(
-              //                 image: DecorationImage(
-              //                   image: AssetImage('assets/images/banner_bg.jpg'),
-              //                   fit: BoxFit.cover,
-              //                 ),
-              //               ),
-              //             ),
-              //           ),
-              //
-              //           // Gradient Overlay
-              //           Container(
-              //             decoration: BoxDecoration(
-              //               gradient: LinearGradient(
-              //                 begin: Alignment.topCenter,
-              //                 end: Alignment.bottomCenter,
-              //                 colors: [
-              //                   Colors.black.withOpacity(0.2),
-              //                   Colors.black.withOpacity(0.6),
-              //                 ],
-              //               ),
-              //             ),
-              //           ),
-              //
-              //           // Animated Text Content
-              //           Positioned(
-              //             left: 24,
-              //             right: 24,
-              //             bottom: 40,
-              //             child: Column(
-              //               crossAxisAlignment: CrossAxisAlignment.start,
-              //               children: [
-              //                 // Main Title - slides from left
-              //                 SlideTransition(
-              //                   position: _titleSlideAnimation,
-              //                   child: Text(
-              //                     'Welcome to MyApp',
-              //                     style: TextStyle(
-              //                       color: Colors.white,
-              //                       fontSize: 32,
-              //                       fontWeight: FontWeight.bold,
-              //                       letterSpacing: 1.2,
-              //                       shadows: [
-              //                         Shadow(
-              //                           color: Colors.black.withOpacity(0.8),
-              //                           blurRadius: 8,
-              //                           offset: const Offset(0, 3),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                   ),
-              //                 ),
-              //
-              //                 const SizedBox(height: 12),
-              //
-              //                 // Subtitle - slides from right
-              //                 SlideTransition(
-              //                   position: _subtitleSlideAnimation,
-              //                   child: Text(
-              //                     'Discover amazing features and unlock your potential with our innovative platform designed for modern users.',
-              //                     style: TextStyle(
-              //                       color: Colors.white.withOpacity(0.9),
-              //                       fontSize: 16,
-              //                       fontWeight: FontWeight.w400,
-              //                       height: 1.5,
-              //                       shadows: [
-              //                         Shadow(
-              //                           color: Colors.black.withOpacity(0.6),
-              //                           blurRadius: 4,
-              //                           offset: const Offset(0, 2),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                   ),
-              //                 ),
-              //
-              //                 const SizedBox(height: 20),
-              //
-              //                 // Call to Action Button - fades in
-              //                 FadeTransition(
-              //                   opacity: _fadeAnimation,
-              //                   child: Container(
-              //                     decoration: BoxDecoration(
-              //                       borderRadius: BorderRadius.circular(25),
-              //                       gradient: const LinearGradient(
-              //                         colors: [
-              //                           Color(0xFF667eea),
-              //                           Color(0xFF764ba2),
-              //                         ],
-              //                       ),
-              //                       boxShadow: [
-              //                         BoxShadow(
-              //                           color: Colors.black.withOpacity(0.3),
-              //                           blurRadius: 10,
-              //                           offset: const Offset(0, 5),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     child: ElevatedButton(
-              //                       onPressed: () {
-              //                         // Handle button press
-              //                         print('Get Started pressed');
-              //                       },
-              //                       style: ElevatedButton.styleFrom(
-              //                         backgroundColor: Colors.transparent,
-              //                         shadowColor: Colors.transparent,
-              //                         padding: const EdgeInsets.symmetric(
-              //                           horizontal: 32,
-              //                           vertical: 16,
-              //                         ),
-              //                         shape: RoundedRectangleBorder(
-              //                           borderRadius: BorderRadius.circular(25),
-              //                         ),
-              //                       ),
-              //                       child: const Row(
-              //                         mainAxisSize: MainAxisSize.min,
-              //                         children: [
-              //                           Text(
-              //                             'Get Started',
-              //                             style: TextStyle(
-              //                               color: Colors.white,
-              //                               fontSize: 16,
-              //                               fontWeight: FontWeight.w600,
-              //                             ),
-              //                           ),
-              //                           SizedBox(width: 8),
-              //                           Icon(
-              //                             Icons.arrow_forward,
-              //                             color: Colors.white,
-              //                             size: 20,
-              //                           ),
-              //                         ],
-              //                       ),
-              //                     ),
-              //                   ),
-              //                 ),
-              //               ],
-              //             ),
-              //           ),
-              //
-              //           // Decorative Elements
-              //           Positioned(
-              //             top: 30,
-              //             right: 30,
-              //             child: FadeTransition(
-              //               opacity: _fadeAnimation,
-              //               child: Container(
-              //                 padding: const EdgeInsets.all(12),
-              //                 decoration: BoxDecoration(
-              //                   color: Colors.white.withOpacity(0.15),
-              //                   borderRadius: BorderRadius.circular(20),
-              //                   border: Border.all(
-              //                     color: Colors.white.withOpacity(0.2),
-              //                     width: 1,
-              //                   ),
-              //                 ),
-              //                 child: const Icon(
-              //                   Icons.star,
-              //                   color: Colors.white,
-              //                   size: 24,
-              //                 ),
-              //               ),
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
-AppBanner(),
+                  //   FadeTransition(
+                  //   opacity: _fadeAnimation,
+                  //   child: Container(
+                  //     width: double.infinity,
+                  //     height: 300,
+                  //     decoration: BoxDecoration(
+                  //       borderRadius: BorderRadius.circular(24),
+                  //       boxShadow: [
+                  //         BoxShadow(
+                  //           color: Colors.black.withOpacity(0.3),
+                  //           blurRadius: 20,
+                  //           offset: const Offset(0, 10),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     child: ClipRRect(
+                  //       borderRadius: BorderRadius.circular(24),
+                  //       child: Stack(
+                  //         children: [
+                  //           // Background Image with scale animation
+                  //           ScaleTransition(
+                  //             scale: _scaleAnimation,
+                  //             child: Container(
+                  //               width: double.infinity,
+                  //               height: double.infinity,
+                  //               decoration: const BoxDecoration(
+                  //                 image: DecorationImage(
+                  //                   image: AssetImage('assets/images/banner_bg.jpg'),
+                  //                   fit: BoxFit.cover,
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           ),
+                  //
+                  //           // Gradient Overlay
+                  //           Container(
+                  //             decoration: BoxDecoration(
+                  //               gradient: LinearGradient(
+                  //                 begin: Alignment.topCenter,
+                  //                 end: Alignment.bottomCenter,
+                  //                 colors: [
+                  //                   Colors.black.withOpacity(0.2),
+                  //                   Colors.black.withOpacity(0.6),
+                  //                 ],
+                  //               ),
+                  //             ),
+                  //           ),
+                  //
+                  //           // Animated Text Content
+                  //           Positioned(
+                  //             left: 24,
+                  //             right: 24,
+                  //             bottom: 40,
+                  //             child: Column(
+                  //               crossAxisAlignment: CrossAxisAlignment.start,
+                  //               children: [
+                  //                 // Main Title - slides from left
+                  //                 SlideTransition(
+                  //                   position: _titleSlideAnimation,
+                  //                   child: Text(
+                  //                     'Welcome to MyApp',
+                  //                     style: TextStyle(
+                  //                       color: Colors.white,
+                  //                       fontSize: 32,
+                  //                       fontWeight: FontWeight.bold,
+                  //                       letterSpacing: 1.2,
+                  //                       shadows: [
+                  //                         Shadow(
+                  //                           color: Colors.black.withOpacity(0.8),
+                  //                           blurRadius: 8,
+                  //                           offset: const Offset(0, 3),
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //
+                  //                 const SizedBox(height: 12),
+                  //
+                  //                 // Subtitle - slides from right
+                  //                 SlideTransition(
+                  //                   position: _subtitleSlideAnimation,
+                  //                   child: Text(
+                  //                     'Discover amazing features and unlock your potential with our innovative platform designed for modern users.',
+                  //                     style: TextStyle(
+                  //                       color: Colors.white.withOpacity(0.9),
+                  //                       fontSize: 16,
+                  //                       fontWeight: FontWeight.w400,
+                  //                       height: 1.5,
+                  //                       shadows: [
+                  //                         Shadow(
+                  //                           color: Colors.black.withOpacity(0.6),
+                  //                           blurRadius: 4,
+                  //                           offset: const Offset(0, 2),
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //
+                  //                 const SizedBox(height: 20),
+                  //
+                  //                 // Call to Action Button - fades in
+                  //                 FadeTransition(
+                  //                   opacity: _fadeAnimation,
+                  //                   child: Container(
+                  //                     decoration: BoxDecoration(
+                  //                       borderRadius: BorderRadius.circular(25),
+                  //                       gradient: const LinearGradient(
+                  //                         colors: [
+                  //                           Color(0xFF667eea),
+                  //                           Color(0xFF764ba2),
+                  //                         ],
+                  //                       ),
+                  //                       boxShadow: [
+                  //                         BoxShadow(
+                  //                           color: Colors.black.withOpacity(0.3),
+                  //                           blurRadius: 10,
+                  //                           offset: const Offset(0, 5),
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                     child: ElevatedButton(
+                  //                       onPressed: () {
+                  //                         // Handle button press
+                  //                         print('Get Started pressed');
+                  //                       },
+                  //                       style: ElevatedButton.styleFrom(
+                  //                         backgroundColor: Colors.transparent,
+                  //                         shadowColor: Colors.transparent,
+                  //                         padding: const EdgeInsets.symmetric(
+                  //                           horizontal: 32,
+                  //                           vertical: 16,
+                  //                         ),
+                  //                         shape: RoundedRectangleBorder(
+                  //                           borderRadius: BorderRadius.circular(25),
+                  //                         ),
+                  //                       ),
+                  //                       child: const Row(
+                  //                         mainAxisSize: MainAxisSize.min,
+                  //                         children: [
+                  //                           Text(
+                  //                             'Get Started',
+                  //                             style: TextStyle(
+                  //                               color: Colors.white,
+                  //                               fontSize: 16,
+                  //                               fontWeight: FontWeight.w600,
+                  //                             ),
+                  //                           ),
+                  //                           SizedBox(width: 8),
+                  //                           Icon(
+                  //                             Icons.arrow_forward,
+                  //                             color: Colors.white,
+                  //                             size: 20,
+                  //                           ),
+                  //                         ],
+                  //                       ),
+                  //                     ),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ),
+                  //
+                  //           // Decorative Elements
+                  //           Positioned(
+                  //             top: 30,
+                  //             right: 30,
+                  //             child: FadeTransition(
+                  //               opacity: _fadeAnimation,
+                  //               child: Container(
+                  //                 padding: const EdgeInsets.all(12),
+                  //                 decoration: BoxDecoration(
+                  //                   color: Colors.white.withOpacity(0.15),
+                  //                   borderRadius: BorderRadius.circular(20),
+                  //                   border: Border.all(
+                  //                     color: Colors.white.withOpacity(0.2),
+                  //                     width: 1,
+                  //                   ),
+                  //                 ),
+                  //                 child: const Icon(
+                  //                   Icons.star,
+                  //                   color: Colors.white,
+                  //                   size: 24,
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  AppBanner(),
+
                   // // Profile Card
                   // if (_isLoadingUserDetail) ...[
                   //   const Center(child: CircularProgressIndicator()),
@@ -576,7 +576,6 @@ AppBanner(),
                   //     ),
                   //   ),
                   // ],
-
                   const SizedBox(height: 24),
 
                   // Healing Sessions Section

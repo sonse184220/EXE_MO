@@ -10,6 +10,7 @@ import 'package:inner_child_app/data/datasources/remote/audio_category_api_servi
 import 'package:inner_child_app/data/datasources/remote/audio_subcategory_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/chat_ai_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/community_api_service.dart';
+import 'package:inner_child_app/data/datasources/remote/dashboard_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/goal_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/help_category_api_service.dart';
 import 'package:inner_child_app/data/datasources/remote/mood_journal_api_service.dart';
@@ -27,6 +28,7 @@ import 'package:inner_child_app/data/repositories/audio_subcategory_repository.d
 import 'package:inner_child_app/data/repositories/auth_repository.dart';
 import 'package:inner_child_app/data/repositories/chat_ai_repository.dart';
 import 'package:inner_child_app/data/repositories/community_repository.dart';
+import 'package:inner_child_app/data/repositories/dashboard_repository.dart';
 import 'package:inner_child_app/data/repositories/goal_repository.dart';
 import 'package:inner_child_app/data/repositories/help_category_repository.dart';
 import 'package:inner_child_app/data/repositories/mood_journal_repository.dart';
@@ -45,6 +47,7 @@ import 'package:inner_child_app/domain/repositories/i_audio_subcategory_reposito
 import 'package:inner_child_app/domain/repositories/i_auth_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_chat_ai_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
+import 'package:inner_child_app/domain/repositories/i_dashboard_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_goal_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_help_category_repository.dart';
 import 'package:inner_child_app/domain/repositories/i_mood_journal_repository.dart';
@@ -62,6 +65,7 @@ import 'package:inner_child_app/domain/usecases/audio_usecase.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/domain/usecases/chat_ai_usecase.dart';
 import 'package:inner_child_app/domain/usecases/community_usecase.dart';
+import 'package:inner_child_app/domain/usecases/dashboard_usecase.dart';
 import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
 import 'package:inner_child_app/domain/usecases/help_category_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
@@ -161,6 +165,10 @@ final paymentApiServiceProvider = Provider(
       (ref) => PaymentApiService(ref.read(dioClientProvider)),
 );
 
+final dashboardApiServiceProvider = Provider(
+      (ref) => DashboardApiService(ref.read(dioClientProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // 🧱 Repositories
 // ─────────────────────────────────────────────────────────────
@@ -241,6 +249,10 @@ final paymentRepositoryProvider = Provider<IPaymentRepository>(
       (ref)=> PaymentRepository(ref.read(paymentApiServiceProvider)),
 );
 
+final dashboardRepositoryProvider = Provider<IDashboardRepository>(
+      (ref) => DashboardRepository(ref.read(dashboardApiServiceProvider)),
+);
+
 // ─────────────────────────────────────────────────────────────
 // ⚙️ Use Cases
 // ─────────────────────────────────────────────────────────────
@@ -312,6 +324,10 @@ final subscriptionUseCaseProvider = Provider(
 
 final paymentUseCaseProvider = Provider(
         (ref)=>PaymentUsecase(ref.read(paymentRepositoryProvider))
+);
+
+final dashboardUseCaseProvider = Provider(
+      (ref) => DashboardUsecase(ref.read(dashboardRepositoryProvider)),
 );
 
 // ─────────────────────────────────────────────────────────────

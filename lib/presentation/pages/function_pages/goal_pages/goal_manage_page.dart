@@ -5,6 +5,7 @@ import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
 import 'package:inner_child_app/domain/entities/goal/create_goal_model.dart';
 import 'package:inner_child_app/domain/entities/goal/goal_model.dart';
 import 'package:inner_child_app/domain/usecases/goal_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_detail_page.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/goal_pages/goal_list_page.dart';
 
 class GoalManagePage extends ConsumerStatefulWidget {
@@ -34,6 +35,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
 
   // Form state
   GoalModel? _editingGoal;
+
   bool get _isEditing => _editingGoal != null;
 
   late final GoalUsecase _goalUsecase;
@@ -55,7 +57,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       });
     } catch (e) {
       setState(() {
-        _error ='Error while fetch all goals';
+        _error = 'Error while fetch all goals';
         _isLoading = false;
       });
     }
@@ -69,19 +71,22 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
         _titleController.text = goalToEdit.goalTitle ?? '';
         _descriptionController.text = goalToEdit.goalDescription ?? '';
         _typeController.text = goalToEdit.goalType ?? '';
-        _targetCountController.text = goalToEdit.goalTargetCount?.toString() ?? '';
-        _periodDaysController.text = goalToEdit.goalPeriodDays?.toString() ?? '';
+        _targetCountController.text =
+            goalToEdit.goalTargetCount?.toString() ?? '';
+        _periodDaysController.text =
+            goalToEdit.goalPeriodDays?.toString() ?? '';
         _selectedStartDate = goalToEdit.goalStartDate;
         _selectedEndDate = goalToEdit.goalEndDate;
         _isFormVisible = true;
         _slideController.forward();
-      } else if (_isFormVisible && !_isEditing) {
+      } else if (_isFormVisible) {
         // Close form
         _isFormVisible = false;
         _slideController.reverse();
         _clearForm();
       } else {
         // Open form for new goal
+        _clearForm();
         _editingGoal = null;
         _clearForm();
         _isFormVisible = true;
@@ -104,7 +109,10 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate ? _selectedStartDate ?? DateTime.now() : _selectedEndDate ?? DateTime.now(),
+      initialDate:
+          isStartDate
+              ? _selectedStartDate ?? DateTime.now()
+              : _selectedEndDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
@@ -144,6 +152,11 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       Notify.showFlushbar('Please enter valid numbers for target and period');
       return;
     }
+
+    if (_selectedStartDate!.isAfter(_selectedEndDate!)) {
+      Notify.showFlushbar('Start date must be before or equal to end date');
+      return;
+    }
     // if (_titleController.text.trim().isEmpty) {
     //   ScaffoldMessenger.of(context).showSnackBar(
     //     SnackBar(content: Text('Please enter a goal title')),
@@ -154,14 +167,22 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
     setState(() {
       _isSubmitting = true;
     });
-    final goalObject = CreateGoalModel(goalTitle: _titleController.text.trim(), goalDescription: _descriptionController.text.trim(), goalType: _typeController.text.trim(), goalStartDate: _selectedStartDate!, goalEndDate: _selectedEndDate!, goalTargetCount: int.tryParse(_targetCountController.text.trim())!, goalPeriodDays: int.tryParse(_periodDaysController.text.trim())!);
+    final goalObject = CreateGoalModel(
+      goalTitle: _titleController.text.trim(),
+      goalDescription: _descriptionController.text.trim(),
+      goalType: _typeController.text.trim(),
+      goalStartDate: _selectedStartDate!,
+      goalEndDate: _selectedEndDate!,
+      goalTargetCount: int.tryParse(_targetCountController.text.trim())!,
+      goalPeriodDays: int.tryParse(_periodDaysController.text.trim())!,
+    );
 
     try {
       if (_isEditing) {
         // Update existing goal
         final result = await _goalUsecase.updateOwnGoals(
           _editingGoal!.goalId!,
-          goalObject
+          goalObject,
           // title: _titleController.text.trim(),
           // description: _descriptionController.text.trim(),
           // type: _typeController.text.trim(),
@@ -171,7 +192,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
           // endDate: _selectedEndDate,
         );
 
-        if(result.isSuccess) {
+        if (result.isSuccess) {
           Notify.showFlushbar('Goal updated successfully!');
         } else {
           throw Exception('Fail to update goal. Please try again');
@@ -182,7 +203,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       } else {
         // Create new goal
         final result = await _goalUsecase.createOwnGoals(
-          goalObject
+          goalObject,
           // title: _titleController.text.trim(),
           // description: _descriptionController.text.trim(),
           // type: _typeController.text.trim(),
@@ -194,19 +215,19 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
         // ScaffoldMessenger.of(context).showSnackBar(
         //   SnackBar(content: Text('Goal created successfully!')),
         // );
-       if(result.isSuccess) {
-         Notify.showFlushbar('Goal created successfully!');
-       } else {
-         throw Exception('Fail to create goal. Please try again');
-       }
+        if (result.isSuccess) {
+          Notify.showFlushbar('Goal created successfully!');
+        } else {
+          throw Exception('Fail to create goal. Please try again');
+        }
       }
 
       // Refresh goals list
       await _fetchGoals();
 
+      _clearForm();
       // Close form
       _toggleForm();
-
     } catch (e) {
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(content: Text('Error: ${e.toString()}')),
@@ -229,52 +250,69 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       barrierDismissible: false, // Prevent dismissing while loading
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: Text('Delete Goal'),
-            content: isDeleting
-                ? Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Deleting...'),
-              ],
-            )
-                : Text('Are you sure you want to delete "${goal.goalTitle}"?'),
-            actions: isDeleting
-                ? []
-                : [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text('Cancel'),
+          builder:
+              (context, setDialogState) => AlertDialog(
+                title: Text('Delete Goal'),
+                content:
+                    isDeleting
+                        ? Row(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(width: 16),
+                            Text('Deleting...'),
+                          ],
+                        )
+                        : Text(
+                          'Are you sure you want to delete "${goal.goalTitle}"?',
+                        ),
+                actions:
+                    isDeleting
+                        ? []
+                        : [
+                          TextButton(
+                            onPressed:
+                                () => Navigator.pop(dialogContext, false),
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              setDialogState(() => isDeleting = true);
+
+                              try {
+                                final result = await _goalUsecase
+                                    .deleteOwnGoals(goal.goalId!);
+
+                                if (result.isSuccess) {
+                                  // Close dialog first
+                                  Navigator.of(dialogContext).pop(true);
+
+                                  // Then show success message and refresh
+                                  Notify.showFlushbar(
+                                    'Goal deleted successfully!',
+                                  );
+                                  await _fetchGoals();
+                                } else {
+                                  setDialogState(() => isDeleting = false);
+                                  Notify.showFlushbar(
+                                    'Failed to delete goal',
+                                    isError: true,
+                                  );
+                                }
+                              } catch (e) {
+                                setDialogState(() => isDeleting = false);
+                                Notify.showFlushbar(
+                                  'Error deleting goal',
+                                  isError: true,
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: Text('Delete'),
+                          ),
+                        ],
               ),
-              TextButton(
-                onPressed: () async {
-                  setDialogState(() => isDeleting = true);
-
-                  try {
-                    final result = await _goalUsecase.deleteOwnGoals(goal.goalId!);
-
-                    if (result.isSuccess) {
-                      // Close dialog first
-                      Navigator.of(dialogContext).pop(true);
-
-                      // Then show success message and refresh
-                      Notify.showFlushbar('Goal deleted successfully!');
-                      await _fetchGoals();
-                    } else {
-                      setDialogState(() => isDeleting = false);
-                      Notify.showFlushbar('Failed to delete goal', isError: true);
-                    }
-                  } catch (e) {
-                    setDialogState(() => isDeleting = false);
-                    Notify.showFlushbar('Error deleting goal', isError: true);
-                  }
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: Text('Delete'),
-              ),
-            ],
-          ),
         );
       },
     );
@@ -286,9 +324,9 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       // await _goalUsecase.toggleGoalCompletion(goal.goalId!, newStatus);
       await _fetchGoals();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating goal')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating goal')));
     }
   }
 
@@ -324,54 +362,114 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
 
   @override
   Widget build(BuildContext context) {
-    return  SafeArea(
-      child:  Scaffold(
-      body:LayoutBuilder(
+    return SafeArea(
+      child: Scaffold(
+        resizeToAvoidBottomInset: true, // Add this
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Back button and title
-                      _buildHeader(),
-
-                      // Form for adding new habits
-                      SizeTransition(
-                        sizeFactor: _slideController,
-                        axisAlignment: -1.0,
-                        child: _buildGoalForm(),
-                      ),
-
-                      // Today's goals section
-                      _buildTodayGoalsSection(),
-
-                      // Spacing at the bottom
-                      SizedBox(height: 40),
-                    ],
-                  ),
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFFFFB876).withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
-              );
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button and title (fixed at top)
+                    _buildHeader(),
+
+                    // Scrollable content area
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Form for adding new habits
+                            SizeTransition(
+                              sizeFactor: _slideController,
+                              axisAlignment: -1.0,
+                              child: _buildGoalForm(),
+                            ),
+
+                            // Today's goals section with constrained height
+                            _buildTodayGoalsSection(),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Spacing at the bottom
+                    SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            );
           },
         ),
       ),
     );
   }
+  // Widget build(BuildContext context) {
+  //   return SafeArea(
+  //     child: Scaffold(
+  //       resizeToAvoidBottomInset: true,
+  //       body: LayoutBuilder(
+  //         builder: (context, constraints) {
+  //           return ConstrainedBox(
+  //             constraints: BoxConstraints(minHeight: constraints.maxHeight),
+  //             child: Container(
+  //               width: double.infinity,
+  //               padding: const EdgeInsets.all(20),
+  //               decoration: BoxDecoration(
+  //                 color: Colors.white,
+  //                 borderRadius: BorderRadius.circular(16),
+  //                 boxShadow: [
+  //                   BoxShadow(
+  //                     color: Color(0xFFFFB876).withOpacity(0.1),
+  //                     blurRadius: 10,
+  //                     offset: Offset(0, 5),
+  //                   ),
+  //                 ],
+  //               ),
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.start,
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   // Back button and title
+  //                   _buildHeader(),
+  //
+  //                   // Form for adding new habits
+  //                   SizeTransition(
+  //                     sizeFactor: _slideController,
+  //                     axisAlignment: -1.0,
+  //                     child: _buildGoalForm(),
+  //                   ),
+  //
+  //                   // Today's goals section
+  //                   _buildTodayGoalsSection(),
+  //
+  //                   // Spacing at the bottom
+  //                   SizedBox(height: 40),
+  //                 ],
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildHeader() {
     return Column(
@@ -390,11 +488,11 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
               onPressed: _toggleForm,
               icon: Icon(
                 _isFormVisible ? Icons.expand_less : Icons.add,
-                color: Colors.deepOrange,
+                color: Color(0xFFFFB876),
               ),
               label: Text(
                 _isFormVisible ? 'Hide Add Goal Form' : 'Add New Goal',
-                style: TextStyle(color: Colors.deepOrange),
+                style: TextStyle(color: Color(0xFFFFB876)),
               ),
             ),
           ],
@@ -428,6 +526,10 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
   }
 
   Widget _buildGoalForm() {
+    if (!_isEditing) {
+      _periodDaysController.text = '0';
+    }
+
     return Column(
       children: [
         // Form title
@@ -439,7 +541,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
+                color: Color(0xFFE6A065),
               ),
             ),
           ),
@@ -472,7 +574,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             Expanded(
               child: _buildFormTextField(
                 controller: _targetCountController,
-                hintText: 'Target Count',
+                hintText: 'Target Days Count',
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -480,8 +582,9 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             Expanded(
               child: _buildFormTextField(
                 controller: _periodDaysController,
-                hintText: 'Period (Days)',
+                hintText: 'Day(s) Completed/Target',
                 keyboardType: TextInputType.number,
+                enabled: _isEditing,
               ),
             ),
           ],
@@ -497,15 +600,19 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Color(0xFFFFF3E6),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Color(0xFFFFD8B3), width: 1),
                   ),
                   child: Text(
                     _selectedStartDate != null
                         ? 'Start: ${_selectedStartDate!.day}/${_selectedStartDate!.month}/${_selectedStartDate!.year}'
                         : 'Select Start Date',
                     style: TextStyle(
-                      color: _selectedStartDate != null ? Colors.black : Colors.grey[500],
+                      color:
+                      _selectedStartDate != null
+                          ? Color(0xFFCC9054)
+                          : Color(0xFFB38760),
                     ),
                   ),
                 ),
@@ -518,15 +625,19 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Color(0xFFFFF3E6),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Color(0xFFFFD8B3), width: 1),
                   ),
                   child: Text(
                     _selectedEndDate != null
                         ? 'End: ${_selectedEndDate!.day}/${_selectedEndDate!.month}/${_selectedEndDate!.year}'
                         : 'Select End Date',
                     style: TextStyle(
-                      color: _selectedEndDate != null ? Colors.black : Colors.grey[500],
+                      color:
+                      _selectedEndDate != null
+                          ? Color(0xFFCC9054)
+                          : Color(0xFFB38760),
                     ),
                   ),
                 ),
@@ -543,13 +654,14 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
           child: ElevatedButton(
             onPressed: _isSubmitting ? null : _submitGoal,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-              disabledBackgroundColor: Colors.grey[400],
+              backgroundColor: Color(0xFFFFB876),
+              disabledBackgroundColor: Color(0xFFD9D9D9),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: _isSubmitting
+            child:
+            _isSubmitting
                 ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -558,7 +670,9 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -592,7 +706,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             child: OutlinedButton(
               onPressed: _isSubmitting ? null : () => _toggleForm(),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.grey[400]!),
+                side: BorderSide(color: Color(0xFFFFD8B3)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -602,7 +716,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[600],
+                  color: Color(0xFFCC9054),
                 ),
               ),
             ),
@@ -619,6 +733,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
     required String hintText,
     int maxLines = 1,
     TextInputType? keyboardType,
+    bool enabled = true,
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -626,16 +741,18 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
         vertical: maxLines > 1 ? 12 : 0,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Color(0xFFFFF9F4),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFFFE5CC), width: 1),
       ),
       child: TextField(
         controller: controller,
+        enabled: enabled,
         maxLines: maxLines,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey[500]),
+          hintStyle: TextStyle(color: Color(0xFFB38760)),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 14),
         ),
@@ -644,70 +761,168 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
   }
 
   Widget _buildTodayGoalsSection() {
-    return Expanded(child:  Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Today Goal',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
 
+    return Container(
+      constraints: BoxConstraints(
+        minHeight: 200,
+        maxHeight: isKeyboardVisible && _isFormVisible
+            ? 250  // Smaller height when form is visible and keyboard is up
+            : 400, // Normal height
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Today Goal',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => GoalListPage()),
                   );
-
-              },
-              child: Text(
-                'See all',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                },
+                child: Text(
+                  'See all',
+                  style: TextStyle(fontSize: 14, color: Color(0xFFB38760)),
+                ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12),
+            ],
+          ),
+          SizedBox(height: 12),
 
-        Expanded(
-          child:_buildGoalsList(),
-          // ListView.builder(
-          //   itemCount: _goals.length,
-          //   itemBuilder: (context, index) {
-          //     return HabitListItem(habit: _goals[index]);
-          //   },
-          // ),
-        ),
-        SizedBox(height: 20),
-
-        // Goal items
-        // ..._goals.map((goal) => _buildGoalItem(goal)),
-      ],
-    ));
+          Expanded(
+            child: _buildGoalsList(),
+          ),
+          SizedBox(height: 20),
+        ],
+      ),
+    );
   }
+
+  // Widget _buildTodayGoalsSection() {
+  //   return Expanded(
+  //     child: SingleChildScrollView( // Wrap the entire section with SingleChildScrollView
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children: [
+  //               Text(
+  //                 'Today Goal',
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Colors.black,
+  //                 ),
+  //               ),
+  //               TextButton(
+  //                 onPressed: () {
+  //                   Navigator.push(
+  //                     context,
+  //                     MaterialPageRoute(builder: (context) => GoalListPage()),
+  //                   );
+  //                 },
+  //                 child: Text(
+  //                   'See all',
+  //                   style: TextStyle(fontSize: 14, color: Color(0xFFB38760)),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 12),
+  //
+  //           // Use Container with minimum height instead of Expanded
+  //           Container(
+  //             constraints: BoxConstraints(
+  //               minHeight: 300, // Minimum height to show some content
+  //               maxHeight: MediaQuery.of(context).size.height * 0.6, // Maximum height
+  //             ),
+  //             child: _buildGoalsList(),
+  //           ),
+  //           SizedBox(height: 20),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // Widget _buildTodayGoalsSection() {
+  //   return Expanded(
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             Text(
+  //               'Today Goal',
+  //               style: TextStyle(
+  //                 fontSize: 18,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.black,
+  //               ),
+  //             ),
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.push(
+  //                   context,
+  //                   MaterialPageRoute(builder: (context) => GoalListPage()),
+  //                 );
+  //               },
+  //               child: Text(
+  //                 'See all',
+  //                 style: TextStyle(fontSize: 14, color: Color(0xFFB38760)),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         SizedBox(height: 12),
+  //
+  //         Expanded(
+  //           child: _buildGoalsList(),
+  //           // ListView.builder(
+  //           //   itemCount: _goals.length,
+  //           //   itemBuilder: (context, index) {
+  //           //     return HabitListItem(habit: _goals[index]);
+  //           //   },
+  //           // ),
+  //         ),
+  //         SizedBox(height: 20),
+  //
+  //         // Goal items
+  //         // ..._goals.map((goal) => _buildGoalItem(goal)),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildGoalsList() {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFB876)),
         ),
       );
     }
 
     if (_error != null) {
-      return Center(
+      return SingleChildScrollView(child:  Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 48, color: Color(0xFFFF9B76)),
             SizedBox(height: 16),
             Text(
               'Error loading goals',
@@ -723,21 +938,21 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             ElevatedButton(
               onPressed: _fetchGoals,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
+                backgroundColor: Color(0xFFFFB876),
               ),
               child: Text('Retry', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
-      );
+      ),);
     }
 
     if (_goals.isEmpty) {
-      return Center(
+      return SingleChildScrollView(child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.track_changes, size: 48, color: Colors.grey[400]),
+            Icon(Icons.track_changes, size: 48, color: Color(0xFFFFD8B3)),
             SizedBox(height: 16),
             Text(
               'No goals yet',
@@ -750,7 +965,7 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
             ),
           ],
         ),
-      );
+      ),);
     }
 
     return RefreshIndicator(
@@ -758,13 +973,13 @@ class _GoalManagePageState extends ConsumerState<GoalManagePage>
       child: ListView.builder(
         itemCount: _goals.length,
         itemBuilder: (context, index) {
-          return GoalListItem(
+          return GestureDetector(onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => GoalDetailPage(goalId: _goals[index].goalId!)));}, child: GoalListItem(
             goal: _goals[index],
             // onToggle: () => _toggleGoalCompletion(_goals[index]),
             onToggle: () => null,
             onEdit: () => _toggleForm(goalToEdit: _goals[index]),
             onDelete: () => _deleteGoal(_goals[index]),
-          );
+          ),);
         },
       ),
     );
@@ -792,7 +1007,8 @@ class GoalListItem extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(6),
-        color: Color(0xFFEDFFF4),
+        color: Color(0xFFFFF9F4),
+        border: Border.all(color: Color(0xFFFFE5CC), width: 1),
       ),
       margin: EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(12),
@@ -811,15 +1027,13 @@ class GoalListItem extends StatelessWidget {
                     decoration: isCompleted ? TextDecoration.lineThrough : null,
                   ),
                 ),
-                if (goal.goalDescription != null && goal.goalDescription!.isNotEmpty)
+                if (goal.goalDescription != null &&
+                    goal.goalDescription!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
                       goal.goalDescription!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ),
                 if (goal.goalType != null)
@@ -829,7 +1043,7 @@ class GoalListItem extends StatelessWidget {
                       'Type: ${goal.goalType}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.deepOrange,
+                        color: Color(0xFFE6A065),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -839,10 +1053,7 @@ class GoalListItem extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
                       'Target: ${goal.goalTargetCount} times',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                     ),
                   ),
               ],
@@ -855,19 +1066,17 @@ class GoalListItem extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: Color(0xFF37C871),
-                  width: 2,
-                ),
-                color: isCompleted ? Color(0xFF5FE394) : Colors.transparent,
+                border: Border.all(color: Color(0xFFFFB876), width: 2),
+                color: isCompleted ? Color(0xFFFFB876) : Colors.transparent,
               ),
-              child: isCompleted
+              child:
+              isCompleted
                   ? Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.grey),
+            icon: Icon(Icons.more_vert, color: Color(0xFFB38760)),
             onSelected: (value) {
               switch (value) {
                 case 'edit':
@@ -878,12 +1087,13 @@ class GoalListItem extends StatelessWidget {
                   break;
               }
             },
-            itemBuilder: (context) => [
+            itemBuilder:
+                (context) => [
               PopupMenuItem(
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(Icons.edit, size: 16, color: Colors.blue),
+                    Icon(Icons.edit, size: 16, color: Color(0xFFFFB876)),
                     SizedBox(width: 8),
                     Text('Edit'),
                   ],
@@ -893,7 +1103,7 @@ class GoalListItem extends StatelessWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, size: 16, color: Colors.red),
+                    Icon(Icons.delete, size: 16, color: Color(0xFFFF9B76)),
                     SizedBox(width: 8),
                     Text('Delete'),
                   ],

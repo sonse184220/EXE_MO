@@ -1059,6 +1059,15 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                         const SizedBox(height: 20),
 
                         // Sign in option
+                        GestureDetector(
+                            onTap:
+                            _isLoading
+                                ? null
+                                : () {
+                              Navigator.pop(context);
+                            },
+                            child:
+
                         Container(
                           margin: const EdgeInsets.only(top: 10, bottom: 20),
                           child: Row(
@@ -1078,23 +1087,16 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  GestureDetector(
-                                    onTap:
-                                        _isLoading
-                                            ? null
-                                            : () {
-                                              Navigator.pop(context);
-                                            },
-                                    child: Text(
-                                      'SIGN IN',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color:
-                                            _isLoading
-                                                ? Colors.grey
-                                                : Colors.black,
-                                      ),
+
+                                  Text(
+                                    'SIGN IN',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color:
+                                      _isLoading
+                                          ? Colors.grey
+                                          : Colors.black,
                                     ),
                                   ),
                                 ],
@@ -1106,7 +1108,7 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                               ),
                             ],
                           ),
-                        ),
+                        ),),
                       ],
                     ),
                   ),

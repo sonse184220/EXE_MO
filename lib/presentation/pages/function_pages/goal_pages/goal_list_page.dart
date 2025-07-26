@@ -56,7 +56,8 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child:  Scaffold(
-      body: LayoutBuilder(
+        backgroundColor: Color(0xFFFFF8F3), // Light papaya background
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -68,7 +69,7 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: Color(0xFFFFB876).withOpacity(0.1),
                       blurRadius: 10,
                       offset: Offset(0, 5),
                     ),
@@ -104,7 +105,7 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
         Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: Icon(Icons.arrow_back, color: Color(0xFFE89A4D)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -112,36 +113,41 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
               constraints: const BoxConstraints(),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Your Goals',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFCC7A2B),
+              ),
             ),
           ],
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: Color(0xFFFFF0E6),
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Color(0xFFFFE1CC), width: 1),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: selectedFilter,
-              icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+              icon: Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFFE89A4D)),
               dropdownColor: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: Color(0xFFCC7A2B),
               ),
               items:
-                  filters.map((String filter) {
-                    return DropdownMenuItem<String>(
-                      value: filter,
-                      child: Text(filter),
-                    );
-                  }).toList(),
+              filters.map((String filter) {
+                return DropdownMenuItem<String>(
+                  value: filter,
+                  child: Text(filter),
+                );
+              }).toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {
@@ -159,17 +165,20 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
   Widget _buildContent() {
     // Handle loading state
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
+            CircularProgressIndicator(
+              color: Color(0xFFFFB876),
+              backgroundColor: Color(0xFFFFE1CC),
+            ),
             SizedBox(height: 16),
             Text(
               'Loading your goals...',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Color(0xFFCC7A2B),
               ),
             ),
           ],
@@ -186,14 +195,14 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.grey[400],
+              color: Color(0xFFFFB876).withOpacity(0.6),
             ),
             const SizedBox(height: 16),
             Text(
               'Failed to load goals',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: Color(0xFFCC7A2B),
               ),
             ),
             const SizedBox(height: 8),
@@ -201,13 +210,20 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
               _error!,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: Color(0xFFE89A4D),
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _fetchGoals,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFFFB876),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -224,14 +240,14 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
             Icon(
               Icons.flag_outlined,
               size: 64,
-              color: Colors.grey[400],
+              color: Color(0xFFFFB876).withOpacity(0.6),
             ),
             const SizedBox(height: 16),
             Text(
               'No goals yet',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: Color(0xFFCC7A2B),
               ),
             ),
             const SizedBox(height: 8),
@@ -239,7 +255,7 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
               'Create your first goal to get started!',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[500],
+                color: Color(0xFFE89A4D),
               ),
             ),
           ],
@@ -250,6 +266,8 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
     // Show goals list
     return RefreshIndicator(
       onRefresh: _fetchGoals,
+      color: Color(0xFFFFB876),
+      backgroundColor: Colors.white,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: _buildGoalsList(),
@@ -279,7 +297,7 @@ class _GoalListPageState extends ConsumerState<GoalListPage> {
             'No ${selectedFilter.toLowerCase()} goals found',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Color(0xFFCC7A2B),
             ),
           ),
         ),
@@ -323,6 +341,22 @@ class GoalProgressCard extends StatelessWidget {
       onTap: tapped,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isAchieved ? Color(0xFFD4B86A) : Color(0xFFFFE1CC),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFFFFB876).withOpacity(0.08),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             // Progress circle
@@ -335,18 +369,19 @@ class GoalProgressCard extends StatelessWidget {
                   CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 5,
-                    backgroundColor: Colors.grey[200],
+                    backgroundColor: Color(0xFFFFF0E6),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isAchieved ? Colors.green : Colors.blue,
+                      isAchieved ? Color(0xFFD4B86A) : Color(0xFFFFB876),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(4),
                     child: Text(
                       '$progressPercentage%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
+                        color: isAchieved ? Color(0xFFD4B86A) : Color(0xFFCC7A2B),
                       ),
                     ),
                   ),
@@ -362,15 +397,19 @@ class GoalProgressCard extends StatelessWidget {
                 children: [
                   Text(
                     goal.goalTitle ?? 'Untitled Goal',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
+                      color: Color(0xFF8B4513),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _buildSubtitleText(),
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFCC7A2B),
+                    ),
                   ),
                 ],
               ),
@@ -380,15 +419,19 @@ class GoalProgressCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isAchieved
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.blue.withOpacity(0.1),
+                    ? Color(0xFFD4B86A).withOpacity(0.15)
+                    : Color(0xFFFFB876).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isAchieved ? Color(0xFFD4B86A) : Color(0xFFFFB876),
+                  width: 1,
+                ),
               ),
               child: Text(
                 isAchieved ? 'Achieved' : 'In Progress',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isAchieved ? Colors.green : Colors.blue,
+                  color: isAchieved ? Color(0xFFB8941A) : Color(0xFFCC7A2B),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -398,7 +441,6 @@ class GoalProgressCard extends StatelessWidget {
       ),
     );
   }
-
   double _calculateProgress() {
     // If goal is completed, show 100%
     if (goal.goalCompletedAt != null) return 1.0;

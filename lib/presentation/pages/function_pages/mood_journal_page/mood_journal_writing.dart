@@ -43,6 +43,9 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
   late final MoodJournalUsecase _moodJournalUsecase;
   late final MoodJournalTypeUsecase _moodJournalTypeUsecase;
 
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
+
   JournalCategory? selectedJournalCategory;
   Mood? selectedMood;
   String _journalTitle = "";
@@ -181,11 +184,18 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
         if (available) {
           setState(() => _isListening = true);
           _speech.listen(
-            localeId: "en_US",
+            // localeId: "en_US",
+            localeId: null,
+            listenOptions: stt.SpeechListenOptions(
+              onDevice: true,
+              listenMode: stt.ListenMode.confirmation,
+            ),
+            // onDevice: true,
             onResult: (val) {
               setState(() {
                 _lastWords = val.recognizedWords;
                 _journalContent += " $_lastWords";
+                _contentController.text = _journalContent;
               });
             },
           );
@@ -209,6 +219,9 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
 
     _moodJournalUsecase = ref.read(moodJournalUseCaseProvider);
     _moodJournalTypeUsecase = ref.read(moodJournalTypeUseCaseProvider);
+
+    _titleController = TextEditingController();
+    _contentController = TextEditingController();
 
     _speech = stt.SpeechToText();
 
@@ -349,6 +362,7 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: TextField(
+                    controller: _titleController,
                     decoration: InputDecoration(
                       hintText: 'Type your journal title here',
                       filled: true,
@@ -374,6 +388,7 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                   ),
 
                   child: TextField(
+                    controller: _contentController,
                     minLines: 5,
                     maxLines: null,
                     style: TextStyle(
@@ -413,7 +428,7 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                         _journalContent = value;
                       });
                     },
-                    controller: TextEditingController(text: _journalContent),
+                    // controller: TextEditingController(text: _journalContent),
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.01),

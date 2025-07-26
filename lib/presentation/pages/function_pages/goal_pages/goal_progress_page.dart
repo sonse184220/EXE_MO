@@ -129,24 +129,32 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child:  Scaffold(
-      body:
-      _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: $_error'),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _fetchGoals,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : LayoutBuilder(
+        body:
+        _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFB876)))
+            : _error != null
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $_error'),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _fetchGoals,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFB876),
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        )
+            : LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
@@ -159,9 +167,9 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: const Color(0xFFFFB876).withOpacity(0.1),
                         blurRadius: 10,
-                        offset: Offset(0, 5),
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
@@ -209,7 +217,7 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD4935A)),
           onPressed: () {Navigator.pop(context);},
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
@@ -217,7 +225,11 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
         const SizedBox(width: 8),
         const Text(
           'Progress',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFB8743E),
+          ),
         ),
       ],
     );
@@ -229,32 +241,37 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
       children: [
         const Text(
           'Progress Report',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFFB8743E),
+          ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: const Color(0xFFFFB876).withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFFB876).withOpacity(0.3)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: selectedMonth,
-              icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+              icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFFD4935A)),
               dropdownColor: Colors.white,
               borderRadius: BorderRadius.circular(12),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: Color(0xFFB8743E),
               ),
               items:
-                  months.map((String month) {
-                    return DropdownMenuItem<String>(
-                      value: month,
-                      child: Text(month),
-                    );
-                  }).toList(),
+              months.map((String month) {
+                return DropdownMenuItem<String>(
+                  value: month,
+                  child: Text(month),
+                );
+              }).toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {
@@ -299,16 +316,23 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
           children: [
             const Text(
               'Your Goals',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            GestureDetector(onTap:() {Navigator.push(context, MaterialPageRoute(builder: (context) => GoalListPage()));},child: Text(
-              'See all',
               style: TextStyle(
-                fontSize: 14,
-                color: Colors.orange,
-                fontWeight: FontWeight.w500,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFB8743E),
               ),
-            ),)
+            ),
+            GestureDetector(
+              onTap:() {Navigator.push(context, MaterialPageRoute(builder: (context) => GoalListPage()));},
+              child: const Text(
+                'See all',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFFFB876),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
           ],
         ),
         const SizedBox(height: 16),
@@ -333,15 +357,16 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: const Color(0xFFFFB876).withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFB876).withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatusItem('Completed', completedGoals, Colors.green),
-          _buildStatusItem('In Progress', inProgressGoals, Colors.orange),
-          _buildStatusItem('Pending', pendingGoals, Colors.grey),
+          _buildStatusItem('Completed', completedGoals, const Color(0xFF8FBF47)),
+          _buildStatusItem('In Progress', inProgressGoals, const Color(0xFFFFB876)),
+          _buildStatusItem('Pending', pendingGoals, const Color(0xFFE0C4A3)),
         ],
       ),
     );
@@ -364,7 +389,7 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: const Color(0xFFB8743E).withOpacity(0.7),
           ),
         ),
       ],
@@ -378,13 +403,13 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
       return Center(
         child: Column(
           children: [
-            Icon(Icons.track_changes, size: 64, color: Colors.grey[400]),
+            Icon(Icons.track_changes, size: 64, color: const Color(0xFFE0C4A3)),
             const SizedBox(height: 16),
             Text(
               'No goals found for $selectedMonth',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: const Color(0xFFB8743E).withOpacity(0.7),
               ),
             ),
           ],
@@ -399,37 +424,21 @@ class _GoalProgressPageState extends ConsumerState<GoalProgressPage> {
     );
   }
 
-  Widget _buildHabitsList() {
-    // Sample habit data - in a real app, this would come from a data source
-    final List<HabitData> habits = [
-      HabitData(
-        title: 'Journaling everyday',
-        progress: 7,
-        target: 7,
-        isAchieved: true,
-      ),
-      HabitData(
-        title: 'Cooking Practice',
-        progress: 7,
-        target: 7,
-        isAchieved: true,
-      ),
-      HabitData(title: 'Vitamin', progress: 5, target: 7, isAchieved: false),
-    ];
-
-    return Column(
-      children: habits.map((habit) => HabitProgressCard(habit: habit)).toList(),
-    );
-  }
-
   Widget _buildSeeAllButton() {
     return Center(
       child: TextButton(
         onPressed: () {},
-        child: Text(
+        style: TextButton.styleFrom(
+          backgroundColor: const Color(0xFFFFB876).withOpacity(0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+        child: const Text(
           'See All',
           style: TextStyle(
-            color: Colors.orange,
+            color: Color(0xFFFFB876),
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -451,8 +460,8 @@ class ProgressCircle extends StatelessWidget {
     required this.percentage,
     required this.size,
     this.strokeWidth = 10.0,
-    this.activeColor = Colors.orange,
-    this.backgroundColor = const Color(0xFFEEEEEE),
+    this.activeColor = const Color(0xFFFFB876),
+    this.backgroundColor = const Color(0xFFFFF2E8),
   });
 
   @override
@@ -475,115 +484,10 @@ class ProgressCircle extends StatelessWidget {
           style: TextStyle(
             fontSize: size * 0.2,
             fontWeight: FontWeight.bold,
-            color: activeColor,
+            color: const Color(0xFFB8743E),
           ),
         ),
       ],
-    );
-  }
-}
-
-// Data model for habit items
-class HabitData {
-  final String title;
-  final int progress;
-  final int target;
-  final bool isAchieved;
-
-  HabitData({
-    required this.title,
-    required this.progress,
-    required this.target,
-    required this.isAchieved,
-  });
-
-  // Calculate percentage progress
-  int get progressPercentage => ((progress / target) * 100).round();
-}
-
-// Reusable widget for habit progress cards
-class HabitProgressCard extends StatelessWidget {
-  final HabitData habit;
-
-  const HabitProgressCard({super.key, required this.habit});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          // Progress circle
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: habit.progress / habit.target,
-                  strokeWidth: 5,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    habit.isAchieved ? Colors.green : Colors.grey,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    '${habit.progressPercentage}%',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 16),
-          // Habit details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  habit.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${habit.progress} from ${habit.target} days target',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          // Achievement status
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color:
-                  habit.isAchieved
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              habit.isAchieved ? 'Achieved' : 'Unachieved',
-              style: TextStyle(
-                fontSize: 12,
-                color: habit.isAchieved ? Colors.green : Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -639,14 +543,14 @@ class GoalProgressCard extends StatelessWidget {
   Color _getStatusColor() {
     switch (goal.goalStatus?.toLowerCase()) {
       case 'completed':
-        return Colors.green;
+        return const Color(0xFF8FBF47);
       case 'in_progress':
       case 'active':
-        return Colors.orange;
+        return const Color(0xFFFFB876);
       case 'paused':
-        return Colors.amber;
+        return const Color(0xFFE0C4A3);
       default:
-        return Colors.grey;
+        return const Color(0xFFD4935A);
     }
   }
 
@@ -675,10 +579,10 @@ class GoalProgressCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: const Color(0xFFFFB876).withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: const Color(0xFFFFB876).withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -696,7 +600,7 @@ class GoalProgressCard extends StatelessWidget {
                 CircularProgressIndicator(
                   value: progress / 100,
                   strokeWidth: 6,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: const Color(0xFFFFF2E8),
                   valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                 ),
                 Text(
@@ -704,6 +608,7 @@ class GoalProgressCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFB8743E),
                   ),
                 ),
               ],
@@ -722,6 +627,7 @@ class GoalProgressCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFFB8743E),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -730,7 +636,7 @@ class GoalProgressCard extends StatelessWidget {
                     goal.goalDescription!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: const Color(0xFFB8743E).withOpacity(0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -741,7 +647,7 @@ class GoalProgressCard extends StatelessWidget {
                     timeRemaining,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: const Color(0xFFD4935A).withOpacity(0.8),
                     ),
                   ),
               ],
@@ -752,8 +658,9 @@ class GoalProgressCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: statusColor.withOpacity(0.3)),
             ),
             child: Text(
               statusText,

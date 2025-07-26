@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_session_list_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/community_pages/community_groups_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/subscription_pages/subscription_page.dart';
+
 class BannerSlide {
   final String imagePath;
   final String title;
@@ -8,6 +12,7 @@ class BannerSlide {
   final String buttonText;
   final IconData decorIcon;
   final List<Color> gradientColors;
+  final String routeName;
 
   BannerSlide({
     required this.imagePath,
@@ -16,6 +21,7 @@ class BannerSlide {
     required this.buttonText,
     required this.decorIcon,
     required this.gradientColors,
+    required this.routeName,
   });
 }
 
@@ -42,41 +48,81 @@ class _AppBannerState extends State<AppBanner> with TickerProviderStateMixin {
 
   final List<BannerSlide> _slides = [
     BannerSlide(
-      imagePath: 'assets/images/daily_mindfulness_background.png',
-      title: 'Welcome to MyApp',
+      imagePath: 'assets/images/aiChat.png',
+      title: 'AI Chat Assistant',
       subtitle:
-          'Discover amazing features and unlock your potential with our innovative platform designed for modern users.',
-      buttonText: 'Get Started',
-      decorIcon: Icons.star,
+      'Experience real-time conversations powered by smart AI. Ask anything, anytime!',
+      buttonText: 'Chat Now',
+      decorIcon: Icons.smart_toy,
       gradientColors: [Color(0xFF667eea), Color(0xFF764ba2)],
+      routeName: 'chat',
     ),
     BannerSlide(
       imagePath: 'assets/images/audio_playing.png',
-      title: 'Boost Your Productivity',
+      title: 'Go Premium',
       subtitle:
-          'Streamline your workflow with powerful tools and intuitive design that adapts to your needs.',
-      buttonText: 'Learn More',
-      decorIcon: Icons.rocket_launch,
+      'Unlock exclusive features, faster response time, and priority support by upgrading your account.',
+      buttonText: 'Upgrade Now',
+      decorIcon: Icons.workspace_premium,
       gradientColors: [Color(0xFFf093fb), Color(0xFFf5576c)],
-    ),
-    BannerSlide(
-      imagePath: 'assets/images/daily_mindfulness_background.png',
-      title: 'Join Our Community',
-      subtitle:
-          'Connect with thousands of users worldwide and share your experiences in our vibrant community.',
-      buttonText: 'Join Now',
-      decorIcon: Icons.people,
-      gradientColors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+      routeName: 'subscription',
     ),
     BannerSlide(
       imagePath: 'assets/images/audio_playing.png',
-      title: 'Premium Features',
+      title: 'Discover Our Features',
       subtitle:
-          'Upgrade to unlock advanced features and get priority support for the ultimate experience.',
-      buttonText: 'Upgrade',
-      decorIcon: Icons.diamond,
+      'From productivity tools to daily inspiration, we’ve got everything you need in one app.',
+      buttonText: 'Explore',
+      decorIcon: Icons.extension,
       gradientColors: [Color(0xFF43e97b), Color(0xFF38f9d7)],
+      routeName: 'subscription',
     ),
+    BannerSlide(
+      imagePath: 'assets/images/community.png',
+      title: 'Connected Community',
+      subtitle:
+      'Join a vibrant community of creators, learners, and dreamers. Share, grow, and thrive together.',
+      buttonText: 'Join Us',
+      decorIcon: Icons.people_alt,
+      gradientColors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+      routeName: 'community',
+    ),
+    // BannerSlide(
+    //   imagePath: 'assets/images/daily_mindfulness_background.png',
+    //   title: 'Welcome to MyApp',
+    //   subtitle:
+    //       'Discover amazing features and unlock your potential with our innovative platform designed for modern users.',
+    //   buttonText: 'Get Started',
+    //   decorIcon: Icons.star,
+    //   gradientColors: [Color(0xFF667eea), Color(0xFF764ba2)],
+    // ),
+    // BannerSlide(
+    //   imagePath: 'assets/images/audio_playing.png',
+    //   title: 'Boost Your Productivity',
+    //   subtitle:
+    //       'Streamline your workflow with powerful tools and intuitive design that adapts to your needs.',
+    //   buttonText: 'Learn More',
+    //   decorIcon: Icons.rocket_launch,
+    //   gradientColors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+    // ),
+    // BannerSlide(
+    //   imagePath: 'assets/images/daily_mindfulness_background.png',
+    //   title: 'Join Our Community',
+    //   subtitle:
+    //       'Connect with thousands of users worldwide and share your experiences in our vibrant community.',
+    //   buttonText: 'Join Now',
+    //   decorIcon: Icons.people,
+    //   gradientColors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+    // ),
+    // BannerSlide(
+    //   imagePath: 'assets/images/audio_playing.png',
+    //   title: 'Premium Features',
+    //   subtitle:
+    //       'Upgrade to unlock advanced features and get priority support for the ultimate experience.',
+    //   buttonText: 'Upgrade',
+    //   decorIcon: Icons.diamond,
+    //   gradientColors: [Color(0xFF43e97b), Color(0xFF38f9d7)],
+    // ),
   ];
 
   @override
@@ -301,7 +347,18 @@ class _AppBannerState extends State<AppBanner> with TickerProviderStateMixin {
                     ),
                     child: ElevatedButton(
                       onPressed: () {
-                        print('${slide.buttonText} pressed');
+                        // print('${slide.buttonText} pressed');
+                        switch (slide.routeName) {
+                          case 'chat':
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ChatAiSessionListPage()));
+                            break;
+                          case 'subscription':
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionPage()));
+                            break;
+                          case 'community':
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => CommunityGroupsPage()));
+                            break;
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -345,8 +402,8 @@ class _AppBannerState extends State<AppBanner> with TickerProviderStateMixin {
         Visibility(
           visible: _showTextAnimation,
           child: Positioned(
-            top: 30,
-            right: 30,
+            top: 10,
+            right: 10,
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Container(
@@ -413,45 +470,45 @@ class _AppBannerState extends State<AppBanner> with TickerProviderStateMixin {
               // ),
 
               // Navigation Controls
-              Positioned(
-                top: 20,
-                left: 20,
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _previousSlide,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: _nextSlide,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Positioned(
+              //   top: 20,
+              //   left: 20,
+              //   child: Row(
+              //     children: [
+              //       GestureDetector(
+              //         onTap: _previousSlide,
+              //         child: Container(
+              //           padding: const EdgeInsets.all(8),
+              //           decoration: BoxDecoration(
+              //             color: Colors.white.withOpacity(0.2),
+              //             borderRadius: BorderRadius.circular(20),
+              //           ),
+              //           child: const Icon(
+              //             Icons.arrow_back_ios,
+              //             color: Colors.white,
+              //             size: 16,
+              //           ),
+              //         ),
+              //       ),
+              //       const SizedBox(width: 12),
+              //       GestureDetector(
+              //         onTap: _nextSlide,
+              //         child: Container(
+              //           padding: const EdgeInsets.all(8),
+              //           decoration: BoxDecoration(
+              //             color: Colors.white.withOpacity(0.2),
+              //             borderRadius: BorderRadius.circular(20),
+              //           ),
+              //           child: const Icon(
+              //             Icons.arrow_forward_ios,
+              //             color: Colors.white,
+              //             size: 16,
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
 
               // Slide Indicators
               Positioned(

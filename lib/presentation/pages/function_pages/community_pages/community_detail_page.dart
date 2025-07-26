@@ -271,7 +271,7 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryOrange,
+                  backgroundColor: Color(0xFFE37083),
                   foregroundColor: Colors.white,
                 ),
                 child: const Text(
@@ -320,216 +320,627 @@ class _CommunityDetailPageState extends ConsumerState<CommunityDetailPage>
     }
   }
 
+  // void _showPostApprovalDialog(CommunityPostModel post) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder:
+  //         (context) => Container(
+  //           height: MediaQuery.of(context).size.height * 0.8,
+  //           decoration: const BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //           ),
+  //           child: Column(
+  //             children: [
+  //               // Handle bar
+  //               Container(
+  //                 margin: const EdgeInsets.only(top: 8),
+  //                 width: 40,
+  //                 height: 4,
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.grey[300],
+  //                   borderRadius: BorderRadius.circular(2),
+  //                 ),
+  //               ),
+  //
+  //               // Header
+  //               Padding(
+  //                 padding: const EdgeInsets.all(16),
+  //                 child: Row(
+  //                   children: [
+  //                     const Expanded(
+  //                       child: Text(
+  //                         'Post Approval',
+  //                         style: TextStyle(
+  //                           fontSize: 20,
+  //                           fontWeight: FontWeight.bold,
+  //                           fontFamily: 'League Spartan',
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     IconButton(
+  //                       onPressed: () => Navigator.pop(context),
+  //                       icon: const Icon(Icons.close),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //
+  //               const Divider(height: 1),
+  //
+  //               // Post content
+  //               Expanded(
+  //                 child: SingleChildScrollView(
+  //                   padding: const EdgeInsets.all(16),
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       // Author info
+  //                       Row(
+  //                         children: [
+  //                           CircleAvatar(
+  //                             radius: 20,
+  //                             backgroundColor: primaryOrange.withOpacity(0.2),
+  //                             child: Text(
+  //                               (post.userName ?? 'U')[0].toUpperCase(),
+  //                               style: const TextStyle(
+  //                                 color: primaryOrange,
+  //                                 fontWeight: FontWeight.bold,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                           const SizedBox(width: 12),
+  //                           Column(
+  //                             crossAxisAlignment: CrossAxisAlignment.start,
+  //                             children: [
+  //                               Text(
+  //                                 post.userName ?? 'Unknown User',
+  //                                 style: const TextStyle(
+  //                                   fontSize: 16,
+  //                                   fontWeight: FontWeight.w600,
+  //                                   fontFamily: 'Inter',
+  //                                 ),
+  //                               ),
+  //                               Text(
+  //                                 _formatDate(post.communityPostCreatedAt),
+  //                                 style: const TextStyle(
+  //                                   fontSize: 12,
+  //                                   color: Colors.grey,
+  //                                   fontFamily: 'Inter',
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ],
+  //                       ),
+  //
+  //                       const SizedBox(height: 16),
+  //
+  //                       // Post title
+  //                       Text(
+  //                         post.communityPostTitle ?? '',
+  //                         style: const TextStyle(
+  //                           fontSize: 18,
+  //                           fontWeight: FontWeight.bold,
+  //                           fontFamily: 'League Spartan',
+  //                         ),
+  //                       ),
+  //
+  //                       const SizedBox(height: 12),
+  //
+  //                       // Post content
+  //                       Text(
+  //                         post.communityPostContent ?? '',
+  //                         style: const TextStyle(
+  //                           fontSize: 14,
+  //                           height: 1.4,
+  //                           fontFamily: 'Inter',
+  //                         ),
+  //                       ),
+  //
+  //                       const SizedBox(height: 16),
+  //
+  //                       // Post image if available
+  //                       buildImageSection(post),
+  //                       // if (post.communityPostImageUrl != null)
+  //                       //   ClipRRect(
+  //                       //     borderRadius: BorderRadius.circular(12),
+  //                       //     child: Image.network(
+  //                       //       post.communityPostImageUrl ?? '',
+  //                       //       width: double.infinity,
+  //                       //       fit: BoxFit.cover,
+  //                       //       errorBuilder: (context, error, stackTrace) {
+  //                       //         return Container(
+  //                       //           height: 200,
+  //                       //           color: Colors.grey[200],
+  //                       //           child: const Center(
+  //                       //             child: Icon(Icons.image_not_supported),
+  //                       //           ),
+  //                       //         );
+  //                       //       },
+  //                       //     ),
+  //                       //   ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //
+  //               // Action buttons
+  //               Container(
+  //                 padding: const EdgeInsets.all(16),
+  //                 decoration: BoxDecoration(
+  //                   border: Border(top: BorderSide(color: Colors.grey[200]!)),
+  //                 ),
+  //                 child: Row(
+  //                   children: [
+  //                     Expanded(
+  //                       child: OutlinedButton(
+  //                         onPressed: () => Navigator.pop(context),
+  //                         style: OutlinedButton.styleFrom(
+  //                           padding: const EdgeInsets.symmetric(vertical: 12),
+  //                           side: const BorderSide(color: Colors.red),
+  //                         ),
+  //                         child: const Text(
+  //                           'Reject',
+  //                           style: TextStyle(
+  //                             color: Colors.red,
+  //                             fontFamily: 'Inter',
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     const SizedBox(width: 16),
+  //                     Expanded(
+  //                       child: ElevatedButton(
+  //                         onPressed:
+  //                             isUpdatingPost
+  //                                 ? null
+  //                                 : () async {
+  //                                   await _approvePost(post);
+  //                                   Navigator.pop(context);
+  //                                 },
+  //                         style: ElevatedButton.styleFrom(
+  //                           backgroundColor: primaryOrange,
+  //                           foregroundColor: Colors.white,
+  //                           padding: const EdgeInsets.symmetric(vertical: 12),
+  //                         ),
+  //                         child:
+  //                             isUpdatingPost
+  //                                 ? const SizedBox(
+  //                                   width: 20,
+  //                                   height: 20,
+  //                                   child: CircularProgressIndicator(
+  //                                     strokeWidth: 2,
+  //                                     valueColor: AlwaysStoppedAnimation<Color>(
+  //                                       Colors.white,
+  //                                     ),
+  //                                   ),
+  //                                 )
+  //                                 : const Text(
+  //                                   'Approve',
+  //                                   style: TextStyle(fontFamily: 'Inter'),
+  //                                 ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //   );
+  // }
+
   void _showPostApprovalDialog(CommunityPostModel post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            height: MediaQuery.of(context).size.height * 0.8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-              children: [
-                // Handle bar
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  width: 40,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Modern handle bar with gradient background
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFE37083).withOpacity(0.1),
+                    Colors.white,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Center(
+                child: Container(
+                  width: 48,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: const Color(0xFFE37083).withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
+              ),
+            ),
 
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Post Approval',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'League Spartan',
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
+            // Modern header with gradient accent
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 8, 16, 16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFFE37083).withOpacity(0.1),
+                    width: 1,
                   ),
                 ),
-
-                const Divider(height: 1),
-
-                // Post content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+              ),
+              child: Row(
+                children: [
+                  // Gradient accent bar
+                  Container(
+                    width: 4,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFE37083), Color(0xFFF49AA2)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Author info
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: primaryOrange.withOpacity(0.2),
-                              child: Text(
-                                (post.userName ?? 'U')[0].toUpperCase(),
-                                style: const TextStyle(
-                                  color: primaryOrange,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  post.userName ?? 'Unknown User',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Inter',
-                                  ),
-                                ),
-                                Text(
-                                  _formatDate(post.communityPostCreatedAt),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                    fontFamily: 'Inter',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Post title
                         Text(
-                          post.communityPostTitle ?? '',
-                          style: const TextStyle(
-                            fontSize: 18,
+                          'Post Approval',
+                          style: TextStyle(
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'League Spartan',
+                            color: Color(0xFF2D3748),
                           ),
                         ),
-
-                        const SizedBox(height: 12),
-
-                        // Post content
                         Text(
-                          post.communityPostContent ?? '',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            height: 1.4,
+                          'Review and approve community content',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF718096),
                             fontFamily: 'Inter',
                           ),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Post image if available
-                        buildImageSection(post),
-                        // if (post.communityPostImageUrl != null)
-                        //   ClipRRect(
-                        //     borderRadius: BorderRadius.circular(12),
-                        //     child: Image.network(
-                        //       post.communityPostImageUrl ?? '',
-                        //       width: double.infinity,
-                        //       fit: BoxFit.cover,
-                        //       errorBuilder: (context, error, stackTrace) {
-                        //         return Container(
-                        //           height: 200,
-                        //           color: Colors.grey[200],
-                        //           child: const Center(
-                        //             child: Icon(Icons.image_not_supported),
-                        //           ),
-                        //         );
-                        //       },
-                        //     ),
-                        //   ),
                       ],
                     ),
                   ),
-                ),
-
-                // Action buttons
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE37083).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFFE37083),
+                        size: 20,
+                      ),
+                    ),
                   ),
-                  child: Row(
+                ],
+              ),
+            ),
+
+            // Post content with modern card design
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFE37083).withOpacity(0.1),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE37083).withOpacity(0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: Colors.red),
+                      // Author info with modern design
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFE37083).withOpacity(0.05),
+                              Colors.white,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          child: const Text(
-                            'Reject',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontFamily: 'Inter',
-                            ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed:
-                              isUpdatingPost
-                                  ? null
-                                  : () async {
-                                    await _approvePost(post);
-                                    Navigator.pop(context);
-                                  },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryOrange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child:
-                              isUpdatingPost
-                                  ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                  : const Text(
-                                    'Approve',
-                                    style: TextStyle(fontFamily: 'Inter'),
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFE37083).withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 24,
+                                backgroundColor: const Color(0xFFE37083).withOpacity(0.15),
+                                child: Text(
+                                  (post.userName ?? 'U')[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Color(0xFFE37083),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    post.userName ?? 'Unknown User',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Inter',
+                                      color: Color(0xFF2D3748),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.schedule_rounded,
+                                        size: 14,
+                                        color: Colors.grey[500],
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _formatDate(post.communityPostCreatedAt),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[600],
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Post content with better spacing
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Post title with modern styling
+                            Container(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                post.communityPostTitle ?? '',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'League Spartan',
+                                  color: Color(0xFF2D3748),
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+
+                            // Post content with improved readability
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFE37083).withOpacity(0.1),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                post.communityPostContent ?? '',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  fontFamily: 'Inter',
+                                  color: Color(0xFF4A5568),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Post image with modern styling
+                            buildImageSection(post),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+
+            // Modern action buttons
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: const Color(0xFFE37083).withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Reject button with modern styling
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(
+                            color: Colors.red.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.red.withOpacity(0.02),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.close_rounded,
+                              color: Colors.red[600],
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Reject',
+                              style: TextStyle(
+                                color: Colors.red[600],
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Approve button with gradient
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE37083), Color(0xFFF49AA2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE37083).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: isUpdatingPost
+                            ? null
+                            : () async {
+                          await _approvePost(post);
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: isUpdatingPost
+                            ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                            : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Approve',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -37,6 +37,11 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
     _fetchTransactions();
   }
 
+  String formatCurrencyVND(int amount) {
+    final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    return formatCurrency.format(amount);
+  }
+
   // Fetch transactions from PaymentUsecase
   Future<void> _fetchTransactions() async {
     setState(() {
@@ -117,10 +122,18 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
     });
   }
 
-  double get totalAmount {
-    return transactions
-        .where((t) => t.transactionStatus == 'completed')
-        .fold(0.0, (sum, t) => sum + (t.transactionAmount ?? 0) / 100.0);
+  // double get totalAmount {
+  //   return transactions
+  //       .where((t) => t.transactionStatus == 'completed')
+  //       .fold(0.0, (sum, t) => sum + (t.transactionAmount ?? 0) / 1000);
+  // }
+
+  String get totalAmount {
+    final total = transactions
+        .where((t) => t.transactionStatus == 'Success')
+        .fold<int>(0, (sum, t) => sum + (t.transactionAmount ?? 0));
+
+    return formatCurrencyVND(total);
   }
 
   @override
@@ -266,9 +279,9 @@ class _TransactionManagePageState extends ConsumerState<TransactionManagePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '\$${totalAmount.toStringAsFixed(2)}',
+                          '\$$totalAmount',
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -522,6 +535,14 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
+  String formatCurrencyVND(num amount) {
+    final formatted = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+    ).format(amount);
+    return formatted.replaceAll('\u00A0', '');
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<List<Color>> transactionColors = [
@@ -534,9 +555,11 @@ class TransactionListItem extends StatelessWidget {
 
     // final colorIndex =
     //     int.parse(transaction.transactionId ?? '0') % transactionColors.length;
-    final colorIndex = (transaction.transactionId?.hashCode ?? 0).abs() % transactionColors.length;
+    final colorIndex =
+        (transaction.transactionId?.hashCode ?? 0).abs() %
+        transactionColors.length;
     final gradientColors = transactionColors[colorIndex];
-    final amount = (transaction.transactionAmount ?? 0) / 100.0;
+    final amount = formatCurrencyVND(transaction.transactionAmount ?? 0);
 
     return GestureDetector(
       onTap: onTap,
@@ -583,7 +606,7 @@ class TransactionListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${transaction.transactionPaymentGateway ?? 'N/A'} • \$${amount.toStringAsFixed(2)}',
+                    '${transaction.transactionPaymentGateway ?? 'N/A'} • \$$amount',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF7F8C8D),
@@ -672,6 +695,14 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
     _fetchTransactionDetail();
   }
 
+  String formatCurrencyVND(int amount) {
+    final formatted = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+    ).format(amount);
+    return formatted.replaceAll('\u00A0', '');
+  }
+
   Future<void> _fetchTransactionDetail() async {
     setState(() {
       isLoading = true;
@@ -728,9 +759,7 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
           ),
           Expanded(
             child: Text(
-              isAmount
-                  ? '\$${(int.parse(value) / 100).toStringAsFixed(2)}'
-                  : value,
+              value,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF2C3E50),
@@ -788,22 +817,39 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Amount', transaction.amount?.toString() ?? '0', isAmount: true),
+          _buildDetailRow(
+            'Amount',
+            formatCurrencyVND(transaction.amount ?? 0),
+            // transaction.amount?.toString() ?? '0',
+            isAmount: true,
+          ),
           _buildDetailRow('Account Number', transaction.accountNumber ?? 'N/A'),
           _buildDetailRow('Description', transaction.description ?? 'N/A'),
-          _buildDetailRow('Transaction Date', formatDate(transaction.transactionDateTime)),
+          _buildDetailRow(
+            'Transaction Date',
+            formatDate(transaction.transactionDateTime),
+          ),
           if (transaction.counterAccountName != null)
             _buildDetailRow('Counter Account', transaction.counterAccountName!),
           if (transaction.counterAccountNumber != null)
-            _buildDetailRow('Counter Account Number', transaction.counterAccountNumber!),
+            _buildDetailRow(
+              'Counter Account Number',
+              transaction.counterAccountNumber!,
+            ),
           if (transaction.counterAccountBankName != null)
             _buildDetailRow('Bank Name', transaction.counterAccountBankName!),
           if (transaction.counterAccountBankId != null)
             _buildDetailRow('Bank ID', transaction.counterAccountBankId!),
           if (transaction.virtualAccountName != null)
-            _buildDetailRow('Virtual Account Name', transaction.virtualAccountName!),
+            _buildDetailRow(
+              'Virtual Account Name',
+              transaction.virtualAccountName!,
+            ),
           if (transaction.virtualAccountNumber != null)
-            _buildDetailRow('Virtual Account Number', transaction.virtualAccountNumber!),
+            _buildDetailRow(
+              'Virtual Account Number',
+              transaction.virtualAccountNumber!,
+            ),
         ],
       ),
     );
@@ -1092,10 +1138,10 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
                                       ],
                                     ),
                                     const SizedBox(height: 20),
-                                    _buildDetailRow(
-                                      'Transaction ID',
-                                      transactionDetail?.id ?? 'N/A',
-                                    ),
+                                    // _buildDetailRow(
+                                    //   'Transaction ID',
+                                    //   transactionDetail?.id ?? 'N/A',
+                                    // ),
                                     _buildDetailRow(
                                       'Order Code',
                                       transactionDetail?.orderCode
@@ -1104,22 +1150,23 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
                                     ),
                                     _buildDetailRow(
                                       'Amount',
-                                      transactionDetail?.amount?.toString() ??
-                                          '0',
+                                      formatCurrencyVND(
+                                        transactionDetail?.amount ?? 0,
+                                      ),
                                       isAmount: true,
                                     ),
                                     _buildDetailRow(
                                       'Amount Paid',
-                                      transactionDetail?.amountPaid
-                                              ?.toString() ??
-                                          '0',
+                                      formatCurrencyVND(
+                                        transactionDetail?.amountPaid ?? 0,
+                                      ),
                                       isAmount: true,
                                     ),
                                     _buildDetailRow(
                                       'Amount Remaining',
-                                      transactionDetail?.amountRemaining
-                                              ?.toString() ??
-                                          '0',
+                                      formatCurrencyVND(
+                                        transactionDetail?.amountRemaining ?? 0,
+                                      ),
                                       isAmount: true,
                                     ),
                                     // _buildDetailRow('Created At', transactionDetail?.createdAt ?? 'N/A'),
@@ -1146,7 +1193,10 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
                               const SizedBox(height: 24),
 
                               // Transaction Items
-                              if (transactionDetail?.transactions != null && transactionDetail!.transactions!.isNotEmpty) ...[
+                              if (transactionDetail?.transactions != null &&
+                                  transactionDetail!
+                                      .transactions!
+                                      .isNotEmpty) ...[
                                 Row(
                                   children: [
                                     Container(
@@ -1154,7 +1204,10 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
                                       height: 30,
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
-                                          colors: [Color(0xFFFFB876), Color(0xFFFFCB7C)], // PAPAYA to SUNSHINE
+                                          colors: [
+                                            Color(0xFFFFB876),
+                                            Color(0xFFFFCB7C),
+                                          ], // PAPAYA to SUNSHINE
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                         ),
@@ -1174,7 +1227,10 @@ class _TransactionDetailModalState extends State<TransactionDetailModal> {
                                   ],
                                 ),
                                 const SizedBox(height: 16),
-                                ...transactionDetail!.transactions!.map((transaction) => _buildTransactionItem(transaction)),
+                                ...transactionDetail!.transactions!.map(
+                                  (transaction) =>
+                                      _buildTransactionItem(transaction),
+                                ),
                               ],
                             ],
                           ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:inner_child_app/core/utils/auth_utils/app_router.dart';
 import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
 import 'package:inner_child_app/core/utils/notify_another_flushbar.dart';
+import 'package:inner_child_app/domain/entities/auth/user_detail_model.dart';
 import 'package:inner_child_app/domain/usecases/auth_usecase.dart';
 import 'package:inner_child_app/presentation/pages/authentication_pages/login.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/customer_services_page/help_screen_page.dart';
@@ -18,9 +19,27 @@ class SettingsPage extends ConsumerStatefulWidget {
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends ConsumerState<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage>
+    with TickerProviderStateMixin {
   late final AuthUsecase _authUsecase;
-  late final List<Widget> settingsItems;
+  late final List<Map<String, dynamic>> settingsItems;
+
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  UserDetailModel? userDetail;
+  bool isLoadingUserDetail = true;
+  String? userDetailError;
+
+  // Color palette
+  static const Color raspberry = Color(0xFFE37083);
+  static const Color papaya = Color(0xFFFFB876);
+  static const Color iceCream = Color(0xFFF49AA2);
+  static const Color meadow = Color(0xFFA8BF8A);
+  static const Color sunshine = Color(0xFFFFCB7C);
+  static const Color springSky = Color(0xFF89B7C2);
 
   @override
   void initState() {
@@ -28,36 +47,53 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     _authUsecase = ref.read(authUseCaseProvider);
 
+    // Initialize animations
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    ));
+
+    // Load user details
+    _loadUserDetail();
+
+    // Initialize settings items
+    _initializeSettingsItems();
+
+    // Start animations
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _fadeController.forward();
+      _slideController.forward();
+    });
+  }
+
+  void _initializeSettingsItems() {
     settingsItems = [
-      _buildSettingItem(
-        icon: Icons.person,
-        color: Colors.grey,
-        title: 'Profile',
-        tap: () {
-          // context.go('usercailon/${AppRoute.profileEdit}');
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ProfileEditPage()),
-          );
-        },
-      ),
-      // _buildSettingItem(
-      //   icon: Icons.star,
-      //   color: Colors.amber,
-      //   title: 'Family Moment Premium',
-      //   tap: null,
-      // ),
-      // _buildSettingItem(
-      //   icon: Icons.photo_album,
-      //   color: Colors.red.shade300,
-      //   title: 'Album Settings',
-      //   tap: null,
-      // ),
-      _buildSettingItem(
-        icon: Icons.settings,
-        color: Colors.red.shade300,
-        title: 'Your payment transactions',
-        tap: () {
+      {
+        'icon': Icons.credit_card,
+        'color': springSky,
+        'title': 'Your payment transactions',
+        'onTap': () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -65,218 +101,465 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           );
         },
-      ),
-      _buildSettingItem(
-        icon: Icons.help_outline,
-        color: Colors.grey,
-        title: 'Support',
-        tap: () {
+      },
+      {
+        'icon': Icons.help_outline,
+        'color': meadow,
+        'title': 'Support',
+        'onTap': () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => HelpScreenPage()),
           );
         },
-      ),
-      _buildSettingItem(
-        icon: Icons.attach_money,
-        color: Colors.green,
-        title: 'Subscription',
-        tap: () {
+      },
+      {
+        'icon': Icons.star,
+        'color': sunshine,
+        'title': 'Subscription',
+        'onTap': () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => SubscriptionPage()),
           );
         },
-      ),
-      _buildSettingItem(
-        icon: Icons.exit_to_app,
-        color: Colors.red,
-        title: 'Switch Profile',
-        tap: () async {
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-              title: Text('Confirm Switch Profile'),
-              content: Text('Are you sure you want to switch profile?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false), // Cancel
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true), // Confirm
-                  child: Text('Switch'),
-                ),
-              ],
-            ),
-          );
-
-          if (shouldLogout == true) {
-            final result = await _authUsecase.switchToProfileChoosing();
-            if (result.isSuccess) {
-              // Navigator.pushReplacement or go to login page
-              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Login()));
-            } else {
-              Notify.showFlushbar('Switch failed due to error. Please logout and login again if you want to switch profile!');
-            }
-          }
-        },
-        // tap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(builder: (context) => Login()),
-        //   );
-        // },
-      ),
-      _buildSettingItem(
-        icon: Icons.exit_to_app,
-        color: Colors.red,
-        title: 'Logout',
-        tap: () async {
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: Text('Confirm Logout'),
-                  content: Text('Are you sure you want to log out?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false), // Cancel
-                      child: Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true), // Confirm
-                      child: Text('Logout'),
-                    ),
-                  ],
-                ),
-          );
-
-          if (shouldLogout == true) {
-            final result = await _authUsecase.logout();
-            if (result.isSuccess) {
-              // Navigator.pushReplacement or go to login page
-              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Login()));
-            } else {
-              Notify.showFlushbar('Logout failed');
-            }
-          }
-        },
-        // tap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(builder: (context) => Login()),
-        //   );
-        // },
-      ),
+      },
+      {
+        'icon': Icons.swap_horiz,
+        'color': papaya,
+        'title': 'Switch Profile',
+        'onTap': () => _handleSwitchProfile(),
+      },
+      {
+        'icon': Icons.logout,
+        'color': raspberry,
+        'title': 'Logout',
+        'onTap': () => _handleLogout(),
+      },
     ];
+  }
+
+  Future<void> _loadUserDetail() async {
+    final userId = ref.read(authNotifierProvider).userInfo?.userId;
+    if (userId == null) {
+      setState(() {
+        isLoadingUserDetail = false;
+        userDetailError = "User ID is missing.";
+      });
+      return;
+    }
+
+    final result = await _authUsecase.getUserDetail(userId);
+    if (result.isSuccess) {
+      setState(() {
+        userDetail = result.data;
+        isLoadingUserDetail = false;
+        userDetailError = null;
+      });
+    } else {
+      setState(() {
+        isLoadingUserDetail = false;
+        userDetailError = "Failed to load user details.";
+      });
+    }
+  }
+
+  Future<void> _handleSwitchProfile() async {
+    final shouldSwitch = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Switch Profile'),
+        content: const Text('Are you sure you want to switch profile?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Switch'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSwitch == true) {
+      final result = await _authUsecase.switchToProfileChoosing();
+      if (result.isSuccess) {
+        // Handle success
+      } else {
+        Notify.showFlushbar(
+            'Switch failed due to error. Please logout and login again if you want to switch profile!'
+        );
+      }
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      final result = await _authUsecase.logout();
+      if (result.isSuccess) {
+        // Handle success
+      } else {
+        Notify.showFlushbar('Logout failed');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    _fadeController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return
-            // SingleChildScrollView(
-            // child:
-            ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Container(
-                width: double.infinity,
-                // height: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: CustomScrollView(
+              slivers: [
+                // Profile Header Section
+                SliverToBoxAdapter(
+                  child: _buildProfileHeader(),
                 ),
-                // child: Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Settings",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 40),
-                    Expanded(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: settingsItems.length,
-                        itemBuilder: (context, index) {
-                          final item = settingsItems[index];
-                          return item;
-                        },
 
-                        separatorBuilder:
-                            (context, index) => SizedBox(height: 10),
+                // Settings Title
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                    child: Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+
+                // Settings List
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        return AnimatedBuilder(
+                          animation: _slideController,
+                          builder: (context, child) {
+                            final delay = index * 0.1;
+                            final animationValue = Curves.easeOutCubic.transform(
+                                (_slideController.value - delay).clamp(0.0, 1.0)
+                            );
+
+                            return Transform.translate(
+                              offset: Offset(0, 30 * (1 - animationValue)),
+                              child: Opacity(
+                                opacity: animationValue,
+                                child: _buildSettingItem(
+                                  settingsItems[index],
+                                  index,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      childCount: settingsItems.length,
+                    ),
+                  ),
+                ),
+
+                // Bottom spacing
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 40),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSettingItem({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required VoidCallback? tap,
-  }) {
-    return
-    // GestureDetector(
-    // onTap: tap,
-    // child:
-    Container(
+  Widget _buildProfileHeader() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFEEEEEE), width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            raspberry.withOpacity(0.8),
+            iceCream.withOpacity(0.9),
+            papaya.withOpacity(0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((0.05 * 255).round()),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+            color: raspberry.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: isLoadingUserDetail
+          ? _buildProfileLoading()
+          : userDetailError != null
+          ? _buildProfileError()
+          : _buildProfileContent(),
+    );
+  }
+
+  Widget _buildProfileLoading() {
+    return Row(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+        const SizedBox(width: 15),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 20,
+                width: 150,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 16,
+                width: 100,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileError() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileEditPage()),
+        );
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Click to view your profile',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Unable to load profile details',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileContent() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileEditPage()),
+        );
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: userDetail?.profilePicture != null
+                  ? Image.network(
+                userDetail!.profilePicture!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.person,
+                    color: raspberry,
+                    size: 30,
+                  );
+                },
+              )
+                  : Icon(
+                Icons.person,
+                color: raspberry,
+                size: 30,
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  userDetail?.fullName ?? 'User',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingItem(Map<String, dynamic> item, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: Colors.black.withAlpha((0.1 * 255).round()),
-            borderRadius: BorderRadius.circular(10),
+            color: (item['color'] as Color).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 24),
+          child: Icon(
+            item['icon'] as IconData,
+            color: item['color'] as Color,
+            size: 24,
+          ),
         ),
         title: Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          item['title'] as String,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2D3748),
+          ),
         ),
-        trailing:
-            title.isNotEmpty
-                ? const Icon(Icons.chevron_right, color: Colors.grey)
-                : null,
-        onTap: tap,
+        trailing: Icon(
+          Icons.chevron_right,
+          color: Colors.grey[400],
+        ),
+        onTap: item['onTap'] as VoidCallback?,
       ),
     );
-    // );
   }
 }

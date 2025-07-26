@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/chat_ai/chat_session_model.dart';
 import 'package:inner_child_app/domain/usecases/chat_ai_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/chat_ai/chat_ai_page.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/subscription_pages/subscription_page.dart';
 
 class ChatAiSessionListPage extends ConsumerStatefulWidget {
   const ChatAiSessionListPage({super.key});
@@ -25,7 +27,6 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage>
 
   Timer? _animationTimer;
 
-
   List<ChatSessionModel> _chatSessions = [];
   List<ChatSessionModel> _filteredSessions = [];
   bool _isLoading = true;
@@ -35,10 +36,13 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage>
 
   final TextEditingController _searchController = TextEditingController();
 
+  late final String? currentPlan;
+
   @override
   void initState() {
     super.initState();
     _chatAIUseCase = ref.read(chatAiUseCaseProvider);
+    currentPlan = ref.read(authNotifierProvider).userInfo?.purchasePlan;
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -61,6 +65,8 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage>
     _animationTimer?.cancel();
     super.dispose();
   }
+
+  bool get isPremiumUser => currentPlan == 'PremiumPlan';
 
   // Future<void> _createNewSession(String title) async {
   //   try {
@@ -325,11 +331,12 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage>
   // }
 
   void _filterAndSortSessions() {
-    List<ChatSessionModel> filtered = _chatSessions.where((session) {
-      return session.aiChatSessionTitle.toLowerCase().contains(
-        _searchQuery.toLowerCase(),
-      );
-    }).toList();
+    List<ChatSessionModel> filtered =
+        _chatSessions.where((session) {
+          return session.aiChatSessionTitle.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
+        }).toList();
 
     filtered.sort((a, b) {
       if (_sortBy == 'newest') {
@@ -401,211 +408,541 @@ class _ChatAiSessionListPageState extends ConsumerState<ChatAiSessionListPage>
     final groupedSessions = _groupSessionsByTime();
 
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7F0),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          shape: const Border(
-            bottom: BorderSide(
-              color: Color(0xFFE5E7EB), // light gray border
-              width: 1,
-            ),
-          ),
-          elevation: 2,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFA8BF8A)),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          centerTitle: true,
-          title: const Text(
-            'Chat Session History',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          actions: [
-            if (_selectedSessionId != null)
-              IconButton(
-                icon: const Icon(Icons.close, color: Color(0xFFA8BF8A)),
-                onPressed: () {
-                  setState(() {
-                    _selectedSessionId = null;
-                  });
-                },
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: const Color(0xFFF5F7F0),
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              shape: const Border(
+                bottom: BorderSide(
+                  color: Color(0xFFE5E7EB), // light gray border
+                  width: 1,
+                ),
               ),
-          ],
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Search and Sort Row
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+              elevation: 2,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Color(0xFFA8BF8A),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              centerTitle: true,
+              title: const Text(
+                'Chat Session History',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+              actions: [
+                if (_selectedSessionId != null)
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFFA8BF8A)),
+                    onPressed: () {
+                      setState(() {
+                        _selectedSessionId = null;
+                      });
+                    },
+                  ),
+              ],
+            ),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // Search and Sort Row
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: const InputDecoration(
+                                hintText: 'Search sessions...',
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: Color(0xFFA8BF8A),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                                _filterAndSortSessions();
+                              },
+                            ),
+                          ),
                         ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: const InputDecoration(
-                            hintText: 'Search sessions...',
-                            prefixIcon: Icon(
-                              Icons.search,
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: DropdownButton<String>(
+                            value: _sortBy,
+                            underline: const SizedBox(),
+                            icon: const Icon(
+                              Icons.sort,
                               color: Color(0xFFA8BF8A),
                             ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                            _filterAndSortSessions();
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: DropdownButton<String>(
-                        value: _sortBy,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.sort, color: Color(0xFFA8BF8A)),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'newest',
-                            child: Text('Newest'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'oldest',
-                            child: Text('Oldest'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _sortBy = value!;
-                          });
-                          _filterAndSortSessions();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // List Content
-              Expanded(
-                child:
-                    _isLoading
-                        ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFA8BF8A),
-                          ),
-                        )
-                        : _filteredSessions.isEmpty
-                        ? const Center(
-                          child: Text(
-                            'No sessions found.',
-                            style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 16,
-                            ),
-                          ),
-                        )
-                        : AnimatedBuilder(
-                          animation: _animationController,
-                          builder: (context, child) {
-                            return ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'newest',
+                                child: Text('Newest'),
                               ),
-                              itemCount: _calculateTotalItems(groupedSessions),
-                              itemBuilder: (context, index) {
-                                return _buildGroupedItem(
-                                  groupedSessions,
-                                  index,
-                                );
-                              },
-                            );
-                          },
-                        ),
-              ),
-
-              // Fixed Bottom Button
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _showCreateSessionDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFA8BF8A),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Create New Session',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                              DropdownMenuItem(
+                                value: 'oldest',
+                                child: Text('Oldest'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _sortBy = value!;
+                              });
+                              _filterAndSortSessions();
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
+
+                  // List Content
+                  Expanded(
+                    child:
+                        _isLoading
+                            ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFA8BF8A),
+                              ),
+                            )
+                            : _filteredSessions.isEmpty
+                            ? const Center(
+                              child: Text(
+                                'No sessions found.',
+                                style: TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                            : AnimatedBuilder(
+                              animation: _animationController,
+                              builder: (context, child) {
+                                return ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  itemCount: _calculateTotalItems(
+                                    groupedSessions,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    return _buildGroupedItem(
+                                      groupedSessions,
+                                      index,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                  ),
+
+                  // Fixed Bottom Button
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _showCreateSessionDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFA8BF8A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'Create New Session',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!isPremiumUser)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 360),
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFFF49AA2), // ICE CREAM
+                              Color(0xFFF49AA2).withOpacity(0.95),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Color(0xFFFFB876), // PAPAYA
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFE37083).withOpacity(0.3), // RASPBERRY
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.1),
+                              blurRadius: 1,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Premium Icon
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFFFFCB7C), // SUNSHINE
+                                    Color(0xFFFFB876), // PAPAYA
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFFE37083).withOpacity(0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.diamond,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Title
+                            const Text(
+                              'Premium Feature',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // Changed to white for better contrast
+                                decoration: TextDecoration.none,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0xFFE37083), // RASPBERRY shadow
+                                    offset: Offset(0, 1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Subtitle
+                            const Text(
+                              'This feature is locked',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white, // Changed to white for better contrast
+                                decoration: TextDecoration.none,
+                                fontWeight: FontWeight.w500,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0xFF89B7C2), // SPRING SKY shadow
+                                    offset: Offset(0, 1),
+                                    blurRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Description
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9), // More opaque background
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Color(0xFFFFB876).withOpacity(0.5), // PAPAYA border
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'Upgrade to Premium to unlock chat session history and advanced features!',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFFE37083), // RASPBERRY for better contrast
+                                  decoration: TextDecoration.none,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Action Buttons - Fixed overflow by using Column
+                            Column(
+                              children: [
+                                // Primary Button
+                                Container(
+                                  width: double.infinity,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    // color: Color(0xFFE37083).withOpacity(0.3),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFFFFCB7C), // SUNSHINE
+                                        Color(0xFFFFB876), // PAPAYA
+                                      ],
+                                    ),
+                                    // gradient: LinearGradient(
+                                    //   begin: Alignment.topLeft,
+                                    //   end: Alignment.bottomRight,
+                                    //   // colors: [
+                                    //   //   Color(0xFFA8BF8A), // MEADOW
+                                    //   //   Color(0xFFA8BF8A).withOpacity(0.9),
+                                    //   // ],
+                                    // ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(0xFFA8BF8A).withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 0,
+                                      shadowColor: Colors.transparent,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(context, MaterialPageRoute(builder: (context)=> SubscriptionPage()));
+                                      // Notify.showFlushbar("Upgrade feature coming soon!");
+                                    },
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min, // Fix overflow
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Flexible( // Prevent text overflow
+                                          child: Text(
+                                            'Unlock Premium',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Secondary Button
+                                Container(
+                                  width: double.infinity,
+                                  height: 44,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white.withOpacity(0.9), // More opaque
+                                      foregroundColor: Color(0xFFE37083), // RASPBERRY for better contrast
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        side: BorderSide(
+                                          color: Color(0xFFFFB876).withOpacity(0.6), // PAPAYA border
+                                          width: 1,
+                                        ),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text(
+                                      'Maybe Later',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Feature Pills - Fixed overflow with Wrap
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                _buildFeaturePill('Chat History', Icons.history),
+                                _buildFeaturePill('Advanced AI', Icons.smart_toy),
+                                _buildFeaturePill('Priority Support', Icons.support),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+        ],
+      ),
+    );
+  }
+
+// Helper method for feature pills - Fixed overflow
+  Widget _buildFeaturePill(String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9), // More opaque background
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Color(0xFFFFB876).withOpacity(0.6), // PAPAYA border
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.3),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Color(0xFFA8BF8A), // MEADOW for better contrast
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Flexible( // Prevent text overflow
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFE37083), // RASPBERRY for better contrast
+                decoration: TextDecoration.none,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
