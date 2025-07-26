@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:inner_child_app/domain/entities/quiz_category/quiz_category_model.dart';
+import 'package:inner_child_app/domain/usecases/quiz_category_usecase.dart';
 
 class QuizCategoryManagePage extends ConsumerStatefulWidget {
   const QuizCategoryManagePage({super.key});
@@ -10,11 +11,151 @@ class QuizCategoryManagePage extends ConsumerStatefulWidget {
 }
 
 class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage> {
+  late final QuizCategoryUsecase _quizCategoryUsecase;
   List<QuizCategoryModel> quizCategories = [];
   bool isLoadCategory = false;
   bool isCategoryListError = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Future<void> _fetchQuizCategories() async {
+  //   setState(() {
+  //     isLoadCategory = true;
+  //     isCategoryListError = false;
+  //   });
+  //
+  //   try {
+  //     // Simulate API call delay
+  //     await Future.delayed(const Duration(seconds: 1));
+  //
+  //     // Mock data - replace with actual API call
+  //     final mockCategories = [
+  //       QuizCategoryModel(
+  //         quizCategoryId: '1',
+  //         quizCategoryName: 'General Knowledge',
+  //         quizCategoryDescription: 'Questions about various topics and general information',
+  //       ),
+  //       QuizCategoryModel(
+  //         quizCategoryId: '2',
+  //         quizCategoryName: 'Science',
+  //         quizCategoryDescription: 'Physics, Chemistry, Biology and Earth Sciences',
+  //       ),
+  //       QuizCategoryModel(
+  //         quizCategoryId: '3',
+  //         quizCategoryName: 'History',
+  //         quizCategoryDescription: 'World history, ancient civilizations, and historical events',
+  //       ),
+  //     ];
+  //
+  //     setState(() {
+  //       quizCategories = mockCategories;
+  //       isLoadCategory = false;
+  //     });
+  //   } catch (_) {
+  //     setState(() {
+  //       isLoadCategory = false;
+  //       isCategoryListError = true;
+  //     });
+  //   }
+  // }
+  //
+  // void _createQuizCategory() async {
+  //   final success = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => Dialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       child: ConstrainedBox(
+  //         constraints: const BoxConstraints(maxWidth: 500),
+  //         child: QuizCategoryForm(
+  //           onSave: (newCategory) async {
+  //             try {
+  //               // Simulate API call
+  //               await Future.delayed(const Duration(seconds: 1));
+  //
+  //               // Mock success - replace with actual API call
+  //               setState(() {
+  //                 quizCategories.add(QuizCategoryModel(
+  //                   quizCategoryId: DateTime.now().millisecondsSinceEpoch.toString(),
+  //                   quizCategoryName: newCategory.quizCategoryName,
+  //                   quizCategoryDescription: newCategory.quizCategoryDescription,
+  //                 ));
+  //               });
+  //
+  //               return true;
+  //             } catch (_) {
+  //               return false;
+  //             }
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  //
+  //   if (success ?? false) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Quiz Category created successfully'),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   } else if (success != null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Failed to create Quiz Category'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
+  //
+  // void _updateQuizCategory(QuizCategoryModel category) async {
+  //   final success = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => Dialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       child: ConstrainedBox(
+  //         constraints: const BoxConstraints(maxWidth: 500),
+  //         child: QuizCategoryForm(
+  //           quizCategory: category,
+  //           onSave: (updated) async {
+  //             try {
+  //               // Simulate API call
+  //               await Future.delayed(const Duration(seconds: 1));
+  //
+  //               // Mock success - replace with actual API call
+  //               setState(() {
+  //                 final index = quizCategories.indexWhere((c) => c.quizCategoryId == updated.quizCategoryId);
+  //                 if (index != -1) {
+  //                   quizCategories[index] = updated;
+  //                 }
+  //               });
+  //
+  //               return true;
+  //             } catch (_) {
+  //               return false;
+  //             }
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  //
+  //   if (success ?? false) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Category updated successfully'),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   } else if (success != null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Failed to update category'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> _fetchQuizCategories() async {
     setState(() {
@@ -23,33 +164,20 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
     });
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await _quizCategoryUsecase.getAllQuizCategories();
 
-      // Mock data - replace with actual API call
-      final mockCategories = [
-        QuizCategoryModel(
-          quizCategoryId: '1',
-          quizCategoryName: 'General Knowledge',
-          quizCategoryDescription: 'Questions about various topics and general information',
-        ),
-        QuizCategoryModel(
-          quizCategoryId: '2',
-          quizCategoryName: 'Science',
-          quizCategoryDescription: 'Physics, Chemistry, Biology and Earth Sciences',
-        ),
-        QuizCategoryModel(
-          quizCategoryId: '3',
-          quizCategoryName: 'History',
-          quizCategoryDescription: 'World history, ancient civilizations, and historical events',
-        ),
-      ];
-
-      setState(() {
-        quizCategories = mockCategories;
-        isLoadCategory = false;
-      });
-    } catch (_) {
+      if (result.isSuccess) {
+        setState(() {
+          quizCategories = result.data ?? [];
+          isLoadCategory = false;
+        });
+      } else {
+        setState(() {
+          isLoadCategory = false;
+          isCategoryListError = true;
+        });
+      }
+    } catch (e) {
       setState(() {
         isLoadCategory = false;
         isCategoryListError = true;
@@ -57,6 +185,7 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
     }
   }
 
+// Updated _createQuizCategory method
   void _createQuizCategory() async {
     final success = await showDialog<bool>(
       context: context,
@@ -67,20 +196,19 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
           child: QuizCategoryForm(
             onSave: (newCategory) async {
               try {
-                // Simulate API call
-                await Future.delayed(const Duration(seconds: 1));
+                final result = await _quizCategoryUsecase.createQuizCategory(
+                  newCategory.quizCategoryName ?? '',
+                  newCategory.quizCategoryDescription ?? '',
+                );
 
-                // Mock success - replace with actual API call
-                setState(() {
-                  quizCategories.add(QuizCategoryModel(
-                    quizCategoryId: DateTime.now().millisecondsSinceEpoch.toString(),
-                    quizCategoryName: newCategory.quizCategoryName,
-                    quizCategoryDescription: newCategory.quizCategoryDescription,
-                  ));
-                });
-
-                return true;
-              } catch (_) {
+                if (result.isSuccess) {
+                  // Refresh the list after successful creation
+                  await _fetchQuizCategories();
+                  return true;
+                } else {
+                  return false;
+                }
+              } catch (e) {
                 return false;
               }
             },
@@ -106,6 +234,7 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
     }
   }
 
+// Updated _updateQuizCategory method
   void _updateQuizCategory(QuizCategoryModel category) async {
     final success = await showDialog<bool>(
       context: context,
@@ -117,19 +246,20 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
             quizCategory: category,
             onSave: (updated) async {
               try {
-                // Simulate API call
-                await Future.delayed(const Duration(seconds: 1));
+                final result = await _quizCategoryUsecase.updateQuizCategory(
+                  updated.quizCategoryId ?? '',
+                  updated.quizCategoryName ?? '',
+                  updated.quizCategoryDescription ?? '',
+                );
 
-                // Mock success - replace with actual API call
-                setState(() {
-                  final index = quizCategories.indexWhere((c) => c.quizCategoryId == updated.quizCategoryId);
-                  if (index != -1) {
-                    quizCategories[index] = updated;
-                  }
-                });
-
-                return true;
-              } catch (_) {
+                if (result.isSuccess) {
+                  // Refresh the list after successful update
+                  await _fetchQuizCategories();
+                  return true;
+                } else {
+                  return false;
+                }
+              } catch (e) {
                 return false;
               }
             },
@@ -178,8 +308,9 @@ class _QuizCategoryManagePageState extends ConsumerState<QuizCategoryManagePage>
 
   @override
   void initState() {
-    super.initState();
     _fetchQuizCategories();
+
+    super.initState();
   }
 
   @override

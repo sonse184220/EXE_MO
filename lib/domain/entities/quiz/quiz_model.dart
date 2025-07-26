@@ -44,4 +44,24 @@ class QuizModel {
       'questions': questions?.map((e) => e.toJson()).toList(),
     };
   }
+
+  QuizModel copyWith({
+    String? quizId,
+    String? quizTitle,
+    String? quizDescription,
+    String? quizStatus,
+    int? quizMaxScore,
+    String? quizCategoryId,
+    List<QuizQuestionModel>? questions,
+  }) {
+    return QuizModel(
+      quizId: quizId ?? this.quizId,
+      quizTitle: quizTitle ?? this.quizTitle,
+      quizDescription: quizDescription ?? this.quizDescription,
+      quizStatus: quizStatus ?? this.quizStatus,
+      quizMaxScore: quizMaxScore ?? this.quizMaxScore,
+      quizCategoryId: quizCategoryId ?? this.quizCategoryId,
+      questions: questions ?? this.questions,
+    );
+  }
 }

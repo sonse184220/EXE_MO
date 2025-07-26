@@ -10,6 +10,8 @@ import 'package:inner_child_app/domain/usecases/mood_journal_type_usecase.dart';
 import 'package:inner_child_app/domain/usecases/mood_journal_usecase.dart';
 import 'package:inner_child_app/presentation/pages/function_pages/mood_journal_page/mood_journal_history_page.dart';
 import 'package:lottie/lottie.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class MoodJournalWriting extends ConsumerStatefulWidget {
   const MoodJournalWriting({super.key});
@@ -41,6 +43,9 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
   late final MoodJournalUsecase _moodJournalUsecase;
   late final MoodJournalTypeUsecase _moodJournalTypeUsecase;
 
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
+
   JournalCategory? selectedJournalCategory;
   Mood? selectedMood;
   String _journalTitle = "";
@@ -51,6 +56,10 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
   MoodJournalTypeModel? selectedJournalType;
   bool isLoadingTypes = false;
   bool isLoggingMood = false;
+
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _lastWords = "";
 
   String _getMoodString(Mood mood) {
     switch (mood) {
@@ -163,6 +172,46 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
     }
   }
 
+  void _listen() async {
+    var status = await Permission.microphone.request();
+
+    if (status.isGranted) {
+      if (!_isListening) {
+        bool available = await _speech.initialize(
+          onStatus: (val) => print('onStatus: $val'),
+          onError: (val) => print('onError: $val'),
+        );
+        if (available) {
+          setState(() => _isListening = true);
+          _speech.listen(
+            // localeId: "en_US",
+            localeId: null,
+            listenOptions: stt.SpeechListenOptions(
+              onDevice: true,
+              listenMode: stt.ListenMode.confirmation,
+            ),
+            // onDevice: true,
+            onResult: (val) {
+              setState(() {
+                _lastWords = val.recognizedWords;
+                _journalContent += " $_lastWords";
+                _contentController.text = _journalContent;
+              });
+            },
+          );
+        }
+      } else {
+        setState(() => _isListening = false);
+        _speech.stop();
+      }
+    } else {
+      Notify.showFlushbar('Microphone permission denied', isError: true);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Microphone permission denied')),
+      // );
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -170,6 +219,11 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
 
     _moodJournalUsecase = ref.read(moodJournalUseCaseProvider);
     _moodJournalTypeUsecase = ref.read(moodJournalTypeUseCaseProvider);
+
+    _titleController = TextEditingController();
+    _contentController = TextEditingController();
+
+    _speech = stt.SpeechToText();
 
     _loadJournalTypes();
   }
@@ -284,44 +338,6 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                   ),
 
                 SizedBox(height: screenHeight * 0.02),
-                // Wrap(
-                //   spacing: screenWidth * 0.02,
-                //   runSpacing: 1,
-                //   children: [
-                //     _buildJournalCategory(journalCategory: JournalCategory.Work),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Exercise,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Family,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Hobbies,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Finances,
-                //     ),
-                //     _buildJournalCategory(journalCategory: JournalCategory.Sleep),
-                //     _buildJournalCategory(journalCategory: JournalCategory.Drink),
-                //     _buildJournalCategory(journalCategory: JournalCategory.Food),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.RelationShip,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Education,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Weather,
-                //     ),
-                //     _buildJournalCategory(journalCategory: JournalCategory.Music),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Travel,
-                //     ),
-                //     _buildJournalCategory(
-                //       journalCategory: JournalCategory.Health,
-                //     ),
-                //   ],
-                // ),
                 SizedBox(height: 1),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -346,6 +362,7 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: TextField(
+                    controller: _titleController,
                     decoration: InputDecoration(
                       hintText: 'Type your journal title here',
                       filled: true,
@@ -371,6 +388,7 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                   ),
 
                   child: TextField(
+                    controller: _contentController,
                     minLines: 5,
                     maxLines: null,
                     style: TextStyle(
@@ -397,12 +415,20 @@ class _MoodJournalWritingState extends ConsumerState<MoodJournalWriting> {
                           width: 3,
                         ), //
                       ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isListening ? Icons.mic : Icons.mic_none,
+                          color: Colors.black,
+                        ),
+                        onPressed: _listen,
+                      ),
                     ),
                     onChanged: (value) {
                       setState(() {
                         _journalContent = value;
                       });
                     },
+                    // controller: TextEditingController(text: _journalContent),
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.01),

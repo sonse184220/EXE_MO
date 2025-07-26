@@ -6,6 +6,7 @@ import 'package:inner_child_app/domain/entities/quiz/quiz_model.dart';
 import 'package:inner_child_app/domain/entities/quiz/quiz_question_model.dart';
 import 'package:inner_child_app/domain/entities/quiz/quiz_user_answer_model.dart';
 import 'package:inner_child_app/domain/usecases/quiz_usecase.dart';
+import 'package:inner_child_app/presentation/pages/function_pages/quiz/quiz_attempt_history_page.dart';
 
 class UserAnswer {
   final String questionId;
@@ -169,10 +170,52 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
     return SafeArea(
       child:  Scaffold(
       backgroundColor: const Color(0xFFF5E6D3),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF5E6D3),
+          elevation: 2,
+          automaticallyImplyLeading: false,
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Color(0xFF8B4513),
+                  size: 20,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  quiz?.quizTitle ?? 'Quiz',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8B4513),
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              TextButton(
+                onPressed: _showQuestionNavigationModal,
+                child: const Text(
+                  "Questions",
+                  style: TextStyle(
+                    color: Color(0xFF8B4513),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       body: Column(
           children: [
             // Header
-            _buildHeader(),
+            // _buildHeader(),
+            const SizedBox(height: 10),
             // Progress Bar
             _buildProgressBar(),
             // Quiz Content
@@ -433,6 +476,7 @@ class _QuizTakingPageState extends ConsumerState<QuizTakingPage> {
         // Show success and navigate to results
         // _showQuizResults(result.data); // Pass the result data if needed
         Notify.showFlushbar('Submit quiz successfully!');
+        Navigator.push(context, MaterialPageRoute(builder: (context) => QuizAttemptHistoryPage()));
       } else {
         Notify.showFlushbar('Failed to submit quiz: ${result.error}', isError: true);
       }

@@ -35,28 +35,10 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
       if (result.isSuccess) {
         // Navigate or show success dialog
         if (!mounted) return;
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Email Sent'),
-            content: Text(
-              'We\'ve sent a password reset link to $email. Please check your inbox.',
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ForgotPassword2()),
-                  );
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const ForgotPassword2()));
       } else if (result.isFailure) {
         // Show error dialog
         if (!mounted) return;
@@ -64,7 +46,7 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Error'),
-            content: Text(result.error ?? 'An unknown error occurred.'),
+            content: Text('Fail to connect to server. Please check your network and try again later'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -124,6 +106,10 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
       },
       child: SafeArea(
         child:  Scaffold(
+          appBar: AppBar(leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),),
         resizeToAvoidBottomInset: true,
         body: Padding(
             padding: const EdgeInsets.all(20),
@@ -131,17 +117,17 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // ===== Top: Back Button and Header =====
-                Column(
+                Container(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                    SizedBox(height: 20),
+                    // Align(
+                    //   alignment: Alignment.centerLeft,
+                    //   child: IconButton(
+                    //     icon: Icon(Icons.arrow_back),
+                    //     onPressed: () => Navigator.of(context).pop(),
+                    //   ),
+                    // ),
+                    // SizedBox(height: 20),
                     SizeTransition(
                       sizeFactor: _controller,
                       axisAlignment: -1.0,
@@ -151,13 +137,14 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
                             Container(
                               padding: EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
+                                // color: Colors.blue.shade50,
+                                color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.lock_reset,
                                 size: 60,
-                                color: Colors.deepOrangeAccent,
+                                color: Color(0xFF89B7C2),
                               ),
                             ),
                             SizedBox(height: 24),
@@ -184,7 +171,7 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
                       ),
                     ),
                   ],
-                ),
+                ),),
 
                 // ===== Middle: Form with scroll if needed =====
                 Flexible(
@@ -232,42 +219,13 @@ class _ForgotPassword1State extends ConsumerState<ForgotPassword1>
                       height: 55,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleRequestPasswordChange,
-                        // onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPassword2()));},
-                            // _isLoading
-                            //     ? null
-                            //     : () async {
-                            //       if (_formKey.currentState!.validate()) {
-                            //         setState(() => _isLoading = true);
-                            //         await Future.delayed(Duration(seconds: 2));
-                            //         setState(() => _isLoading = false);
-                            //
-                            //         showDialog(
-                            //           context: context,
-                            //           builder:
-                            //               (context) => AlertDialog(
-                            //                 title: Text('Email Sent'),
-                            //                 content: Text(
-                            //                   'We\'ve sent a password reset link to ${_emailController.text}. Please check your inbox.',
-                            //                 ),
-                            //                 actions: [
-                            //                   TextButton(
-                            //                     onPressed:
-                            //                         () =>
-                            //                             Navigator.pop(context),
-                            //                     child: Text('OK'),
-                            //                   ),
-                            //                 ],
-                            //               ),
-                            //         );
-                            //       }
-                            //     },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.brown,
+                          backgroundColor: Color(0xFF89B7C2),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          disabledBackgroundColor: Colors.blue.withAlpha((0.5 * 255).toInt()),
+                          disabledBackgroundColor: Colors.grey.withAlpha((0.5 * 255).toInt()),
                         ),
                         child:
                             _isLoading

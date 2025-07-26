@@ -511,19 +511,9 @@ class ContactUs extends StatefulWidget {
 class _ContactUsState extends State<ContactUs> {
   final List<Map<String, dynamic>> _contactItems = [
     {
-      'icon': FontAwesomeIcons.headphones,
-      'label': 'Customer Service',
-      'url': 'mailto:support@example.com',
-    },
-    {
-      'icon': FontAwesomeIcons.whatsapp,
-      'label': 'WhatsApp',
-      'url': 'https://wa.me/1234567890',
-    },
-    {
       'icon': FontAwesomeIcons.globe,
       'label': 'Website',
-      'url': 'https://www.example.com',
+      'url': 'https://inner-child.vercel.app/',
     },
     {
       'icon': FontAwesomeIcons.facebook,
@@ -532,13 +522,13 @@ class _ContactUsState extends State<ContactUs> {
     },
     {
       'icon': FontAwesomeIcons.twitter,
-      'label': 'Twitter',
-      'url': 'https://twitter.com/example',
+      'label': 'Tik Tok',
+      'url': 'https://www.tiktok.com/@_innerchild_520',
     },
     {
       'icon': FontAwesomeIcons.instagram,
       'label': 'Instagram',
-      'url': 'https://instagram.com/example',
+      'url': 'https://www.instagram.com/letters.to.innerchild/',
     },
   ];
 

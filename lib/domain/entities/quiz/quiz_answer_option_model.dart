@@ -28,4 +28,18 @@ class QuizAnswerOptionModel {
       'questionId': questionId,
     };
   }
+
+  QuizAnswerOptionModel copyWith({
+    String? quizAnswerOptionId,
+    String? quizContent,
+    int? quizScoreValue,
+    String? questionId,
+  }) {
+    return QuizAnswerOptionModel(
+      quizAnswerOptionId: quizAnswerOptionId ?? this.quizAnswerOptionId,
+      quizContent: quizContent ?? this.quizContent,
+      quizScoreValue: quizScoreValue ?? this.quizScoreValue,
+      questionId: questionId ?? this.questionId,
+    );
+  }
 }

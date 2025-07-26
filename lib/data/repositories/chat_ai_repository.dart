@@ -88,4 +88,23 @@ class ChatAiRepository implements IChatAiRepository {
       return Result.failure('Create session error: $e');
     }
   }
+
+  @override
+  Future<Result<String>> deleteChatSession(String chatSessionId) async {
+    try {
+      final response = await _chatAiService.deleteChatSession(chatSessionId);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        return Result.success(data);
+      }
+
+      return Result.failure(
+        'Failed to delete chat session: ${response.statusCode}',
+      );
+    } catch (e) {
+      return Result.failure('Delete session error');
+    }
+  }
 }

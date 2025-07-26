@@ -1,26 +1,35 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:inner_child_app/core/utils/dependency_injection/injection.dart';
+import 'package:inner_child_app/domain/entities/transaction/transaction_admin_view_model.dart';
+import 'package:inner_child_app/domain/usecases/dashboard_usecase.dart';
+import 'package:inner_child_app/domain/usecases/payment_usecase.dart';
 import 'package:intl/intl.dart';
 
-class AdminHomePage extends StatefulWidget {
+class AdminHomePage extends ConsumerStatefulWidget {
   const AdminHomePage({super.key});
 
   @override
-  State<AdminHomePage> createState() => _AdminHomePageState();
+  ConsumerState<AdminHomePage> createState() => _AdminHomePageState();
 }
 
-class _AdminHomePageState extends State<AdminHomePage> {
+class _AdminHomePageState extends ConsumerState<AdminHomePage> {
+  late final DashboardUsecase _dashboardUsecase;
+  late final PaymentUsecase _paymentUsecase;
+
   // Sample data - replace with your actual API data
   List<RevenueData> revenueData = [
-    RevenueData(time: "01/2024", revenue: 64450),
-    RevenueData(time: "02/2024", revenue: 63680),
-    RevenueData(time: "03/2024", revenue: 52120),
-    RevenueData(time: "04/2024", revenue: 78900),
-    RevenueData(time: "05/2024", revenue: 85600),
-    RevenueData(time: "06/2024", revenue: 92300),
+    // RevenueData(time: "01/2024", revenue: 64450),
+    // RevenueData(time: "02/2024", revenue: 63680),
+    // RevenueData(time: "03/2024", revenue: 52120),
+    // RevenueData(time: "04/2024", revenue: 78900),
+    // RevenueData(time: "05/2024", revenue: 85600),
+    // RevenueData(time: "06/2024", revenue: 92300),
   ];
 
-  OverviewData overviewData = OverviewData(
+  OverviewData overviewData =
+  OverviewData(
     totalRevenue: 165365,
     totalTransactions: 6,
     successfulTransactions: 6,
@@ -48,26 +57,212 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _dashboardUsecase = ref.read(dashboardUseCaseProvider);
+    _paymentUsecase = ref.read(paymentUseCaseProvider);
+
+    _fetchRevenueChartData();
+    fetchOverviewData();
   }
 
-  Future<void> _fetchData() async {
+  // Future<void> _fetchData() async {
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+  //
+  //   try {
+  //     // TODO: Replace with your actual API calls
+  //     // await _fetchRevenueData();
+  //     // await _fetchOverviewData();
+  //
+  //     // Simulate API delay
+  //     await Future.delayed(const Duration(milliseconds: 500));
+  //
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
+
+  // Future<void> fetchOverviewData() async {
+  //   setState(() => isLoading = true);
+  //
+  //   try {
+  //     final transactions = await _paymentUsecase.getTransactionsForAdmin();
+  //
+  //     final totalRevenue = transactions.data!
+  //         .where((t) => t.transactionAmount != null)
+  //         .fold<int>(0, (sum, t) => sum + t.transactionAmount!);
+  //
+  //     final totalTransactions = transactions.data!.length;
+  //
+  //     final successfulTransactions = transactions.data!
+  //         .where((t) => t.transactionStatus?.toLowerCase() == 'success')
+  //         .length;
+  //
+  //     final failedTransactions = transactions.data!
+  //         .where((t) => t.transactionStatus?.toLowerCase() == 'failed')
+  //         .length;
+  //
+  //     // Group by subscriptionId
+  //     final Map<String, SubscriptionStat> subscriptionMap = {};
+  //
+  //     for (var t in transactions.data!) {
+  //       if (t.subscriptionId == null) continue;
+  //
+  //       final key = t.subscriptionId!;
+  //       subscriptionMap.putIfAbsent(key, () {
+  //         return SubscriptionStat(
+  //           subscriptionId: key,
+  //           subscriptionName: t.subscriptionType ?? 'Unknown',
+  //           revenue: 0,
+  //           purchasesCount: 0,
+  //         );
+  //       });
+  //
+  //       late final sub = subscriptionMap[key]!;
+  //       sub.revenue += t.transactionAmount ?? 0;
+  //       sub.purchasesCount += 1;
+  //     }
+  //
+  //     setState(() {
+  //       overviewData = OverviewData(
+  //         totalRevenue: totalRevenue,
+  //         totalTransactions: totalTransactions,
+  //         successfulTransactions: successfulTransactions,
+  //         failedTransactions: failedTransactions,
+  //         subscriptionStats: subscriptionMap.values.toList(),
+  //       );
+  //     });
+  //   } catch (e, stack) {
+  //     debugPrint('Error fetching overview data: $e');
+  //     debugPrintStack(stackTrace: stack);
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
+
+  Future<void> fetchOverviewData() async {
+    // setState(() => isLoading = true);
+
     setState(() {
       isLoading = true;
+      // Clear existing data
+      overviewData = OverviewData(
+        totalRevenue: 0,
+        totalTransactions: 0,
+        successfulTransactions: 0,
+        failedTransactions: 0,
+        subscriptionStats: [],
+      );
     });
 
     try {
-      // TODO: Replace with your actual API calls
-      // await _fetchRevenueData();
-      // await _fetchOverviewData();
+      final result = await _paymentUsecase.getTransactionsForAdmin();
+      final List<TransactionAdminViewModel> data = result.data ?? [];
 
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      int totalRevenue = 0;
+      int successfulTransactions = 0;
+      int failedTransactions = 0;
+
+      // Grouping by subscriptionId
+      final Map<String, SubscriptionStat> subscriptionMap = {};
+
+      for (final t in data) {
+        final amount = t.transactionAmount ?? 0;
+        // totalRevenue += amount;
+
+        if (t.transactionStatus?.toLowerCase() == 'success') {
+          successfulTransactions++;
+          totalRevenue += amount;
+        } else if (t.transactionStatus?.toLowerCase() == 'canceled' || t.transactionStatus == null) {
+          failedTransactions++;
+        }
+
+       if(t.transactionStatus?.toLowerCase() == 'success'){
+         final subscriptionId = t.subscriptionId;
+         if (subscriptionId != null) {
+           final key = subscriptionId;
+           subscriptionMap.putIfAbsent(key, () {
+             return SubscriptionStat(
+               subscriptionId: key,
+               subscriptionName: t.subscriptionType ?? 'Unknown',
+               revenue: 0,
+               purchasesCount: 0,
+             );
+           });
+
+           subscriptionMap[key]!.revenue += amount;
+           subscriptionMap[key]!.purchasesCount += 1;
+         }
+       }
+      }
 
       setState(() {
+        overviewData = OverviewData(
+          totalRevenue: totalRevenue,
+          totalTransactions: data.length,
+          successfulTransactions: successfulTransactions,
+          failedTransactions: failedTransactions,
+          subscriptionStats: subscriptionMap.values.toList(),
+        );
+      });
+    } catch (e, stack) {
+      debugPrint('Error fetching overview data: $e');
+      debugPrintStack(stackTrace: stack);
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+
+
+  Future<void> _fetchRevenueChartData() async {
+    setState(() {
+      isLoading = true;
+      revenueData = [];
+    });
+
+    try {
+      final chartData = await _dashboardUsecase.getRevenueStatistics();
+
+      // final overview = await _dashboardUsecase.getOverviewData(
+      //   startDate: startDate,
+      //   endDate: endDate,
+      // );
+
+      setState(() {
+        revenueData =
+            chartData.data!
+                .map(
+                  (item) => RevenueData(time: item.time, revenue: item.revenue),
+                )
+                .toList();
+
+        // overviewData = OverviewData(
+        //   totalRevenue: overview.totalRevenue,
+        //   totalTransactions: overview.totalTransactions,
+        //   successfulTransactions: overview.successfulTransactions,
+        //   failedTransactions: overview.failedTransactions,
+        //   subscriptionStats: overview.subscriptionStats
+        //       .map(
+        //         (s) => SubscriptionStat(
+        //       subscriptionId: s.subscriptionId,
+        //       subscriptionName: s.subscriptionName,
+        //       revenue: s.revenue,
+        //       purchasesCount: s.purchasesCount,
+        //     ),
+        //   )
+        //       .toList(),
+        // );
+
         isLoading = false;
       });
     } catch (e) {
+      debugPrint('Error fetching dashboard data: $e');
       setState(() {
         isLoading = false;
       });
@@ -111,7 +306,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _fetchData,
+        onRefresh: _fetchRevenueChartData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
@@ -138,6 +333,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Widget _buildOverviewSection() {
+    if (isLoading) {
+      return Container(
+        height: 200,
+        decoration: BoxDecoration(/* same decoration */),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -241,19 +446,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: color ?? Colors.white,
-            size: 16,
-          ),
+          Icon(icon, color: color ?? Colors.white, size: 16),
           const SizedBox(height: 8),
           Text(
             title,
@@ -309,15 +507,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   const SizedBox(height: 4),
                   Text(
                     'Monthly revenue performance',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF89B7C2).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -346,8 +544,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
           const SizedBox(height: 20),
           SizedBox(
-            height: 200,
-            child: RevenueLineChart(data: revenueData),
+              height: 200,
+              child: isLoading
+                  ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF89B7C2),
+                ),
+              )
+                  : RevenueLineChart(data: revenueData)
           ),
         ],
       ),
@@ -380,12 +584,17 @@ class _AdminHomePageState extends State<AdminHomePage> {
             ),
           ),
           const SizedBox(height: 4),
+          if (isLoading)
+            const SizedBox(
+              height: 120,
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF89B7C2)),
+              ),
+            )
+          else
           Text(
             'Revenue breakdown by subscription plans',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
           const SizedBox(height: 20),
           Row(
@@ -401,78 +610,81 @@ class _AdminHomePageState extends State<AdminHomePage> {
               const SizedBox(width: 20),
               Expanded(
                 child: Column(
-                  children: overviewData.subscriptionStats.map((sub) {
-                    final index = overviewData.subscriptionStats.indexOf(sub);
-                    final colors = [
-                      const Color(0xFFFFB876),
-                      const Color(0xFF89B7C2),
-                      const Color(0xFFE37083),
-                      const Color(0xFFA8BF8A),
-                    ];
-                    final color = colors[index % colors.length];
+                  children:
+                      overviewData.subscriptionStats.map((sub) {
+                        final index = overviewData.subscriptionStats.indexOf(
+                          sub,
+                        );
+                        final colors = [
+                          const Color(0xFFFFB876),
+                          const Color(0xFF89B7C2),
+                          const Color(0xFFE37083),
+                          const Color(0xFFA8BF8A),
+                        ];
+                        final color = colors[index % colors.length];
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  sub.subscriptionName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2C3E50),
-                                  ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
                                 ),
-                                Text(
-                                  formatVND(sub.revenue.toDouble()),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      sub.subscriptionName,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                    Text(
+                                      formatVND(sub.revenue.toDouble()),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${sub.purchasesCount}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.bold,
+                                    color: color,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${sub.purchasesCount}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: color,
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ),
             ],
@@ -490,12 +702,15 @@ class RevenueLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spots = data.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.revenue.toDouble());
-    }).toList();
+    final spots =
+        data.asMap().entries.map((entry) {
+          return FlSpot(entry.key.toDouble(), entry.value.revenue.toDouble());
+        }).toList();
 
-    final maxY = data.map((e) => e.revenue).reduce((a, b) => a > b ? a : b).toDouble();
-    final minY = data.map((e) => e.revenue).reduce((a, b) => a < b ? a : b).toDouble();
+    final maxY =
+        data.map((e) => e.revenue).reduce((a, b) => a > b ? a : b).toDouble();
+    final minY =
+        data.map((e) => e.revenue).reduce((a, b) => a < b ? a : b).toDouble();
 
     return LineChart(
       LineChartData(
@@ -504,10 +719,7 @@ class RevenueLineChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: (maxY - minY) / 4,
           getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.shade200,
-              strokeWidth: 1,
-            );
+            return FlLine(color: Colors.grey.shade200, strokeWidth: 1);
           },
         ),
         titlesData: FlTitlesData(
@@ -623,23 +835,24 @@ class SubscriptionPieChart extends StatelessWidget {
       PieChartData(
         sectionsSpace: 4,
         centerSpaceRadius: 30,
-        sections: subscriptions.asMap().entries.map((entry) {
-          final index = entry.key;
-          final sub = entry.value;
-          final percentage = (sub.revenue / totalRevenue * 100);
+        sections:
+            subscriptions.asMap().entries.map((entry) {
+              final index = entry.key;
+              final sub = entry.value;
+              final percentage = (sub.revenue / totalRevenue * 100);
 
-          return PieChartSectionData(
-            color: colors[index % colors.length],
-            value: sub.revenue.toDouble(),
-            title: '${percentage.toStringAsFixed(1)}%',
-            radius: 25,
-            titleStyle: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          );
-        }).toList(),
+              return PieChartSectionData(
+                color: colors[index % colors.length],
+                value: sub.revenue.toDouble(),
+                title: '${percentage.toStringAsFixed(1)}%',
+                radius: 35,
+                titleStyle: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              );
+            }).toList(),
       ),
     );
   }
@@ -672,8 +885,8 @@ class OverviewData {
 class SubscriptionStat {
   final String subscriptionId;
   final String subscriptionName;
-  final int revenue;
-  final int purchasesCount;
+   int revenue;
+   int purchasesCount;
 
   SubscriptionStat({
     required this.subscriptionId,

@@ -1,6 +1,7 @@
 import 'package:inner_child_app/core/utils/result_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_group_model.dart';
 import 'package:inner_child_app/domain/entities/community/community_post_model.dart';
+import 'package:inner_child_app/domain/entities/community/create_comment_model.dart';
 import 'package:inner_child_app/domain/entities/community/create_community_post_model.dart';
 import 'package:inner_child_app/domain/repositories/i_community_repository.dart';
 
@@ -43,5 +44,33 @@ class CommunityUsecase {
 
   Future<Result<String>> updateCommunityGroup(String groupId, String name, String description, String status) {
     return iCommunityRepository.updateCommunityGroup(groupId, name, description, status);
+  }
+
+  Future<Result<String>> likePost(String postId) {
+    return iCommunityRepository.likePost(postId);
+  }
+
+  Future<Result<String>> unlikePost(String postId) {
+    return iCommunityRepository.unlikePost(postId);
+  }
+
+  Future<Result<String>> likeComment(String commentId) {
+    return iCommunityRepository.likeComment(commentId);
+  }
+
+  Future<Result<String>> unlikeComment(String commentId) {
+    return iCommunityRepository.unlikeComment(commentId);
+  }
+
+  Future<Result<String>> createComment(CreateCommentModel comment) {
+    return iCommunityRepository.createComment(comment);
+  }
+
+  // Future<Result<String>> updateComment(String commentId, CreateCommentModel comment) {
+  //   return iCommunityRepository.updateComment(commentId, comment);
+  // }
+
+  Future<Result<String>> deleteComment(String commentId) {
+    return iCommunityRepository.deleteComment(commentId);
   }
 }

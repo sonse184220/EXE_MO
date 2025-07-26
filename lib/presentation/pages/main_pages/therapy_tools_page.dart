@@ -16,6 +16,21 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Therapy-Toolkits',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 30,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          // Uncomment the line below if you want a back button
+          // automaticallyImplyLeading: true,
+        ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -58,17 +73,17 @@ class _TherapyToolsPageState extends State<TherapyToolsPage> {
                         //   onPressed: () => Navigator.of(context).pop(),
                         // ),
                         // Centered title
-                        Align(
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'Therapy-Toolkits',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
+                        // Align(
+                        //   alignment: Alignment.center,
+                        //   child: const Text(
+                        //     'Therapy-Toolkits',
+                        //     style: TextStyle(
+                        //       color: Colors.black,
+                        //       fontWeight: FontWeight.bold,
+                        //       fontSize: 20,
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
 

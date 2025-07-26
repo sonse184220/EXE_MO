@@ -402,367 +402,430 @@ class RegisterPageState extends ConsumerState<RegisterPage>
       }
     });
 
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-
-        // Reset gender and date if previously selected
-        setState(() {
-          _isPickingImage = false;
-          _isSelectingGender = false;
-          _isSelectingDate = false;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: SafeArea(
-        child: Scaffold(
-          resizeToAvoidBottomInset: true,
-          body: Stack(
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Animated Header Section
-                      SizeTransition(
-                        sizeFactor: _headerController,
-                        axisAlignment: -1.0,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // App Logo
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 70,
-                              height: 80,
-                              decoration: const BoxDecoration(
-                                image: DecorationImage(
-                                  image: AssetImage(
-                                    'assets/images/appLogo.png',
-                                  ),
-                                  fit: BoxFit.fitWidth,
-                                ),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                // Reset gender and date if previously selected
+                setState(() {
+                  _isPickingImage = false;
+                  _isSelectingGender = false;
+                  _isSelectingDate = false;
+                });
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Header section with gradient background (same as login)
+                SizeTransition(
+                sizeFactor: _headerController,
+                axisAlignment: -1.0,child:
+                  Container(
+                    width: double.infinity,
+                    height: constraints.maxHeight * 0.3, // Set fixed height
+                    color: Color(0xFF89B7C2),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(35),
+                              image: const DecorationImage(
+                                image: AssetImage('assets/images/circula_app_logo_cropped.png'),
+                                fit: BoxFit.fitWidth,
                               ),
                             ),
-
-                            // Welcome Text section
-                            Container(
-                              margin: const EdgeInsets.only(
-                                top: 20,
-                                bottom: 20,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Create Account',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Join us for a Healthier, Happier You',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Create Account',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Join us for a Healthier, Happier You',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xE6FFFFFF),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                  ),),
 
-                      const SizedBox(height: 10),
+                  // White content section positioned to overlap (same as login)
+                  Expanded(
+                    child: Transform.translate(
+                      offset: const Offset(0, -25),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(25),
+                            topRight: Radius.circular(25),
+                          ),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 20),
 
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              // Profile Picture Section with loading and error handling
-                              Center(
-                                child: Column(
+                                // Profile Picture Section with loading and error handling
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: _isLoading ? null : _pickImage,
+                                        child: Container(
+                                          width: 100,
+                                          height: 100,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[200],
+                                            shape: BoxShape.circle,
+                                            border:
+                                                _imageError != null
+                                                    ? Border.all(
+                                                      color: Colors.red,
+                                                      width: 2,
+                                                    )
+                                                    : null,
+                                            image:
+                                                _profileImage != null
+                                                    ? DecorationImage(
+                                                      image: FileImage(
+                                                        _profileImage!,
+                                                      ),
+                                                      fit: BoxFit.cover,
+                                                    )
+                                                    : null,
+                                          ),
+                                          child:
+                                              _profileImage == null
+                                                  ? _isPickingImage
+                                                      ? const CircularProgressIndicator()
+                                                      : const Icon(
+                                                        Icons.add_a_photo,
+                                                        size: 40,
+                                                        color: Colors.grey,
+                                                      )
+                                                  : null,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Add Profile Picture (Optional)',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      if (_imageError != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 5,
+                                          ),
+                                          child: Text(
+                                            _imageError!,
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                // Input Fields Section
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Email
+                                    TextFormField(
+                                      controller: _emailController,
+                                      focusNode: _emailFocus,
+                                      keyboardType: TextInputType.emailAddress,
+                                      enabled: !_isLoading,
+                                      decoration: InputDecoration(
+                                        hintText: 'Email Address *',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: const Color(0xFFEBEBEB),
+                                        prefixIcon: const Icon(
+                                          Icons.email,
+                                          color: Colors.grey,
+                                        ),
+                                        errorText: _emailError,
+                                      ),
+                                      onChanged: (value) {
+                                        if (_emailError != null) {
+                                          setState(() {
+                                            _emailError = null;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Password
+                                    TextFormField(
+                                      controller: _passwordController,
+                                      focusNode: _passwordFocus,
+                                      obscureText: _obscurePassword,
+                                      enabled: !_isLoading,
+                                      decoration: InputDecoration(
+                                        hintText: 'Password *',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey[200],
+                                        prefixIcon: const Icon(
+                                          Icons.lock,
+                                          color: Colors.grey,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed:
+                                              _isLoading
+                                                  ? null
+                                                  : () {
+                                                    setState(() {
+                                                      _obscurePassword =
+                                                          !_obscurePassword;
+                                                    });
+                                                  },
+                                        ),
+                                        errorText: _passwordError,
+                                      ),
+                                      onChanged: (value) {
+                                        if (_passwordError != null) {
+                                          setState(() {
+                                            _passwordError = null;
+                                          });
+                                        }
+                                        if (_confirmPasswordController
+                                            .text
+                                            .isNotEmpty) {
+                                          setState(() {
+                                            _confirmPasswordError =
+                                                _confirmPasswordController
+                                                            .text !=
+                                                        value
+                                                    ? 'Passwords do not match'
+                                                    : null;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Confirm Password
+                                    TextFormField(
+                                      controller: _confirmPasswordController,
+                                      focusNode: _confirmPasswordFocus,
+                                      obscureText: _obscureConfirmPassword,
+                                      enabled: !_isLoading,
+                                      decoration: InputDecoration(
+                                        hintText: 'Confirm Password *',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey[200],
+                                        prefixIcon: const Icon(
+                                          Icons.lock_outline,
+                                          color: Colors.grey,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscureConfirmPassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed:
+                                              _isLoading
+                                                  ? null
+                                                  : () {
+                                                    setState(() {
+                                                      _obscureConfirmPassword =
+                                                          !_obscureConfirmPassword;
+                                                    });
+                                                  },
+                                        ),
+                                        errorText: _confirmPasswordError,
+                                      ),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _confirmPasswordError =
+                                              value != _passwordController.text
+                                                  ? 'Passwords do not match'
+                                                  : null;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Full Name
+                                    TextFormField(
+                                      controller: _fullNameController,
+                                      focusNode: _fullNameFocus,
+                                      enabled: !_isLoading,
+                                      decoration: InputDecoration(
+                                        hintText: 'Full Name *',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: const Color(0xFFEBEBEB),
+                                        prefixIcon: const Icon(
+                                          Icons.person,
+                                          color: Colors.grey,
+                                        ),
+                                        errorText: _fullNameError,
+                                      ),
+                                      onChanged: (value) {
+                                        if (_fullNameError != null) {
+                                          setState(() {
+                                            _fullNameError = null;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Date of Birth - Button to show date picker
                                     GestureDetector(
-                                      onTap: _isLoading ? null : _pickImage,
+                                      onTap:
+                                          _isLoading
+                                              ? null
+                                              : () => _selectDate(context),
                                       child: Container(
-                                        width: 100,
-                                        height: 100,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 14,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[200],
-                                          shape: BoxShape.circle,
+                                          color:
+                                              _isLoading
+                                                  ? Colors.grey[300]
+                                                  : Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           border:
-                                              _imageError != null
+                                              _dateOfBirthError != null
                                                   ? Border.all(
                                                     color: Colors.red,
-                                                    width: 2,
-                                                  )
-                                                  : null,
-                                          image:
-                                              _profileImage != null
-                                                  ? DecorationImage(
-                                                    image: FileImage(
-                                                      _profileImage!,
-                                                    ),
-                                                    fit: BoxFit.cover,
                                                   )
                                                   : null,
                                         ),
-                                        child:
-                                            _profileImage == null
-                                                ? _isPickingImage
-                                                    ? const CircularProgressIndicator()
-                                                    : const Icon(
-                                                      Icons.add_a_photo,
-                                                      size: 40,
-                                                      color: Colors.grey,
-                                                    )
-                                                : null,
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.calendar_today,
+                                              color: Colors.grey,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              _selectedDate == null
+                                                  ? 'Date of Birth'
+                                                  : DateFormat(
+                                                    'MMM dd, yyyy',
+                                                  ).format(_selectedDate!),
+                                              style: TextStyle(
+                                                color:
+                                                    _selectedDate == null
+                                                        ? Colors.grey[600]
+                                                        : Colors.black87,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      'Add Profile Picture (Optional)',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    if (_imageError != null)
+                                    if (_dateOfBirthError != null)
                                       Padding(
-                                        padding: const EdgeInsets.only(top: 5),
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                          left: 16.0,
+                                        ),
                                         child: Text(
-                                          _imageError!,
+                                          _dateOfBirthError!,
                                           style: const TextStyle(
                                             color: Colors.red,
                                             fontSize: 12,
                                           ),
                                         ),
                                       ),
-                                  ],
-                                ),
-                              ),
+                                    const SizedBox(height: 16),
 
-                              const SizedBox(height: 20),
-
-                              //Input Fields Section (keep all your existing input fields as they are)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Email
-                                  TextFormField(
-                                    controller: _emailController,
-                                    focusNode: _emailFocus,
-                                    keyboardType: TextInputType.emailAddress,
-                                    enabled: !_isLoading,
-                                    decoration: InputDecoration(
-                                      hintText: 'Email Address *',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                      prefixIcon: const Icon(
-                                        Icons.email,
-                                        color: Colors.grey,
-                                      ),
-                                      errorText: _emailError,
-                                    ),
-                                    onChanged: (value) {
-                                      if (_emailError != null) {
-                                        setState(() {
-                                          _emailError = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Password
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    focusNode: _passwordFocus,
-                                    obscureText: _obscurePassword,
-                                    enabled: !_isLoading,
-                                    decoration: InputDecoration(
-                                      hintText: 'Password *',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                      prefixIcon: const Icon(
-                                        Icons.lock,
-                                        color: Colors.grey,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: Colors.grey,
-                                        ),
-                                        onPressed:
-                                            _isLoading
-                                                ? null
-                                                : () {
-                                                  setState(() {
-                                                    _obscurePassword =
-                                                        !_obscurePassword;
-                                                  });
-                                                },
-                                      ),
-                                      errorText: _passwordError,
-                                    ),
-                                    onChanged: (value) {
-                                      if (_passwordError != null) {
-                                        setState(() {
-                                          _passwordError = null;
-                                        });
-                                      }
-                                      if (_confirmPasswordController
-                                          .text
-                                          .isNotEmpty) {
-                                        setState(() {
-                                          _confirmPasswordError =
-                                              _confirmPasswordController.text !=
-                                                      value
-                                                  ? 'Passwords do not match'
-                                                  : null;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Confirm Password
-                                  TextFormField(
-                                    controller: _confirmPasswordController,
-                                    focusNode: _confirmPasswordFocus,
-                                    obscureText: _obscureConfirmPassword,
-                                    enabled: !_isLoading,
-                                    decoration: InputDecoration(
-                                      hintText: 'Confirm Password *',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline,
-                                        color: Colors.grey,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscureConfirmPassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: Colors.grey,
-                                        ),
-                                        onPressed:
-                                            _isLoading
-                                                ? null
-                                                : () {
-                                                  setState(() {
-                                                    _obscureConfirmPassword =
-                                                        !_obscureConfirmPassword;
-                                                  });
-                                                },
-                                      ),
-                                      errorText: _confirmPasswordError,
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _confirmPasswordError =
-                                            value != _passwordController.text
-                                                ? 'Passwords do not match'
-                                                : null;
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Full Name
-                                  TextFormField(
-                                    controller: _fullNameController,
-                                    focusNode: _fullNameFocus,
-                                    enabled: !_isLoading,
-                                    decoration: InputDecoration(
-                                      hintText: 'Full Name *',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                      prefixIcon: const Icon(
-                                        Icons.person,
-                                        color: Colors.grey,
-                                      ),
-                                      errorText: _fullNameError,
-                                    ),
-                                    onChanged: (value) {
-                                      if (_fullNameError != null) {
-                                        setState(() {
-                                          _fullNameError = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Date of Birth - Button to show date picker
-                                  GestureDetector(
-                                    onTap:
-                                        _isLoading
-                                            ? null
-                                            : () => _selectDate(context),
-                                    child: Container(
+                                    // Gender Dropdown
+                                    Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 16,
-                                        vertical: 14,
+                                        vertical: 5,
                                       ),
                                       decoration: BoxDecoration(
                                         color:
@@ -771,323 +834,288 @@ class RegisterPageState extends ConsumerState<RegisterPage>
                                                 : Colors.grey[200],
                                         borderRadius: BorderRadius.circular(8),
                                         border:
-                                            _dateOfBirthError != null
+                                            _genderError != null
                                                 ? Border.all(color: Colors.red)
                                                 : null,
                                       ),
                                       child: Row(
                                         children: [
                                           const Icon(
-                                            Icons.calendar_today,
+                                            Icons.person_outline,
                                             color: Colors.grey,
                                           ),
                                           const SizedBox(width: 10),
-                                          Text(
-                                            _selectedDate == null
-                                                ? 'Date of Birth'
-                                                : DateFormat(
-                                                  'MMM dd, yyyy',
-                                                ).format(_selectedDate!),
-                                            style: TextStyle(
-                                              color:
-                                                  _selectedDate == null
-                                                      ? Colors.grey[600]
-                                                      : Colors.black87,
-                                              fontSize: 16,
+                                          Expanded(
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                hint: const Text(
+                                                  'Select Gender *',
+                                                ),
+                                                value: _selectedGender,
+                                                isExpanded: true,
+                                                icon: const Icon(
+                                                  Icons.arrow_drop_down,
+                                                ),
+                                                items:
+                                                    _genderOptions.map((
+                                                      String gender,
+                                                    ) {
+                                                      return DropdownMenuItem<
+                                                        String
+                                                      >(
+                                                        value: gender,
+                                                        child: Text(gender),
+                                                      );
+                                                    }).toList(),
+                                                onTap:
+                                                    _isLoading
+                                                        ? null
+                                                        : () {
+                                                          setState(() {
+                                                            _isSelectingGender =
+                                                                true;
+                                                          });
+                                                          _handleFocusChange();
+                                                        },
+                                                onChanged:
+                                                    _isLoading
+                                                        ? null
+                                                        : (String? newValue) {
+                                                          setState(() {
+                                                            _selectedGender =
+                                                                newValue;
+                                                            _isSelectingGender =
+                                                                false;
+                                                            _genderError = null;
+                                                          });
+                                                          _handleFocusChange();
+                                                        },
+                                              ),
                                             ),
                                           ),
-                                          if (_dateOfBirthError != null)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 8.0,
-                                                left: 16.0,
-                                              ),
-                                              child: Text(
-                                                _dateOfBirthError!,
-                                                style: const TextStyle(
-                                                  color: Colors.red,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
+                                    if (_genderError != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                          left: 16.0,
+                                        ),
+                                        child: Text(
+                                          _genderError!,
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 16),
 
-                                  // Gender Dropdown
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          _isLoading
-                                              ? Colors.grey[300]
-                                              : Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border:
-                                          _genderError != null
-                                              ? Border.all(color: Colors.red)
-                                              : null,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.person_outline,
+                                    // Phone Number
+                                    TextFormField(
+                                      controller: _phoneNumberController,
+                                      focusNode: _phoneNumberFocus,
+                                      keyboardType: TextInputType.phone,
+                                      enabled: !_isLoading,
+                                      decoration: InputDecoration(
+                                        hintText: 'Phone Number',
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 14,
+                                            ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: const Color(0xFFEBEBEB),
+                                        prefixIcon: const Icon(
+                                          Icons.phone,
                                           color: Colors.grey,
                                         ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              hint: const Text(
-                                                'Select Gender *',
-                                              ),
-                                              value: _selectedGender,
-                                              isExpanded: true,
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
-                                              ),
-                                              items:
-                                                  _genderOptions.map((
-                                                    String gender,
-                                                  ) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: gender,
-                                                      child: Text(gender),
-                                                    );
-                                                  }).toList(),
-                                              onTap:
-                                                  _isLoading
-                                                      ? null
-                                                      : () {
-                                                        setState(() {
-                                                          _isSelectingGender =
-                                                              true;
-                                                        });
-                                                        _handleFocusChange();
-                                                      },
-                                              onChanged:
-                                                  _isLoading
-                                                      ? null
-                                                      : (String? newValue) {
-                                                        setState(() {
-                                                          _selectedGender =
-                                                              newValue;
-                                                          _isSelectingGender =
-                                                              false;
-                                                          _genderError = null;
-                                                        });
-                                                        _handleFocusChange();
-                                                      },
-                                            ),
-                                          ),
-                                        ),
-                                        if (_genderError != null)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 8.0,
-                                              left: 16.0,
-                                            ),
-                                            child: Text(
-                                              _genderError!,
-                                              style: const TextStyle(
-                                                color: Colors.red,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Phone Number
-                                  TextFormField(
-                                    controller: _phoneNumberController,
-                                    focusNode: _phoneNumberFocus,
-                                    keyboardType: TextInputType.phone,
-                                    enabled: !_isLoading,
-                                    decoration: InputDecoration(
-                                      hintText: 'Phone Number',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 14,
-                                          ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide.none,
-                                        borderRadius: BorderRadius.circular(8),
+                                        errorText: _phoneNumberError,
                                       ),
-                                      filled: true,
-                                      fillColor: Colors.grey[200],
-                                      prefixIcon: const Icon(
-                                        Icons.phone,
-                                        color: Colors.grey,
-                                      ),
-                                      errorText: _phoneNumberError,
+                                      onChanged: (value) {
+                                        if (_phoneNumberError != null) {
+                                          setState(() {
+                                            _phoneNumberError = null;
+                                          });
+                                        }
+                                      },
                                     ),
-                                    onChanged: (value) {
-                                      if (_phoneNumberError != null) {
-                                        setState(() {
-                                          _phoneNumberError = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 30),
-                            ],
+                                    const SizedBox(height: 30),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                    ),
+                  ),
 
-                      // Register Button with loading state
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE37083),
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // Register Button with loading state
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                _isLoading
+                                    ? Colors.grey
+                                    : const Color(0xFF89B7C2),
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
-                        ),
-                        onPressed:
-                            _isLoading
-                                ? null
-                                : () async {
-                                  if (_validateForm()) {
-                                    setState(() {
-                                      _isLoading = true;
-                                    });
+                          onPressed:
+                              _isLoading
+                                  ? null
+                                  : () async {
+                                    if (_validateForm()) {
+                                      setState(() {
+                                        _isLoading = true;
+                                      });
 
-                                    try {
-                                      var user = UserRegisterModel(
-                                        _fullNameController.text,
-                                        _emailController.text,
-                                        _passwordController.text,
-                                        _confirmPasswordController.text,
-                                        _selectedDate!,
-                                        _selectedGender.toString(),
-                                        _phoneNumberController.text,
-                                        _profileImage,
-                                      );
+                                      try {
+                                        var user = UserRegisterModel(
+                                          _fullNameController.text,
+                                          _emailController.text,
+                                          _passwordController.text,
+                                          _confirmPasswordController.text,
+                                          _selectedDate!,
+                                          _selectedGender.toString(),
+                                          _phoneNumberController.text,
+                                          _profileImage,
+                                        );
 
-                                      final result = await authUseCase.register(
-                                        user,
-                                      );
+                                        final result = await authUseCase
+                                            .register(user);
 
-                                      if (result.isSuccess) {
-                                        _showSuccessDialog();
-                                      } else {
+                                        if (result.isSuccess) {
+                                          _showSuccessDialog();
+                                        } else {
+                                          Notify.showFlushbar(
+                                            "Registration failed: ${result.error ?? 'Unknown error'}",
+                                            isError: true,
+                                          );
+                                        }
+                                      } catch (e) {
                                         Notify.showFlushbar(
-                                          "Registration failed: ${result.error ?? 'Unknown error'}",
+                                          "Error: $e",
                                           isError: true,
                                         );
-                                      }
-                                    } catch (e) {
-                                      Notify.showFlushbar(
-                                        "Error: $e",
-                                        isError: true,
-                                      );
-                                    } finally {
-                                      if (mounted) {
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
                                       }
                                     }
-                                  }
-                                },
-                        child:
-                            _isLoading
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                  },
+                          child:
+                              _isLoading
+                                  ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      const Text(
+                                        'REGISTERING...',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : const Text(
+                                    'REGISTER',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                )
-                                : const Text(
-                                  'REGISTER',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                      ),
+                        ),
 
-                      const SizedBox(height: 5),
+                        const SizedBox(height: 20),
 
-                      // Sign in option
-                      Container(
-                        margin: const EdgeInsets.only(top: 10, bottom: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Already have an account?",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
+                        // Sign in option
+                        GestureDetector(
+                            onTap:
+                            _isLoading
+                                ? null
+                                : () {
+                              Navigator.pop(context);
+                            },
+                            child:
+
+                        Container(
+                          margin: const EdgeInsets.only(top: 10, bottom: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Already have an account?",
+                                    style: TextStyle(
+                                      color:
+                                          _isLoading
+                                              ? Colors.grey
+                                              : Colors.black,
+                                      fontSize: 14,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                GestureDetector(
-                                  onTap:
-                                      _isLoading
-                                          ? null
-                                          : () {
-                                            Navigator.pop(context);
-                                          },
-                                  child: Text(
+                                  const SizedBox(height: 4),
+
+                                  Text(
                                     'SIGN IN',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                       color:
-                                          _isLoading
-                                              ? Colors.grey
-                                              : Colors.black,
+                                      _isLoading
+                                          ? Colors.grey
+                                          : Colors.black,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Icon(
-                              Icons.arrow_right_alt,
-                              size: 28,
-                              color: _isLoading ? Colors.grey : Colors.black,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                                ],
+                              ),
+                              Icon(
+                                Icons.arrow_right_alt,
+                                size: 28,
+                                color: _isLoading ? Colors.grey : Colors.black,
+                              ),
+                            ],
+                          ),
+                        ),),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-              // Loading overlay
-              if (_isLoading)
-                Container(
-                  color: Colors.black26,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -1105,425 +1133,143 @@ class RegisterPageState extends ConsumerState<RegisterPage>
     //   },
     //   behavior: HitTestBehavior.opaque,
     //   child: SafeArea(
-    //     child:  Scaffold(
-    //     resizeToAvoidBottomInset: true,
-    //     body: Container(
-    //         width: double.infinity,
-    //         padding: const EdgeInsets.all(20),
-    //         decoration: BoxDecoration(
-    //           color: Colors.white,
-    //           borderRadius: BorderRadius.circular(16),
-    //           boxShadow: const [
-    //             BoxShadow(
-    //               color: Colors.black12,
-    //               blurRadius: 10,
-    //               offset: Offset(0, 5),
-    //             ),
-    //           ],
-    //         ),
-    //         child: Form(
-    //           key: _formKey,
-    //           child: Column(
-    //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //             // crossAxisAlignment: CrossAxisAlignment.start,
-    //             children: [
-    //               // Animated Header Section
-    //               SizeTransition(
-    //                 sizeFactor: _headerController,
-    //                 axisAlignment: -1.0, // Grow from top
-    //                 child: Column(
-    //                   mainAxisSize: MainAxisSize.min,
-    //                   crossAxisAlignment: CrossAxisAlignment.start,
-    //                   children: [
-    //                     // App Logo
-    //                     Container(
-    //                       alignment: Alignment.centerLeft,
-    //                       width: 70,
-    //                       height: 80,
-    //                       decoration: const BoxDecoration(
-    //                         image: DecorationImage(
-    //                           image: AssetImage('assets/images/appLogo.png'),
-    //                           fit: BoxFit.fitWidth,
-    //                         ),
-    //                       ),
-    //                     ),
-    //
-    //                     // Welcome Text section
-    //                     Container(
-    //                       margin: const EdgeInsets.only(top: 20, bottom: 20),
-    //                       child: Column(
-    //                         crossAxisAlignment: CrossAxisAlignment.start,
-    //                         children: [
-    //                           const Text(
-    //                             'Create Account',
-    //                             style: TextStyle(
-    //                               fontSize: 24,
-    //                               fontWeight: FontWeight.bold,
-    //                             ),
-    //                           ),
-    //                           const SizedBox(height: 10),
-    //                           Text(
-    //                             'Join us for a Healthier, Happier You',
-    //                             style: TextStyle(
-    //                               fontSize: 16,
-    //                               color: Colors.grey[600],
-    //                             ),
-    //                           ),
-    //                         ],
-    //                       ),
-    //                     ),
-    //                   ],
+    //     child: Scaffold(
+    //       resizeToAvoidBottomInset: true,
+    //       body: Stack(
+    //         children: [
+    //           Container(
+    //             width: double.infinity,
+    //             padding: const EdgeInsets.all(20),
+    //             decoration: BoxDecoration(
+    //               color: Colors.white,
+    //               borderRadius: BorderRadius.circular(16),
+    //               boxShadow: const [
+    //                 BoxShadow(
+    //                   color: Colors.black12,
+    //                   blurRadius: 10,
+    //                   offset: Offset(0, 5),
     //                 ),
-    //               ),
-    //
-    //               const SizedBox(height: 10),
-    //
-    //               Expanded(
-    //                 child: SingleChildScrollView(
-    //                   child: Column(
-    //                     children: [
-    //                       // Profile Picture Section
-    //                       Center(
-    //                         child: Column(
-    //                           children: [
-    //                             GestureDetector(
-    //                               onTap: _pickImage,
-    //                               child: Container(
-    //                                 width: 100,
-    //                                 height: 100,
-    //                                 decoration: BoxDecoration(
-    //                                   color: Colors.grey[200],
-    //                                   shape: BoxShape.circle,
-    //                                   image:
-    //                                       _profileImage != null
-    //                                           ? DecorationImage(
-    //                                             image: FileImage(
-    //                                               _profileImage!,
-    //                                             ),
-    //                                             fit: BoxFit.cover,
-    //                                           )
-    //                                           : null,
-    //                                 ),
-    //                                 child:
-    //                                     _profileImage == null
-    //                                         ? const Icon(
-    //                                           Icons.add_a_photo,
-    //                                           size: 40,
-    //                                           color: Colors.grey,
-    //                                         )
-    //                                         : null,
+    //               ],
+    //             ),
+    //             child: Form(
+    //               key: _formKey,
+    //               child: Column(
+    //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //                 children: [
+    //                   // Animated Header Section
+    //                   SizeTransition(
+    //                     sizeFactor: _headerController,
+    //                     axisAlignment: -1.0,
+    //                     child: Column(
+    //                       mainAxisSize: MainAxisSize.min,
+    //                       crossAxisAlignment: CrossAxisAlignment.start,
+    //                       children: [
+    //                         // App Logo
+    //                         Container(
+    //                           alignment: Alignment.centerLeft,
+    //                           width: 70,
+    //                           height: 80,
+    //                           decoration: const BoxDecoration(
+    //                             image: DecorationImage(
+    //                               image: AssetImage(
+    //                                 'assets/images/appLogo.png',
     //                               ),
+    //                               fit: BoxFit.fitWidth,
     //                             ),
-    //                             const SizedBox(height: 10),
-    //                             Text(
-    //                               'Add Profile Picture (Optional)',
-    //                               style: TextStyle(
-    //                                 color: Colors.grey[600],
-    //                                 fontSize: 14,
-    //                               ),
-    //                             ),
-    //                           ],
+    //                           ),
     //                         ),
-    //                       ),
     //
-    //                       const SizedBox(height: 20),
+    //                         // Welcome Text section
+    //                         Container(
+    //                           margin: const EdgeInsets.only(
+    //                             top: 20,
+    //                             bottom: 20,
+    //                           ),
+    //                           child: Column(
+    //                             crossAxisAlignment: CrossAxisAlignment.start,
+    //                             children: [
+    //                               const Text(
+    //                                 'Create Account',
+    //                                 style: TextStyle(
+    //                                   fontSize: 24,
+    //                                   fontWeight: FontWeight.bold,
+    //                                 ),
+    //                               ),
+    //                               const SizedBox(height: 10),
+    //                               Text(
+    //                                 'Join us for a Healthier, Happier You',
+    //                                 style: TextStyle(
+    //                                   fontSize: 16,
+    //                                   color: Colors.grey[600],
+    //                                 ),
+    //                               ),
+    //                             ],
+    //                           ),
+    //                         ),
+    //                       ],
+    //                     ),
+    //                   ),
     //
-    //                       //Input Fields Section
-    //                       Column(
-    //                         crossAxisAlignment: CrossAxisAlignment.start,
+    //                   const SizedBox(height: 10),
+    //
+    //                   Expanded(
+    //                     child: SingleChildScrollView(
+    //                       child: Column(
     //                         children: [
-    //                           // Email
-    //                           TextFormField(
-    //                             controller: _emailController,
-    //                             focusNode: _emailFocus,
-    //                             keyboardType: TextInputType.emailAddress,
-    //                             decoration: InputDecoration(
-    //                               hintText: 'Email Address *',
-    //                               contentPadding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
-    //                               ),
-    //                               border: OutlineInputBorder(
-    //                                 borderSide: BorderSide.none,
-    //                                 borderRadius: BorderRadius.circular(8),
-    //                               ),
-    //                               filled: true,
-    //                               fillColor: Colors.grey[200],
-    //                               prefixIcon: const Icon(
-    //                                 Icons.email,
-    //                                 color: Colors.grey,
-    //                               ),
-    //                               errorText: _emailError,
-    //                             ),
-    //                             onChanged: (value) {
-    //                               if (_emailError != null) {
-    //                                 setState(() {
-    //                                   _emailError = null;
-    //                                 });
-    //                               }
-    //                             },
-    //                           ),
-    //                           const SizedBox(height: 16),
-    //
-    //                           // Password
-    //                           TextFormField(
-    //                             controller: _passwordController,
-    //                             focusNode: _passwordFocus,
-    //                             obscureText: _obscurePassword,
-    //                             decoration: InputDecoration(
-    //                               hintText: 'Password *',
-    //                               contentPadding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
-    //                               ),
-    //                               border: OutlineInputBorder(
-    //                                 borderSide: BorderSide.none,
-    //                                 borderRadius: BorderRadius.circular(8),
-    //                               ),
-    //                               filled: true,
-    //                               fillColor: Colors.grey[200],
-    //                               prefixIcon: const Icon(
-    //                                 Icons.lock,
-    //                                 color: Colors.grey,
-    //                               ),
-    //                               suffixIcon: IconButton(
-    //                                 icon: Icon(
-    //                                   _obscurePassword
-    //                                       ? Icons.visibility_off
-    //                                       : Icons.visibility,
-    //                                   color: Colors.grey,
-    //                                 ),
-    //                                 onPressed: () {
-    //                                   setState(() {
-    //                                     _obscurePassword = !_obscurePassword;
-    //                                   });
-    //                                 },
-    //                               ),
-    //                               errorText: _passwordError,
-    //                             ),
-    //                             onChanged: (value) {
-    //                               if (_passwordError != null) {
-    //                                 setState(() {
-    //                                   _passwordError = null;
-    //                                 });
-    //                               }
-    //                               // Check confirm password match if it's already filled
-    //                               if (_confirmPasswordController
-    //                                   .text
-    //                                   .isNotEmpty) {
-    //                                 setState(() {
-    //                                   _confirmPasswordError =
-    //                                       _confirmPasswordController.text !=
-    //                                               value
-    //                                           ? 'Passwords do not match'
-    //                                           : null;
-    //                                 });
-    //                               }
-    //                             },
-    //                           ),
-    //                           const SizedBox(height: 16),
-    //
-    //                           // Confirm Password
-    //                           TextFormField(
-    //                             controller: _confirmPasswordController,
-    //                             focusNode: _confirmPasswordFocus,
-    //                             obscureText: _obscureConfirmPassword,
-    //                             decoration: InputDecoration(
-    //                               hintText: 'Confirm Password *',
-    //                               contentPadding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
-    //                               ),
-    //                               border: OutlineInputBorder(
-    //                                 borderSide: BorderSide.none,
-    //                                 borderRadius: BorderRadius.circular(8),
-    //                               ),
-    //                               filled: true,
-    //                               fillColor: Colors.grey[200],
-    //                               prefixIcon: const Icon(
-    //                                 Icons.lock_outline,
-    //                                 color: Colors.grey,
-    //                               ),
-    //                               suffixIcon: IconButton(
-    //                                 icon: Icon(
-    //                                   _obscureConfirmPassword
-    //                                       ? Icons.visibility_off
-    //                                       : Icons.visibility,
-    //                                   color: Colors.grey,
-    //                                 ),
-    //                                 onPressed: () {
-    //                                   setState(() {
-    //                                     _obscureConfirmPassword =
-    //                                         !_obscureConfirmPassword;
-    //                                   });
-    //                                 },
-    //                               ),
-    //                               errorText: _confirmPasswordError,
-    //                             ),
-    //                             onChanged: (value) {
-    //                               setState(() {
-    //                                 _confirmPasswordError =
-    //                                     value != _passwordController.text
-    //                                         ? 'Passwords do not match'
-    //                                         : null;
-    //                               });
-    //                             },
-    //                           ),
-    //                           const SizedBox(height: 16),
-    //
-    //                           // Full Name
-    //                           TextFormField(
-    //                             controller: _fullNameController,
-    //                             focusNode: _fullNameFocus,
-    //                             decoration: InputDecoration(
-    //                               hintText: 'Full Name *',
-    //                               contentPadding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
-    //                               ),
-    //                               border: OutlineInputBorder(
-    //                                 borderSide: BorderSide.none,
-    //                                 borderRadius: BorderRadius.circular(8),
-    //                               ),
-    //                               filled: true,
-    //                               fillColor: Colors.grey[200],
-    //                               prefixIcon: const Icon(
-    //                                 Icons.person,
-    //                                 color: Colors.grey,
-    //                               ),
-    //                               errorText: _fullNameError,
-    //                             ),
-    //                             onChanged: (value) {
-    //                               if (_fullNameError != null) {
-    //                                 setState(() {
-    //                                   _fullNameError = null;
-    //                                 });
-    //                               }
-    //                             },
-    //                           ),
-    //                           const SizedBox(height: 16),
-    //
-    //                           // Date of Birth - Button to show date picker
-    //                           GestureDetector(
-    //                             onTap: () => _selectDate(context),
-    //                             child: Container(
-    //                               padding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
-    //                               ),
-    //                               decoration: BoxDecoration(
-    //                                 color: Colors.grey[200],
-    //                                 borderRadius: BorderRadius.circular(8),
-    //                                 border:
-    //                                     _dateOfBirthError != null
-    //                                         ? Border.all(color: Colors.red)
-    //                                         : null,
-    //                               ),
-    //                               child: Row(
-    //                                 children: [
-    //                                   const Icon(
-    //                                     Icons.calendar_today,
-    //                                     color: Colors.grey,
-    //                                   ),
-    //                                   const SizedBox(width: 10),
-    //                                   Text(
-    //                                     _selectedDate == null
-    //                                         ? 'Date of Birth'
-    //                                         : DateFormat(
-    //                                           'MMM dd, yyyy',
-    //                                         ).format(_selectedDate!),
-    //                                     style: TextStyle(
-    //                                       color:
-    //                                           _selectedDate == null
-    //                                               ? Colors.grey[600]
-    //                                               : Colors.black87,
-    //                                       fontSize: 16,
-    //                                     ),
-    //                                   ),
-    //                                   if (_dateOfBirthError != null)
-    //                                     Padding(
-    //                                       padding: const EdgeInsets.only(
-    //                                         top: 8.0,
-    //                                         left: 16.0,
-    //                                       ),
-    //                                       child: Text(
-    //                                         _dateOfBirthError!,
-    //                                         style: const TextStyle(
-    //                                           color: Colors.red,
-    //                                           fontSize: 12,
-    //                                         ),
-    //                                       ),
-    //                                     ),
-    //                                 ],
-    //                               ),
-    //                             ),
-    //                           ),
-    //                           const SizedBox(height: 16),
-    //
-    //                           // Gender Dropdown
-    //                           Container(
-    //                             padding: const EdgeInsets.symmetric(
-    //                               horizontal: 16,
-    //                               vertical: 5,
-    //                             ),
-    //                             decoration: BoxDecoration(
-    //                               color: Colors.grey[200],
-    //                               borderRadius: BorderRadius.circular(8),
-    //                               border:
-    //                                   _genderError != null
-    //                                       ? Border.all(color: Colors.red)
-    //                                       : null,
-    //                             ),
-    //                             child: Row(
+    //                           // Profile Picture Section with loading and error handling
+    //                           Center(
+    //                             child: Column(
     //                               children: [
-    //                                 const Icon(
-    //                                   Icons.person_outline,
-    //                                   color: Colors.grey,
-    //                                 ),
-    //                                 const SizedBox(width: 10),
-    //                                 Expanded(
-    //                                   child: DropdownButtonHideUnderline(
-    //                                     child: DropdownButton<String>(
-    //                                       hint: const Text('Select Gender *'),
-    //                                       value: _selectedGender,
-    //                                       isExpanded: true,
-    //                                       icon: const Icon(
-    //                                         Icons.arrow_drop_down,
-    //                                       ),
-    //                                       items:
-    //                                           _genderOptions.map((
-    //                                             String gender,
-    //                                           ) {
-    //                                             return DropdownMenuItem<String>(
-    //                                               value: gender,
-    //                                               child: Text(gender),
-    //                                             );
-    //                                           }).toList(),
-    //                                       onTap: () {
-    //                                         setState(() {
-    //                                           _isSelectingGender = true;
-    //                                         });
-    //                                         _handleFocusChange();
-    //                                       },
-    //                                       onChanged: (String? newValue) {
-    //                                         setState(() {
-    //                                           _selectedGender = newValue;
-    //                                           _isSelectingGender = false;
-    //                                           _genderError = null;
-    //                                         });
-    //                                         _handleFocusChange();
-    //                                       },
+    //                                 GestureDetector(
+    //                                   onTap: _isLoading ? null : _pickImage,
+    //                                   child: Container(
+    //                                     width: 100,
+    //                                     height: 100,
+    //                                     decoration: BoxDecoration(
+    //                                       color: Colors.grey[200],
+    //                                       shape: BoxShape.circle,
+    //                                       border:
+    //                                           _imageError != null
+    //                                               ? Border.all(
+    //                                                 color: Colors.red,
+    //                                                 width: 2,
+    //                                               )
+    //                                               : null,
+    //                                       image:
+    //                                           _profileImage != null
+    //                                               ? DecorationImage(
+    //                                                 image: FileImage(
+    //                                                   _profileImage!,
+    //                                                 ),
+    //                                                 fit: BoxFit.cover,
+    //                                               )
+    //                                               : null,
     //                                     ),
+    //                                     child:
+    //                                         _profileImage == null
+    //                                             ? _isPickingImage
+    //                                                 ? const CircularProgressIndicator()
+    //                                                 : const Icon(
+    //                                                   Icons.add_a_photo,
+    //                                                   size: 40,
+    //                                                   color: Colors.grey,
+    //                                                 )
+    //                                             : null,
     //                                   ),
     //                                 ),
-    //                                 if (_genderError != null)
+    //                                 const SizedBox(height: 10),
+    //                                 Text(
+    //                                   'Add Profile Picture (Optional)',
+    //                                   style: TextStyle(
+    //                                     color: Colors.grey[600],
+    //                                     fontSize: 14,
+    //                                   ),
+    //                                 ),
+    //                                 if (_imageError != null)
     //                                   Padding(
-    //                                     padding: const EdgeInsets.only(
-    //                                       top: 8.0,
-    //                                       left: 16.0,
-    //                                     ),
+    //                                     padding: const EdgeInsets.only(top: 5),
     //                                     child: Text(
-    //                                       _genderError!,
+    //                                       _imageError!,
     //                                       style: const TextStyle(
     //                                         color: Colors.red,
     //                                         fontSize: 12,
@@ -1533,138 +1279,532 @@ class RegisterPageState extends ConsumerState<RegisterPage>
     //                               ],
     //                             ),
     //                           ),
-    //                           const SizedBox(height: 16),
     //
-    //                           // Phone Number
-    //                           TextFormField(
-    //                             controller: _phoneNumberController,
-    //                             focusNode: _phoneNumberFocus,
-    //                             keyboardType: TextInputType.phone,
-    //                             decoration: InputDecoration(
-    //                               hintText: 'Phone Number',
-    //                               contentPadding: const EdgeInsets.symmetric(
-    //                                 horizontal: 16,
-    //                                 vertical: 14,
+    //                           const SizedBox(height: 20),
+    //
+    //                           //Input Fields Section (keep all your existing input fields as they are)
+    //                           Column(
+    //                             crossAxisAlignment: CrossAxisAlignment.start,
+    //                             children: [
+    //                               // Email
+    //                               TextFormField(
+    //                                 controller: _emailController,
+    //                                 focusNode: _emailFocus,
+    //                                 keyboardType: TextInputType.emailAddress,
+    //                                 enabled: !_isLoading,
+    //                                 decoration: InputDecoration(
+    //                                   hintText: 'Email Address *',
+    //                                   contentPadding:
+    //                                       const EdgeInsets.symmetric(
+    //                                         horizontal: 16,
+    //                                         vertical: 14,
+    //                                       ),
+    //                                   border: OutlineInputBorder(
+    //                                     borderSide: BorderSide.none,
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                   ),
+    //                                   filled: true,
+    //                                   fillColor: Colors.grey[200],
+    //                                   prefixIcon: const Icon(
+    //                                     Icons.email,
+    //                                     color: Colors.grey,
+    //                                   ),
+    //                                   errorText: _emailError,
+    //                                 ),
+    //                                 onChanged: (value) {
+    //                                   if (_emailError != null) {
+    //                                     setState(() {
+    //                                       _emailError = null;
+    //                                     });
+    //                                   }
+    //                                 },
     //                               ),
-    //                               border: OutlineInputBorder(
-    //                                 borderSide: BorderSide.none,
-    //                                 borderRadius: BorderRadius.circular(8),
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Password
+    //                               TextFormField(
+    //                                 controller: _passwordController,
+    //                                 focusNode: _passwordFocus,
+    //                                 obscureText: _obscurePassword,
+    //                                 enabled: !_isLoading,
+    //                                 decoration: InputDecoration(
+    //                                   hintText: 'Password *',
+    //                                   contentPadding:
+    //                                       const EdgeInsets.symmetric(
+    //                                         horizontal: 16,
+    //                                         vertical: 14,
+    //                                       ),
+    //                                   border: OutlineInputBorder(
+    //                                     borderSide: BorderSide.none,
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                   ),
+    //                                   filled: true,
+    //                                   fillColor: Colors.grey[200],
+    //                                   prefixIcon: const Icon(
+    //                                     Icons.lock,
+    //                                     color: Colors.grey,
+    //                                   ),
+    //                                   suffixIcon: IconButton(
+    //                                     icon: Icon(
+    //                                       _obscurePassword
+    //                                           ? Icons.visibility_off
+    //                                           : Icons.visibility,
+    //                                       color: Colors.grey,
+    //                                     ),
+    //                                     onPressed:
+    //                                         _isLoading
+    //                                             ? null
+    //                                             : () {
+    //                                               setState(() {
+    //                                                 _obscurePassword =
+    //                                                     !_obscurePassword;
+    //                                               });
+    //                                             },
+    //                                   ),
+    //                                   errorText: _passwordError,
+    //                                 ),
+    //                                 onChanged: (value) {
+    //                                   if (_passwordError != null) {
+    //                                     setState(() {
+    //                                       _passwordError = null;
+    //                                     });
+    //                                   }
+    //                                   if (_confirmPasswordController
+    //                                       .text
+    //                                       .isNotEmpty) {
+    //                                     setState(() {
+    //                                       _confirmPasswordError =
+    //                                           _confirmPasswordController.text !=
+    //                                                   value
+    //                                               ? 'Passwords do not match'
+    //                                               : null;
+    //                                     });
+    //                                   }
+    //                                 },
     //                               ),
-    //                               filled: true,
-    //                               fillColor: Colors.grey[200],
-    //                               prefixIcon: const Icon(
-    //                                 Icons.phone,
-    //                                 color: Colors.grey,
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Confirm Password
+    //                               TextFormField(
+    //                                 controller: _confirmPasswordController,
+    //                                 focusNode: _confirmPasswordFocus,
+    //                                 obscureText: _obscureConfirmPassword,
+    //                                 enabled: !_isLoading,
+    //                                 decoration: InputDecoration(
+    //                                   hintText: 'Confirm Password *',
+    //                                   contentPadding:
+    //                                       const EdgeInsets.symmetric(
+    //                                         horizontal: 16,
+    //                                         vertical: 14,
+    //                                       ),
+    //                                   border: OutlineInputBorder(
+    //                                     borderSide: BorderSide.none,
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                   ),
+    //                                   filled: true,
+    //                                   fillColor: Colors.grey[200],
+    //                                   prefixIcon: const Icon(
+    //                                     Icons.lock_outline,
+    //                                     color: Colors.grey,
+    //                                   ),
+    //                                   suffixIcon: IconButton(
+    //                                     icon: Icon(
+    //                                       _obscureConfirmPassword
+    //                                           ? Icons.visibility_off
+    //                                           : Icons.visibility,
+    //                                       color: Colors.grey,
+    //                                     ),
+    //                                     onPressed:
+    //                                         _isLoading
+    //                                             ? null
+    //                                             : () {
+    //                                               setState(() {
+    //                                                 _obscureConfirmPassword =
+    //                                                     !_obscureConfirmPassword;
+    //                                               });
+    //                                             },
+    //                                   ),
+    //                                   errorText: _confirmPasswordError,
+    //                                 ),
+    //                                 onChanged: (value) {
+    //                                   setState(() {
+    //                                     _confirmPasswordError =
+    //                                         value != _passwordController.text
+    //                                             ? 'Passwords do not match'
+    //                                             : null;
+    //                                   });
+    //                                 },
     //                               ),
-    //                               errorText: _phoneNumberError,
-    //                             ),
-    //                             onChanged: (value) {
-    //                               if (_phoneNumberError != null) {
-    //                                 setState(() {
-    //                                   _phoneNumberError = null;
-    //                                 });
-    //                               }
-    //                             },
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Full Name
+    //                               TextFormField(
+    //                                 controller: _fullNameController,
+    //                                 focusNode: _fullNameFocus,
+    //                                 enabled: !_isLoading,
+    //                                 decoration: InputDecoration(
+    //                                   hintText: 'Full Name *',
+    //                                   contentPadding:
+    //                                       const EdgeInsets.symmetric(
+    //                                         horizontal: 16,
+    //                                         vertical: 14,
+    //                                       ),
+    //                                   border: OutlineInputBorder(
+    //                                     borderSide: BorderSide.none,
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                   ),
+    //                                   filled: true,
+    //                                   fillColor: Colors.grey[200],
+    //                                   prefixIcon: const Icon(
+    //                                     Icons.person,
+    //                                     color: Colors.grey,
+    //                                   ),
+    //                                   errorText: _fullNameError,
+    //                                 ),
+    //                                 onChanged: (value) {
+    //                                   if (_fullNameError != null) {
+    //                                     setState(() {
+    //                                       _fullNameError = null;
+    //                                     });
+    //                                   }
+    //                                 },
+    //                               ),
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Date of Birth - Button to show date picker
+    //                               GestureDetector(
+    //                                 onTap:
+    //                                     _isLoading
+    //                                         ? null
+    //                                         : () => _selectDate(context),
+    //                                 child: Container(
+    //                                   padding: const EdgeInsets.symmetric(
+    //                                     horizontal: 16,
+    //                                     vertical: 14,
+    //                                   ),
+    //                                   decoration: BoxDecoration(
+    //                                     color:
+    //                                         _isLoading
+    //                                             ? Colors.grey[300]
+    //                                             : Colors.grey[200],
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                     border:
+    //                                         _dateOfBirthError != null
+    //                                             ? Border.all(color: Colors.red)
+    //                                             : null,
+    //                                   ),
+    //                                   child: Row(
+    //                                     children: [
+    //                                       const Icon(
+    //                                         Icons.calendar_today,
+    //                                         color: Colors.grey,
+    //                                       ),
+    //                                       const SizedBox(width: 10),
+    //                                       Text(
+    //                                         _selectedDate == null
+    //                                             ? 'Date of Birth'
+    //                                             : DateFormat(
+    //                                               'MMM dd, yyyy',
+    //                                             ).format(_selectedDate!),
+    //                                         style: TextStyle(
+    //                                           color:
+    //                                               _selectedDate == null
+    //                                                   ? Colors.grey[600]
+    //                                                   : Colors.black87,
+    //                                           fontSize: 16,
+    //                                         ),
+    //                                       ),
+    //                                       if (_dateOfBirthError != null)
+    //                                         Padding(
+    //                                           padding: const EdgeInsets.only(
+    //                                             top: 8.0,
+    //                                             left: 16.0,
+    //                                           ),
+    //                                           child: Text(
+    //                                             _dateOfBirthError!,
+    //                                             style: const TextStyle(
+    //                                               color: Colors.red,
+    //                                               fontSize: 12,
+    //                                             ),
+    //                                           ),
+    //                                         ),
+    //                                     ],
+    //                                   ),
+    //                                 ),
+    //                               ),
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Gender Dropdown
+    //                               Container(
+    //                                 padding: const EdgeInsets.symmetric(
+    //                                   horizontal: 16,
+    //                                   vertical: 5,
+    //                                 ),
+    //                                 decoration: BoxDecoration(
+    //                                   color:
+    //                                       _isLoading
+    //                                           ? Colors.grey[300]
+    //                                           : Colors.grey[200],
+    //                                   borderRadius: BorderRadius.circular(8),
+    //                                   border:
+    //                                       _genderError != null
+    //                                           ? Border.all(color: Colors.red)
+    //                                           : null,
+    //                                 ),
+    //                                 child: Row(
+    //                                   children: [
+    //                                     const Icon(
+    //                                       Icons.person_outline,
+    //                                       color: Colors.grey,
+    //                                     ),
+    //                                     const SizedBox(width: 10),
+    //                                     Expanded(
+    //                                       child: DropdownButtonHideUnderline(
+    //                                         child: DropdownButton<String>(
+    //                                           hint: const Text(
+    //                                             'Select Gender *',
+    //                                           ),
+    //                                           value: _selectedGender,
+    //                                           isExpanded: true,
+    //                                           icon: const Icon(
+    //                                             Icons.arrow_drop_down,
+    //                                           ),
+    //                                           items:
+    //                                               _genderOptions.map((
+    //                                                 String gender,
+    //                                               ) {
+    //                                                 return DropdownMenuItem<
+    //                                                   String
+    //                                                 >(
+    //                                                   value: gender,
+    //                                                   child: Text(gender),
+    //                                                 );
+    //                                               }).toList(),
+    //                                           onTap:
+    //                                               _isLoading
+    //                                                   ? null
+    //                                                   : () {
+    //                                                     setState(() {
+    //                                                       _isSelectingGender =
+    //                                                           true;
+    //                                                     });
+    //                                                     _handleFocusChange();
+    //                                                   },
+    //                                           onChanged:
+    //                                               _isLoading
+    //                                                   ? null
+    //                                                   : (String? newValue) {
+    //                                                     setState(() {
+    //                                                       _selectedGender =
+    //                                                           newValue;
+    //                                                       _isSelectingGender =
+    //                                                           false;
+    //                                                       _genderError = null;
+    //                                                     });
+    //                                                     _handleFocusChange();
+    //                                                   },
+    //                                         ),
+    //                                       ),
+    //                                     ),
+    //                                     if (_genderError != null)
+    //                                       Padding(
+    //                                         padding: const EdgeInsets.only(
+    //                                           top: 8.0,
+    //                                           left: 16.0,
+    //                                         ),
+    //                                         child: Text(
+    //                                           _genderError!,
+    //                                           style: const TextStyle(
+    //                                             color: Colors.red,
+    //                                             fontSize: 12,
+    //                                           ),
+    //                                         ),
+    //                                       ),
+    //                                   ],
+    //                                 ),
+    //                               ),
+    //                               const SizedBox(height: 16),
+    //
+    //                               // Phone Number
+    //                               TextFormField(
+    //                                 controller: _phoneNumberController,
+    //                                 focusNode: _phoneNumberFocus,
+    //                                 keyboardType: TextInputType.phone,
+    //                                 enabled: !_isLoading,
+    //                                 decoration: InputDecoration(
+    //                                   hintText: 'Phone Number',
+    //                                   contentPadding:
+    //                                       const EdgeInsets.symmetric(
+    //                                         horizontal: 16,
+    //                                         vertical: 14,
+    //                                       ),
+    //                                   border: OutlineInputBorder(
+    //                                     borderSide: BorderSide.none,
+    //                                     borderRadius: BorderRadius.circular(8),
+    //                                   ),
+    //                                   filled: true,
+    //                                   fillColor: Colors.grey[200],
+    //                                   prefixIcon: const Icon(
+    //                                     Icons.phone,
+    //                                     color: Colors.grey,
+    //                                   ),
+    //                                   errorText: _phoneNumberError,
+    //                                 ),
+    //                                 onChanged: (value) {
+    //                                   if (_phoneNumberError != null) {
+    //                                     setState(() {
+    //                                       _phoneNumberError = null;
+    //                                     });
+    //                                   }
+    //                                 },
+    //                               ),
+    //                             ],
     //                           ),
+    //
+    //                           const SizedBox(height: 30),
     //                         ],
     //                       ),
-    //
-    //                       const SizedBox(height: 30),
-    //                     ],
+    //                     ),
     //                   ),
-    //                 ),
-    //               ),
-    //               const SizedBox(height: 10),
+    //                   const SizedBox(height: 10),
     //
-    //               // Register Button
-    //               ElevatedButton(
-    //                 style: ElevatedButton.styleFrom(
-    //                   backgroundColor: Color(0xFFE37083),
-    //                   minimumSize: const Size.fromHeight(50),
-    //                   shape: RoundedRectangleBorder(
-    //                     borderRadius: BorderRadius.circular(30),
-    //                   ),
-    //                 ),
-    //                 onPressed: () async {
-    //                   if (_validateForm()) {
-    //                     try {
-    //                       var user = UserRegisterModel(
-    //                         _fullNameController.text,
-    //                         _emailController.text,
-    //                         _passwordController.text,
-    //                         _confirmPasswordController.text,
-    //                         _selectedDate!,
-    //                         _selectedGender.toString(),
-    //                         _phoneNumberController.text,
-    //                       );
-    //                       final result = await authUseCase.register(user);
-    //                       if (result.isSuccess) {
-    //                         // Show success toast/snackbar
-    //                         Notify.showFlushbar( "Registration successful!", isError: false);
-    //                       } else {
-    //                         // Show error toast/snackbar with result.error
-    //                         Notify.showFlushbar( "Registration fail!", isError: true);
-    //                       }
-    //                     } catch (e) {
-    //                       // Show error message with flushbar
-    //                       Notify.showFlushbar( "Error: $e", isError: true);
-    //                     }
-    //                   }
-    //                 },
-    //                 child: const Text(
-    //                   'REGISTER',
-    //                   style: TextStyle(
-    //                     fontSize: 16,
-    //                     fontWeight: FontWeight.bold,
-    //                     color: Colors.white,
-    //                   ),
-    //                 ),
-    //               ),
+    //                   // Register Button with loading state
+    //                   ElevatedButton(
+    //                     style: ElevatedButton.styleFrom(
+    //                       backgroundColor: const Color(0xFFE37083),
+    //                       minimumSize: const Size.fromHeight(50),
+    //                       shape: RoundedRectangleBorder(
+    //                         borderRadius: BorderRadius.circular(30),
+    //                       ),
+    //                     ),
+    //                     onPressed:
+    //                         _isLoading
+    //                             ? null
+    //                             : () async {
+    //                               if (_validateForm()) {
+    //                                 setState(() {
+    //                                   _isLoading = true;
+    //                                 });
     //
-    //               const SizedBox(height: 5),
+    //                                 try {
+    //                                   var user = UserRegisterModel(
+    //                                     _fullNameController.text,
+    //                                     _emailController.text,
+    //                                     _passwordController.text,
+    //                                     _confirmPasswordController.text,
+    //                                     _selectedDate!,
+    //                                     _selectedGender.toString(),
+    //                                     _phoneNumberController.text,
+    //                                     _profileImage,
+    //                                   );
     //
-    //               // Sign in option
-    //               Container(
-    //                 margin: const EdgeInsets.only(top: 10, bottom: 20),
-    //                 child: Row(
-    //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //                   children: [
-    //                     Column(
-    //                       crossAxisAlignment: CrossAxisAlignment.start,
-    //                       children: [
-    //                         const Text(
-    //                           "Already have an account?",
-    //                           style: TextStyle(
-    //                             color: Colors.black,
-    //                             fontSize: 14,
-    //                           ),
-    //                         ),
-    //                         const SizedBox(height: 4),
-    //                         GestureDetector(
-    //                           onTap: () {
-    //                             Navigator.pop(context);
-    //                           },
-    //                           child: const Text(
-    //                             'SIGN IN',
-    //                             style: TextStyle(
-    //                               fontWeight: FontWeight.bold,
-    //                               fontSize: 14,
+    //                                   final result = await authUseCase.register(
+    //                                     user,
+    //                                   );
+    //
+    //                                   if (result.isSuccess) {
+    //                                     _showSuccessDialog();
+    //                                   } else {
+    //                                     Notify.showFlushbar(
+    //                                       "Registration failed: ${result.error ?? 'Unknown error'}",
+    //                                       isError: true,
+    //                                     );
+    //                                   }
+    //                                 } catch (e) {
+    //                                   Notify.showFlushbar(
+    //                                     "Error: $e",
+    //                                     isError: true,
+    //                                   );
+    //                                 } finally {
+    //                                   if (mounted) {
+    //                                     setState(() {
+    //                                       _isLoading = false;
+    //                                     });
+    //                                   }
+    //                                 }
+    //                               }
+    //                             },
+    //                     child:
+    //                         _isLoading
+    //                             ? const SizedBox(
+    //                               height: 20,
+    //                               width: 20,
+    //                               child: CircularProgressIndicator(
+    //                                 strokeWidth: 2,
+    //                                 valueColor: AlwaysStoppedAnimation<Color>(
+    //                                   Colors.white,
+    //                                 ),
+    //                               ),
+    //                             )
+    //                             : const Text(
+    //                               'REGISTER',
+    //                               style: TextStyle(
+    //                                 fontSize: 16,
+    //                                 fontWeight: FontWeight.bold,
+    //                                 color: Colors.white,
+    //                               ),
     //                             ),
-    //                           ),
+    //                   ),
+    //
+    //                   const SizedBox(height: 5),
+    //
+    //                   // Sign in option
+    //                   Container(
+    //                     margin: const EdgeInsets.only(top: 10, bottom: 20),
+    //                     child: Row(
+    //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //                       children: [
+    //                         Column(
+    //                           crossAxisAlignment: CrossAxisAlignment.start,
+    //                           children: [
+    //                             const Text(
+    //                               "Already have an account?",
+    //                               style: TextStyle(
+    //                                 color: Colors.black,
+    //                                 fontSize: 14,
+    //                               ),
+    //                             ),
+    //                             const SizedBox(height: 4),
+    //                             GestureDetector(
+    //                               onTap:
+    //                                   _isLoading
+    //                                       ? null
+    //                                       : () {
+    //                                         Navigator.pop(context);
+    //                                       },
+    //                               child: Text(
+    //                                 'SIGN IN',
+    //                                 style: TextStyle(
+    //                                   fontWeight: FontWeight.bold,
+    //                                   fontSize: 14,
+    //                                   color:
+    //                                       _isLoading
+    //                                           ? Colors.grey
+    //                                           : Colors.black,
+    //                                 ),
+    //                               ),
+    //                             ),
+    //                           ],
+    //                         ),
+    //                         Icon(
+    //                           Icons.arrow_right_alt,
+    //                           size: 28,
+    //                           color: _isLoading ? Colors.grey : Colors.black,
     //                         ),
     //                       ],
     //                     ),
-    //                     const Icon(
-    //                       Icons.arrow_right_alt,
-    //                       size: 28,
-    //                       color: Colors.black,
-    //                     ),
-    //                   ],
-    //                 ),
+    //                   ),
+    //                 ],
     //               ),
-    //             ],
+    //             ),
     //           ),
-    //         ),
+    //           // Loading overlay
+    //           if (_isLoading)
+    //             Container(
+    //               color: Colors.black26,
+    //               child: const Center(child: CircularProgressIndicator()),
+    //             ),
+    //         ],
     //       ),
     //     ),
     //   ),

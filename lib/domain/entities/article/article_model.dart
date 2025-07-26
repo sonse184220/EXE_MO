@@ -17,7 +17,7 @@ class ArticleModel {
     return ArticleModel(
       articleId: json['articleId'] as String?,
       articleName: json['articleName'] as String?,
-      articleUrl: json['articleUrl'] as String?,
+      articleUrl: json['articleURL'] as String?,
       articleDescription: json['articleDescription'] as String?,
       articleContent: json['articleContent'] as String?,
     );

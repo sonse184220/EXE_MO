@@ -10,4 +10,26 @@ class QuizCategoryUsecase {
   Future<Result<List<QuizCategoryModel>>> getAllQuizCategories() {
     return _quizCategoryRepository.getAllQuizCategories();
   }
+
+  Future<Result<String>> createQuizCategory(
+    String quizCategoryName,
+    String quizCategoryDescription,
+  ) {
+    return _quizCategoryRepository.createQuizCategory(
+      quizCategoryName,
+      quizCategoryDescription,
+    );
+  }
+
+  Future<Result<String>> updateQuizCategory(
+    String quizCategoryId,
+    String quizCategoryName,
+    String quizCategoryDescription,
+  ) {
+    return _quizCategoryRepository.updateQuizCategory(
+      quizCategoryId,
+      quizCategoryName,
+      quizCategoryDescription,
+    );
+  }
 }

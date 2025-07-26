@@ -44,11 +44,11 @@ class _CustomNavbarState extends State<CustomNavbar> {
               activeIcon: Icon(Icons.home),
               label: 'Home',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border_outlined),
-              activeIcon: Icon(Icons.favorite),
-              label: 'Therapy-Tools',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.favorite_border_outlined),
+            //   activeIcon: Icon(Icons.favorite),
+            //   label: 'Therapy-Tools',
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Icons.track_changes_outlined),
               activeIcon: Icon(Icons.track_changes),

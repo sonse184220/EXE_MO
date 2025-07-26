@@ -260,13 +260,18 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
         isPlaying = false;
       });
     } else {
-      try {
-        await _audioPlayer.resume();
-        setState(() {
-          isPlaying = true;
-        });
-      } catch (e) {
-        print('Error resuming audio: $e');
+      if (totalDuration == Duration.zero || currentPosition >= totalDuration) {
+        // replay
+        await _loadAndPlayAudio();
+      } else {
+        try {
+          await _audioPlayer.resume();
+          setState(() {
+            isPlaying = true;
+          });
+        } catch (e) {
+          print('Error resuming audio: $e');
+        }
       }
     }
   }
@@ -331,16 +336,32 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     }
   }
 
+  // void _onAudioComplete() {
+  //   setState(() {
+  //     currentPosition = Duration.zero;
+  //     isPlaying = false;
+  //   });
+  //   _rotationController.reset();
+  //
+  //   // Auto play next track
+  //   if (currentAudioIndex < audioList.length - 1) {
+  //     _nextTrack();
+  //   }
+  // }
+
   void _onAudioComplete() {
     setState(() {
       currentPosition = Duration.zero;
+      totalDuration = Duration.zero;
       isPlaying = false;
     });
     _rotationController.reset();
 
-    // Auto play next track
     if (currentAudioIndex < audioList.length - 1) {
       _nextTrack();
+    } else {
+      // Replay same track
+      _loadAndPlayAudio();
     }
   }
 
@@ -462,6 +483,13 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     final screenHeight = MediaQuery.of(context).size.height;
     final imgSize = MediaQuery.of(context).size.width - 20;
 
+    double sliderValue = 0.0;
+    if (totalDuration.inMilliseconds > 0) {
+      sliderValue = (currentPosition.inMilliseconds /
+              totalDuration.inMilliseconds)
+          .clamp(0.0, 1.0);
+    }
+
     return SafeArea(
       child: Scaffold(
         body: LayoutBuilder(
@@ -571,140 +599,149 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
                                 // Meditation image and title
                                 Expanded(
-                                  child:
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    AspectRatio(
-                                      aspectRatio: 1,
-                                      child: AnimatedBuilder(
-                                        animation: _rotationController,
-                                        builder: (context, child) {
-                                          return Transform.rotate(
-                                            angle:
-                                                _rotationController.value *
-                                                2 *
-                                                3.14159,
-                                            child: Container(
-                                              width: imgSize,
-                                              height: imgSize,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.grey[300],
-                                              ),
-                                              child:
-                                                  isLoading
-                                                      ? Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                      )
-                                                      : currentAudio
-                                                                  ?.audioThumbnail !=
-                                                              null &&
-                                                          currentAudio!
-                                                              .audioThumbnail!
-                                                              .isNotEmpty
-                                                      ? ClipOval(
-                                                        child: Image.network(
-                                                          currentAudio!
-                                                              .audioThumbnail!,
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (
-                                                            context,
-                                                            error,
-                                                            stackTrace,
-                                                          ) {
-                                                            return Icon(
-                                                              Icons.music_note,
-                                                              color:
-                                                                  Colors.grey,
-                                                              size: 100,
-                                                            );
-                                                          },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      AspectRatio(
+                                        aspectRatio: 1,
+                                        child: AnimatedBuilder(
+                                          animation: _rotationController,
+                                          builder: (context, child) {
+                                            return Transform.rotate(
+                                              angle:
+                                                  _rotationController.value *
+                                                  2 *
+                                                  3.14159,
+                                              child: Container(
+                                                width: imgSize,
+                                                height: imgSize,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.grey[300],
+                                                ),
+                                                child:
+                                                    isLoading
+                                                        ? Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                              ),
+                                                        )
+                                                        : currentAudio
+                                                                    ?.audioThumbnail !=
+                                                                null &&
+                                                            currentAudio!
+                                                                .audioThumbnail!
+                                                                .isNotEmpty
+                                                        ? ClipOval(
+                                                          child: Image.network(
+                                                            currentAudio!
+                                                                .audioThumbnail!,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (
+                                                              context,
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Icon(
+                                                                Icons
+                                                                    .music_note,
+                                                                color:
+                                                                    Colors.grey,
+                                                                size: 100,
+                                                              );
+                                                            },
+                                                          ),
+                                                        )
+                                                        : Icon(
+                                                          Icons.music_note,
+                                                          color: Colors.grey,
+                                                          size: 100,
                                                         ),
-                                                      )
-                                                      : Icon(
-                                                        Icons.music_note,
-                                                        color: Colors.grey,
-                                                        size: 100,
-                                                      ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      currentAudio?.audioTitle ?? 'Loading...',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      currentAudio?.subAudioCategoryName ?? '',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          _formatDuration(currentPosition),
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.7,
-                                            ),
-                                            fontSize: 14,
-                                          ),
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        Expanded(
-                                          child: Slider(
-                                            value:
-                                                totalDuration.inMilliseconds > 0
-                                                    ? currentPosition
-                                                            .inMilliseconds /
-                                                        totalDuration
-                                                            .inMilliseconds
-                                                    : 0.0,
-                                            onChanged: (value) {
-                                              final position = Duration(
-                                                milliseconds:
-                                                    (value *
-                                                            totalDuration
-                                                                .inMilliseconds)
-                                                        .round(),
-                                              );
-                                              _seekTo(position);
-                                            },
-                                            activeColor: Colors.white,
-                                            inactiveColor: Colors.white
-                                                .withOpacity(0.3),
-                                          ),
+                                      ),
+                                      SizedBox(height: 20),
+                                      Text(
+                                        currentAudio?.audioTitle ??
+                                            'Loading...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        Text(
-                                          _formatDuration(totalDuration),
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.7,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        currentAudio?.subAudioCategoryName ??
+                                            '',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            _formatDuration(currentPosition),
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
+                                              fontSize: 14,
                                             ),
-                                            fontSize: 14,
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                          Expanded(
+                                            child: Slider(
+                                              value: sliderValue,
+                                              // value: totalDuration.inMilliseconds > 0
+                                              //     ? (currentPosition.inMilliseconds / totalDuration.inMilliseconds)
+                                              //     .clamp(0.0, 1.0)
+                                              //     : 0.0,
+
+                                              // value:
+                                              //     totalDuration.inMilliseconds > 0
+                                              //         ? currentPosition
+                                              //                 .inMilliseconds /
+                                              //             totalDuration
+                                              //                 .inMilliseconds
+                                              //         : 0.0,
+                                              onChanged: (value) {
+                                                final position = Duration(
+                                                  milliseconds:
+                                                      (value *
+                                                              totalDuration
+                                                                  .inMilliseconds)
+                                                          .round(),
+                                                );
+                                                _seekTo(position);
+                                              },
+                                              activeColor: Colors.white,
+                                              inactiveColor: Colors.white
+                                                  .withOpacity(0.3),
+                                            ),
+                                          ),
+                                          Text(
+                                            _formatDuration(totalDuration),
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),

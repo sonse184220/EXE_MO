@@ -452,101 +452,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Initialize auth state by checking for stored token
-  // Future<void> _initialize() async {
-  //   if (kDebugMode) {
-  //     print('🚀 AuthNotifier: Starting initialization...');
-  //   }
-  //   try {
-  //     final tokenModelJson = await _storage.read(tokenModel);
-  //
-  //     // Check if token data exists
-  //     if (tokenModelJson == null) {
-  //       if (kDebugMode) {
-  //         print('🚀 AuthNotifier: Token null in secure storage initialization...');
-  //       }
-  //       state = const AuthState(status: AuthStatus.unauthenticated);
-  //       return;
-  //     }
-  //
-  //     TokenModel tokenModelObject;
-  //
-  //     // If stored as JSON string, parse it
-  //     final Map<String, dynamic> jsonMap = json.decode(tokenModelJson);
-  //     tokenModelObject = TokenModel.fromJson(jsonMap);
-  //     if (kDebugMode) {
-  //       print(tokenModelObject.accessToken);
-  //     }
-  //
-  //     final userInfo = _extractUserInfoFromToken(tokenModelObject.accessToken);
-  //
-  //     // Check if token is expired or close to expiry
-  //     if (userInfo != null) {
-  //       if (userInfo.isExpired) {
-  //         // Try to refresh token first
-  //         final refreshed = await _refreshToken();
-  //         if (refreshed) {
-  //           // Re-read the new token and update state
-  //           await _updateStateWithNewToken();
-  //           _startTokenExpiryCountdown();
-  //           state = AuthState(
-  //             status: AuthStatus.authenticated,
-  //             userInfo: userInfo,
-  //             token: tokenModelObject.accessToken,
-  //           );
-  //         } else {
-  //           // Refresh failed, remove token
-  //           await _storage.delete(tokenModel);
-  //           state = const AuthState(status: AuthStatus.unauthenticated);
-  //         }
-  //       } else if (shouldRefreshToken) {
-  //         // Token is close to expiry, proactively refresh
-  //         await _refreshToken();
-  //         await _updateStateWithNewToken();
-  //         _startTokenExpiryCountdown();
-  //         state = AuthState(
-  //           status: AuthStatus.authenticated,
-  //           userInfo: userInfo,
-  //           token: tokenModelObject.accessToken,
-  //         );
-  //       } else {
-  //         // Token is valid
-  //         state = AuthState(
-  //           status: AuthStatus.authenticated,
-  //           userInfo: userInfo,
-  //           token: tokenModelObject.accessToken,
-  //         );
-  //         _startTokenExpiryCountdown();
-  //       }
-  //     } else {
-  //       // Invalid token format, remove it
-  //       await _storage.delete(tokenModel);
-  //       state = const AuthState(status: AuthStatus.unauthenticated);
-  //     }
-  //
-  //     if (kDebugMode) {
-  //       print('✅ AuthNotifier: Initialization completed with status: ${state.status}');
-  //     }
-  //
-  //     // // Check if token is expired
-  //     // if (userInfo != null && !userInfo.isExpired) {
-  //     //   state = AuthState(
-  //     //     status: AuthStatus.authenticated,
-  //     //     userInfo: userInfo,
-  //     //     token: tokenModelObject.accessToken,
-  //     //   );
-  //     // } else {
-  //     //   // Token is expired, remove it
-  //     //   await _storage.delete(tokenModel);
-  //     //   state = const AuthState(status: AuthStatus.unauthenticated);
-  //     // }
-  //   } catch (e) {
-  //     debugPrint('Error initializing auth state: $e');
-  //     // Clean up invalid token data
-  //     await _storage.delete(tokenModel);
-  //     state = const AuthState(status: AuthStatus.unauthenticated);
-  //   }
-  // }
+  Future<void> stopConnection() async {
+    try {
+      await _signalRService.stopConnection();
+    } catch (e) {
+      debugPrint('❌ SignalR retry failed: $e');
+      state = const AuthState(status: AuthStatus.error);
+    }
+  }
 
   Future<void> _updateStateWithNewToken() async {
     try {
@@ -664,21 +577,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final profilesJson = jsonEncode(profiles.map((p) => p.toJson()).toList());
       String profilesKey = AppConstants.profiles;
       await _storage.write(profilesKey, profilesJson);
-
-      // final userInfo = _extractUserInfoFromToken(tokenModel.accessToken);
-
-      // if (userInfo == null) {
-      //   throw Exception('Invalid token format');
-      // }
-      //
-      // if (userInfo.isExpired) {
-      //   throw Exception('Token is expired');
-      // }
-
-      // final tokenModelToJson = jsonEncode(tokenModel.toJson());
-      // String tokenModelString = AppConstants.tokenModel;
-      //
-      // await _storage.write(tokenModelString, tokenModelToJson);
 
       // Set to profileSelection status instead of authenticated
       state = AuthState(

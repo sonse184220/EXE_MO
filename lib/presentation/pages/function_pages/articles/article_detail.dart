@@ -21,7 +21,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
 
   late AnimationController _animationController;
   late Animation<double> _animation;
-  bool _isVisible = false;
+  // bool _isVisible = false;
 
   ArticleModel? _article;
   bool _loading = true;
@@ -69,12 +69,12 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
     );
 
     // Start with a flow-up animation
-    Future.delayed(Duration(milliseconds: 100), () {
-      setState(() {
-        _isVisible = true;
-      });
-      _animationController.forward();
-    });
+    // Future.delayed(Duration(milliseconds: 100), () {
+    //   setState(() {
+    //     _isVisible = true;
+    //   });
+    //   _animationController.forward();
+    // });
 
     _articleUseCase = ref.read(articleUseCaseProvider);
     _fetchArticle();
@@ -89,7 +89,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
   Future<void> _openArticleUrl() async {
     if (_article?.articleUrl != null && _article!.articleUrl!.isNotEmpty) {
       try {
-        final Uri url = Uri.parse(_article!.articleUrl!);
+        final Uri url = Uri.parse(_article!.articleDescription!);
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
@@ -104,12 +104,12 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
   }
 
   void _closeArticle() {
-    setState(() {
-      _isVisible = false;
-    });
-    _animationController.reverse().then((_) {
+    // setState(() {
+    //   _isVisible = false;
+    // });
+    // _animationController.reverse().then((_) {
       Navigator.of(context).pop();
-    });
+    // });
   }
 
   Widget _buildImageContainer() {
@@ -124,48 +124,58 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/article_cover.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildImageErrorWidget();
-                },
-              ),
+              child:
+                  _article?.articleUrl != null &&
+                          _article!.articleUrl!.isNotEmpty
+                      ? Image.network(
+                        _article!.articleUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildImageErrorWidget();
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value:
+                                  loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          (loadingProgress.expectedTotalBytes ??
+                                              1)
+                                      : null,
+                            ),
+                          );
+                        },
+                      )
+                      : _buildImageErrorWidget(),
             ),
           ),
-          Positioned(
-            bottom: 10,
-            left: 10,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: meadow.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: meadow,
-                    size: 16,
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    'Hurray, we identified this article!',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: meadow,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Positioned(
+          //   bottom: 10,
+          //   left: 10,
+          //   child: Container(
+          //     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          //     decoration: BoxDecoration(
+          //       color: meadow.withOpacity(0.2),
+          //       borderRadius: BorderRadius.circular(20),
+          //     ),
+          //     child: Row(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         Icon(Icons.check_circle, color: meadow, size: 16),
+          //         SizedBox(width: 4),
+          //         Text(
+          //           'Hurray, we identified this article!',
+          //           style: TextStyle(
+          //             fontSize: 12,
+          //             color: meadow,
+          //             fontWeight: FontWeight.w600,
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -197,10 +207,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
           SizedBox(height: 4),
           Text(
             'Tap to retry',
-            style: TextStyle(
-              color: raspberry.withOpacity(0.6),
-              fontSize: 12,
-            ),
+            style: TextStyle(color: raspberry.withOpacity(0.6), fontSize: 12),
           ),
         ],
       ),
@@ -212,11 +219,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: raspberry,
-          ),
+          Icon(Icons.error_outline, size: 64, color: raspberry),
           SizedBox(height: 16),
           Text(
             'Failed to load article',
@@ -229,10 +232,7 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
           SizedBox(height: 8),
           Text(
             'Please check your connection and try again',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 20),
@@ -261,192 +261,798 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: sunshine.withOpacity(0.05),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(
-                        0,
-                        constraints.maxHeight * (1 - _animation.value),
+    // return SafeArea(
+    //   child: Scaffold(
+    //     appBar: AppBar(
+    //       automaticallyImplyLeading: false,
+    //       backgroundColor: Colors.white,
+    //       elevation: 0,
+    //       titleSpacing: 0,
+    //       flexibleSpace: GestureDetector(
+    //         onVerticalDragEnd: (details) {
+    //           if (details.primaryVelocity != null && details.primaryVelocity! > 150) {
+    //             _closeArticle();
+    //           }
+    //         },
+    //         child: SafeArea(
+    //           child: Container(
+    //             color: Colors.white,
+    //             padding: const EdgeInsets.symmetric(horizontal: 16),
+    //             alignment: Alignment.centerLeft,
+    //             child: Row(
+    //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //               children: [
+    //                 Text(
+    //                   'Article detail',
+    //                   style: TextStyle(
+    //                     fontSize: 18,
+    //                     color: springSky,
+    //                     fontWeight: FontWeight.w600,
+    //                   ),
+    //                 ),
+    //                 IconButton(
+    //                   icon: Icon(Icons.close),
+    //                   color: raspberry,
+    //                   onPressed: _closeArticle,
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         ),
+    //       ),
+    //     ),
+    //     // appBar: AppBar(
+    //     //   automaticallyImplyLeading: false,
+    //     //   backgroundColor: Colors.white,
+    //     //   elevation: 0,
+    //     //   titleSpacing: 0,
+    //     //   title: Padding(
+    //     //     padding: const EdgeInsets.symmetric(horizontal: 16),
+    //     //     child: Text(
+    //     //       'Article detail',
+    //     //       style: TextStyle(
+    //     //         fontSize: 18,
+    //     //         color: springSky,
+    //     //         fontWeight: FontWeight.w600,
+    //     //       ),
+    //     //     ),
+    //     //   ),
+    //     //   actions: [
+    //     //     IconButton(
+    //     //       icon: Icon(Icons.close),
+    //     //       color: raspberry,
+    //     //       onPressed: _closeArticle,
+    //     //     ),
+    //     //   ],
+    //     // ),
+    //     backgroundColor: sunshine.withOpacity(0.05),
+    //     body: Container(
+    //       width: double.infinity,
+    //       decoration: BoxDecoration(
+    //         color: Colors.white,
+    //         boxShadow: [
+    //           BoxShadow(
+    //             color: springSky.withOpacity(0.1),
+    //             blurRadius: 10,
+    //             offset: Offset(0, 5),
+    //           ),
+    //         ],
+    //       ),
+    //       child: _loading
+    //           ? Center(
+    //         child: Column(
+    //           mainAxisAlignment: MainAxisAlignment.center,
+    //           children: [
+    //             CircularProgressIndicator(
+    //               valueColor: AlwaysStoppedAnimation<Color>(
+    //                 springSky,
+    //               ),
+    //             ),
+    //             SizedBox(height: 16),
+    //             Text(
+    //               'Loading article...',
+    //               style: TextStyle(
+    //                 color: Colors.grey[600],
+    //                 fontSize: 16,
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //       )
+    //           : _hasError
+    //           ? _buildErrorState()
+    //           : _article == null
+    //           ? Center(
+    //         child: Column(
+    //           mainAxisAlignment: MainAxisAlignment.center,
+    //           children: [
+    //             Icon(
+    //               Icons.article_outlined,
+    //               size: 64,
+    //               color: raspberry.withOpacity(0.7),
+    //             ),
+    //             SizedBox(height: 16),
+    //             Text(
+    //               'Article not found',
+    //               style: TextStyle(
+    //                 fontSize: 18,
+    //                 fontWeight: FontWeight.bold,
+    //                 color: raspberry,
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //       )
+    //           : Column(
+    //         children: [
+    //           // SCROLLABLE CONTENT
+    //           Expanded(
+    //             child: SingleChildScrollView(
+    //               padding: const EdgeInsets.all(20),
+    //               child: Column(
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: [
+    //                   SizedBox(height: 10),
+    //                   GestureDetector(
+    //                     onTap: () {
+    //                       setState(() {});
+    //                     },
+    //                     child: _buildImageContainer(),
+    //                   ),
+    //                   SizedBox(height: 20),
+    //                   Text(
+    //                     _article?.articleName ?? 'Unknown',
+    //                     style: TextStyle(
+    //                       fontSize: 24,
+    //                       fontWeight: FontWeight.bold,
+    //                       color: raspberry,
+    //                     ),
+    //                   ),
+    //                   SizedBox(height: 20),
+    //                   Text(
+    //                     'Content',
+    //                     style: TextStyle(
+    //                       fontSize: 18,
+    //                       fontWeight: FontWeight.bold,
+    //                       color: springSky,
+    //                     ),
+    //                   ),
+    //                   SizedBox(height: 10),
+    //                   Text(
+    //                     _article?.articleContent ?? 'Unknown',
+    //                     style: TextStyle(
+    //                       fontSize: 16,
+    //                       color: Colors.grey[700],
+    //                       height: 1.5,
+    //                     ),
+    //                   ),
+    //                   Row(
+    //                     children: [
+    //                       TextButton(
+    //                         onPressed: _openArticleUrl,
+    //                         child: Text(
+    //                           'Read More',
+    //                           style: TextStyle(
+    //                             color: springSky,
+    //                             fontWeight: FontWeight.w600,
+    //                           ),
+    //                         ),
+    //                       ),
+    //                     ],
+    //                   ),
+    //                   SizedBox(height: 20),
+    //                 ],
+    //               ),
+    //             ),
+    //           ),
+    //
+    //           // FIXED BOTTOM BUTTON
+    //           Container(
+    //             width: double.infinity,
+    //             padding: const EdgeInsets.all(20),
+    //             child: ElevatedButton(
+    //               onPressed: _openArticleUrl,
+    //               style: ElevatedButton.styleFrom(
+    //                 backgroundColor: meadow,
+    //                 foregroundColor: Colors.white,
+    //                 padding: EdgeInsets.symmetric(vertical: 16),
+    //                 shape: RoundedRectangleBorder(
+    //                   borderRadius: BorderRadius.circular(12),
+    //                 ),
+    //                 elevation: 2,
+    //                 shadowColor: meadow.withOpacity(0.3),
+    //               ),
+    //               child: Row(
+    //                 mainAxisAlignment: MainAxisAlignment.center,
+    //                 children: [
+    //                   Icon(
+    //                     Icons.open_in_browser_outlined,
+    //                     color: Colors.white,
+    //                   ),
+    //                   SizedBox(width: 8),
+    //                   Text(
+    //                     'Read on browser',
+    //                     style: TextStyle(
+    //                       color: Colors.white,
+    //                       fontSize: 16,
+    //                       fontWeight: FontWeight.w600,
+    //                     ),
+    //                   ),
+    //                 ],
+    //               ),
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //
+    //     // body:
+    //     // LayoutBuilder(
+    //     //   builder: (context, constraints) {
+    //     //     return
+    //     //       SingleChildScrollView(
+    //     //       child:
+    //     //       ConstrainedBox(
+    //     //         constraints: BoxConstraints(minHeight: constraints.maxHeight),
+    //     //         child:
+    //     //         Container(
+    //     //           width: double.infinity,
+    //     //           padding: const EdgeInsets.all(20),
+    //     //           decoration: BoxDecoration(
+    //     //             color: Colors.white,
+    //     //             // borderRadius: BorderRadius.circular(16),
+    //     //             boxShadow: [
+    //     //               BoxShadow(
+    //     //                 color: springSky.withOpacity(0.1),
+    //     //                 blurRadius: 10,
+    //     //                 offset: Offset(0, 5),
+    //     //               ),
+    //     //             ],
+    //     //           ),
+    //     //           child:
+    //     //               _loading
+    //     //                   ? Center(
+    //     //                     child: Column(
+    //     //                       mainAxisAlignment: MainAxisAlignment.center,
+    //     //                       children: [
+    //     //                         CircularProgressIndicator(
+    //     //                           valueColor: AlwaysStoppedAnimation<Color>(
+    //     //                             springSky,
+    //     //                           ),
+    //     //                         ),
+    //     //                         SizedBox(height: 16),
+    //     //                         Text(
+    //     //                           'Loading article...',
+    //     //                           style: TextStyle(
+    //     //                             color: Colors.grey[600],
+    //     //                             fontSize: 16,
+    //     //                           ),
+    //     //                         ),
+    //     //                       ],
+    //     //                     ),
+    //     //                   )
+    //     //                   : _hasError
+    //     //                   ? _buildErrorState()
+    //     //                   : _article == null
+    //     //                   ? Center(
+    //     //                     child: Column(
+    //     //                       mainAxisAlignment: MainAxisAlignment.center,
+    //     //                       children: [
+    //     //                         Icon(
+    //     //                           Icons.article_outlined,
+    //     //                           size: 64,
+    //     //                           color: raspberry.withOpacity(0.7),
+    //     //                         ),
+    //     //                         SizedBox(height: 16),
+    //     //                         Text(
+    //     //                           'Article not found',
+    //     //                           style: TextStyle(
+    //     //                             fontSize: 18,
+    //     //                             fontWeight: FontWeight.bold,
+    //     //                             color: raspberry,
+    //     //                           ),
+    //     //                         ),
+    //     //                       ],
+    //     //                     ),
+    //     //                   )
+    //     //                   : Column(
+    //     //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //     //                     crossAxisAlignment: CrossAxisAlignment.start,
+    //     //                     children: [
+    //     //                       Column(
+    //     //                         crossAxisAlignment: CrossAxisAlignment.start,
+    //     //                         children: [
+    //     //                           // Row(
+    //     //                           //   mainAxisAlignment:
+    //     //                           //       MainAxisAlignment.spaceBetween,
+    //     //                           //   children: [
+    //     //                           //     Text(
+    //     //                           //       'Article detail',
+    //     //                           //       style: TextStyle(
+    //     //                           //         fontSize: 16,
+    //     //                           //         color: springSky,
+    //     //                           //         fontWeight: FontWeight.w600,
+    //     //                           //       ),
+    //     //                           //     ),
+    //     //                           //     IconButton(
+    //     //                           //       icon: Icon(Icons.close),
+    //     //                           //       color: raspberry,
+    //     //                           //       onPressed: _closeArticle,
+    //     //                           //     ),
+    //     //                           //   ],
+    //     //                           // ),
+    //     //                           SizedBox(height: 10),
+    //     //                           GestureDetector(
+    //     //                             onTap: () {
+    //     //                               // Tap to retry if image fails to load
+    //     //                               setState(() {});
+    //     //                             },
+    //     //                             child: _buildImageContainer(),
+    //     //                           ),
+    //     //                           SizedBox(height: 20),
+    //     //                           Text(
+    //     //                             _article?.articleName ?? 'Unknown',
+    //     //                             style: TextStyle(
+    //     //                               fontSize: 24,
+    //     //                               fontWeight: FontWeight.bold,
+    //     //                               color: raspberry,
+    //     //                             ),
+    //     //                           ),
+    //     //                           SizedBox(height: 20),
+    //     //                           Text(
+    //     //                             'Content',
+    //     //                             style: TextStyle(
+    //     //                               fontSize: 18,
+    //     //                               fontWeight: FontWeight.bold,
+    //     //                               color: springSky,
+    //     //                             ),
+    //     //                           ),
+    //     //                           SizedBox(height: 10),
+    //     //                           Text(
+    //     //                             _article?.articleContent ?? 'Unknown',
+    //     //                             style: TextStyle(
+    //     //                               fontSize: 16,
+    //     //                               color: Colors.grey[700],
+    //     //                               height: 1.5,
+    //     //                             ),
+    //     //                           ),
+    //     //                           Row(
+    //     //                             children: [
+    //     //                               TextButton(
+    //     //                                 onPressed: _openArticleUrl,
+    //     //                                 child: Text(
+    //     //                                   'Read More',
+    //     //                                   style: TextStyle(
+    //     //                                     color: springSky,
+    //     //                                     fontWeight: FontWeight.w600,
+    //     //                                   ),
+    //     //                                 ),
+    //     //                               ),
+    //     //                             ],
+    //     //                           ),
+    //     //                           SizedBox(height: 20),
+    //     //                         ],
+    //     //                       ),
+    //     //                       SizedBox(height: 30),
+    //     //                       SizedBox(
+    //     //                         width: double.infinity,
+    //     //                         child: ElevatedButton(
+    //     //                           onPressed: _openArticleUrl,
+    //     //                           style: ElevatedButton.styleFrom(
+    //     //                             backgroundColor: meadow,
+    //     //                             foregroundColor: Colors.white,
+    //     //                             padding: EdgeInsets.symmetric(vertical: 16),
+    //     //                             shape: RoundedRectangleBorder(
+    //     //                               borderRadius: BorderRadius.circular(12),
+    //     //                             ),
+    //     //                             elevation: 2,
+    //     //                             shadowColor: meadow.withOpacity(0.3),
+    //     //                           ),
+    //     //                           child: Row(
+    //     //                             mainAxisAlignment: MainAxisAlignment.center,
+    //     //                             children: [
+    //     //                               Icon(
+    //     //                                 Icons.open_in_browser_outlined,
+    //     //                                 color: Colors.white,
+    //     //                               ),
+    //     //                               SizedBox(width: 8),
+    //     //                               Text(
+    //     //                                 'Read on browser',
+    //     //                                 style: TextStyle(
+    //     //                                   color: Colors.white,
+    //     //                                   fontSize: 16,
+    //     //                                   fontWeight: FontWeight.w600,
+    //     //                                 ),
+    //     //                               ),
+    //     //                             ],
+    //     //                           ),
+    //     //                         ),
+    //     //                       ),
+    //     //                     ],
+    //     //                   ),
+    //     //         ),
+    //     //         // ),
+    //     //       ),
+    //     //     );
+    //     //   },
+    //     // ),
+    //   ),
+    // );
+
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          titleSpacing: 0,
+          flexibleSpace: GestureDetector(
+            onVerticalDragEnd: (details) {
+              if (details.primaryVelocity != null && details.primaryVelocity! > 150) {
+                _closeArticle();
+              }
+            },
+            child: SafeArea(
+              child: Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Article Detail',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: raspberry,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: child,
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: springSky.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
                     ),
-                    child: _loading
-                        ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(springSky),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Loading article...',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                    Container(
+                      decoration: BoxDecoration(
+                        color: springSky.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    )
-                        : _hasError
-                        ? _buildErrorState()
-                        : _article == null
-                        ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.article_outlined,
-                            size: 64,
-                            color: raspberry.withOpacity(0.7),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Article not found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: raspberry,
-                            ),
-                          ),
-                        ],
+                      child: IconButton(
+                        icon: Icon(Icons.close),
+                        color: raspberry,
+                        onPressed: _closeArticle,
                       ),
-                    )
-                        : Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        body: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white,
+                sunshine.withOpacity(0.03),
+              ],
+            ),
+          ),
+          child: _loading
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(raspberry),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Loading article...',
+                  style: TextStyle(
+                    color: springSky,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : _hasError
+              ? _buildErrorState()
+              : _article == null
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: iceCream.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    Icons.article_outlined,
+                    size: 64,
+                    color: raspberry,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Article not found',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: raspberry,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : Column(
+            children: [
+              // SCROLLABLE CONTENT
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image Container with gradient styling
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              springSky.withOpacity(0.1),
+                              papaya.withOpacity(0.1),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: springSky.withOpacity(0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {});
+                            },
+                            child: _buildImageContainer(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Article Title with gradient background
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              raspberry.withOpacity(0.8),
+                              iceCream.withOpacity(0.9),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: raspberry.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Article detail',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: springSky,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.close),
-                                  color: raspberry,
-                                  onPressed: _closeArticle,
-                                ),
-                              ],
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.article,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
-                            SizedBox(height: 10),
-                            GestureDetector(
-                              onTap: () {
-                                // Tap to retry if image fails to load
-                                setState(() {});
-                              },
-                              child: _buildImageContainer(),
-                            ),
-                            SizedBox(height: 20),
+                            SizedBox(height: 12),
                             Text(
                               _article?.articleName ?? 'Unknown',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: raspberry,
+                                color: Colors.white,
                               ),
                             ),
-                            SizedBox(height: 20),
-                            Text(
-                              'Description',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: springSky,
-                              ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Content Section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: springSky.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: springSky.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
                             ),
-                            SizedBox(height: 10),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: meadow.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.description,
+                                    color: meadow,
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Content',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: springSky,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
                             Text(
-                              _article?.articleDescription ?? 'Unknown',
+                              _article?.articleContent ?? 'Unknown',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey[700],
-                                height: 1.5,
+                                height: 1.6,
                               ),
                             ),
-                            Row(
-                              children: [
-                                TextButton(
-                                  onPressed: _openArticleUrl,
-                                  child: Text(
-                                    'Read More',
-                                    style: TextStyle(
-                                      color: springSky,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                            SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: sunshine.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: sunshine.withOpacity(0.3),
                                 ),
-                              ],
+                              ),
+                              child: TextButton(
+                                onPressed: _openArticleUrl,
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Read More',
+                                      style: TextStyle(
+                                        color: springSky,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: springSky,
+                                      size: 14,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 20),
                           ],
                         ),
-                        SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _openArticleUrl,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: meadow,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                              shadowColor: meadow.withOpacity(0.3),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.open_in_browser_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Read on browser',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+
+              // FIXED BOTTOM BUTTON with gradient styling
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: springSky.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        meadow.withOpacity(0.8),
+                        meadow,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: meadow.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _openArticleUrl,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.open_in_browser_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Read on browser',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -454,8 +1060,8 @@ class _ArticleDetailState extends ConsumerState<ArticleDetail>
                   ),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );

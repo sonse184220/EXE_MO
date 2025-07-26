@@ -20,9 +20,8 @@ class AppColors {
 }
 
 class GoalHomePage extends ConsumerStatefulWidget {
-  const GoalHomePage({
-    super.key,
-  });
+  const GoalHomePage({super.key});
+
   @override
   ConsumerState<GoalHomePage> createState() => _GoalHomePageState();
 }
@@ -71,16 +70,17 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             .where((goal) => goal.goalStatus?.toLowerCase() == "completed")
             .length;
     final completionPercentage =
-    _goals.isEmpty ? 0 : ((completedGoals / _goals.length) * 100).round();
+        _goals.isEmpty ? 0 : ((completedGoals / _goals.length) * 100).round();
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: _isLoading
-            ? _buildLoadingState()
-            : _error != null
-            ? _buildErrorState()
-            : _buildMainContent(completionPercentage, completedGoals),
+        // backgroundColor: Color(0xFFFFF9F5), // Very light papaya background
+        body:
+            _isLoading
+                ? _buildLoadingState()
+                : _error != null
+                ? _buildErrorState()
+                : _buildMainContent(completionPercentage, completedGoals),
       ),
     );
   }
@@ -91,7 +91,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.raspberry),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF9D52)),
+            // Medium papaya
             strokeWidth: 3,
           ),
           const SizedBox(height: 16),
@@ -100,7 +101,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Color(0xFFD4824A), // Muted papaya
             ),
           ),
         ],
@@ -118,7 +119,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: AppColors.raspberry,
+              color: Color(0xFFFF9D52), // Medium papaya
             ),
             const SizedBox(height: 16),
             Text(
@@ -127,7 +128,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                 fontFamily: 'League Spartan',
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Color(0xFF3D3D3D), // Dark for readability
               ),
             ),
             const SizedBox(height: 8),
@@ -137,16 +138,20 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Color(0xFFD4824A), // Muted papaya
               ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _fetchGoals,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.raspberry,
+                backgroundColor: Color(0xFFFF9D52),
+                // Medium papaya
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -171,9 +176,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: constraints.maxHeight,
-          ),
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -182,7 +185,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black12,
+                  color: Color(0xFFFFB876).withAlpha((0.15 * 255).round()),
+                  // Papaya-tinted shadow
                   blurRadius: 10,
                   offset: Offset(0, 5),
                 ),
@@ -243,7 +247,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                 formattedDate,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  color: Colors.grey[600],
+                  color: Color(0xFFD4824A), // Muted papaya
                   fontSize: 14,
                 ),
               ),
@@ -261,7 +265,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                     // TextSpan(
                     //   text: name,
                     //   style: TextStyle(
-                    //     color: AppColors.papaya,
+                    //     color: Color(0xFFFF9D52), // Medium papaya
                     //   ),
                     // ),
                     TextSpan(text: "!"),
@@ -271,8 +275,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             ],
           ),
           FloatingActionButton(
-            backgroundColor: AppColors.meadow,
-            child: Icon(Icons.add, color: Colors.white),
+            backgroundColor: Color(0xFFFF9D52), // Medium papaya
+            child: Icon(Icons.edit, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -292,7 +296,10 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
       margin: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.papaya, AppColors.sunshine],
+          colors: [
+            Color(0xFFFFB876), // Main papaya
+            Color(0xFFFFCA94), // Lighter papaya
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -407,7 +414,7 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                   "See all",
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: AppColors.papaya,
+                    color: Color(0xFFFF9D52), // Medium papaya
                   ),
                 ),
               ),
@@ -428,82 +435,6 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
     );
   }
 
-  // Widget _buildPerformanceStats(int percentageBetter, int tasksLeft) {
-  //   return Container(
-  //     width: double.infinity,
-  //     padding: EdgeInsets.all(15),
-  //     decoration: BoxDecoration(
-  //       color: AppColors.springSky.withOpacity(0.1),
-  //       borderRadius: BorderRadius.circular(15),
-  //     ),
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //       children: [
-  //         Expanded(
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 "You are doing better than",
-  //                 style: TextStyle(
-  //                   fontFamily: 'Inter',
-  //                   fontSize: 16,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //               SizedBox(height: 5),
-  //               Text(
-  //                 "$percentageBetter%",
-  //                 style: TextStyle(
-  //                   fontFamily: 'League Spartan',
-  //                   fontSize: 24,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: AppColors.raspberry,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         Container(
-  //           padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(10),
-  //             boxShadow: [
-  //               BoxShadow(
-  //                 color: Colors.black.withAlpha((0.05 * 255).round()),
-  //                 blurRadius: 5,
-  //                 spreadRadius: 1,
-  //               ),
-  //             ],
-  //           ),
-  //           child: Column(
-  //             children: [
-  //               Text(
-  //                 "$tasksLeft/4",
-  //                 style: TextStyle(
-  //                   fontFamily: 'League Spartan',
-  //                   fontSize: 20,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: AppColors.raspberry,
-  //                 ),
-  //               ),
-  //               Text(
-  //                 "Tasks left",
-  //                 style: TextStyle(
-  //                   fontFamily: 'Inter',
-  //                   fontSize: 12,
-  //                   color: Colors.grey[600],
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildPerformanceStats() {
     final stats = _calculatePerformanceStats();
     final percentageBetter = stats['percentageBetter']!;
@@ -515,8 +446,11 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
       width: double.infinity,
       padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: AppColors.springSky.withOpacity(0.1),
+        // Light papaya background with very low opacity
+        color: Color(0xFFFFB876).withOpacity(0.08),
         borderRadius: BorderRadius.circular(15),
+        // Subtle papaya border
+        border: Border.all(color: Color(0xFFFFB876).withOpacity(0.2), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -531,6 +465,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                     fontFamily: 'Inter',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    // Darker papaya shade for text
+                    color: Color(0xFFE8965A),
                   ),
                 ),
                 SizedBox(height: 5),
@@ -540,7 +476,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                     fontFamily: 'League Spartan',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.raspberry,
+                    // Rich papaya color for the percentage
+                    color: Color(0xFFFF9D52),
                   ),
                 ),
               ],
@@ -551,13 +488,20 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
+              // Papaya-tinted shadow
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha((0.05 * 255).round()),
-                  blurRadius: 5,
+                  color: Color(0xFFFFB876).withAlpha((0.15 * 255).round()),
+                  blurRadius: 8,
                   spreadRadius: 1,
+                  offset: Offset(0, 2),
                 ),
               ],
+              // Subtle papaya border
+              border: Border.all(
+                color: Color(0xFFFFB876).withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
@@ -567,7 +511,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                     fontFamily: 'League Spartan',
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.raspberry,
+                    // Medium papaya shade
+                    color: Color(0xFFFF9D52),
                   ),
                 ),
                 Text(
@@ -575,7 +520,8 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    // Muted papaya shade
+                    color: Color(0xFFD4824A),
                   ),
                 ),
               ],
@@ -591,39 +537,45 @@ class _GoalHomePageState extends ConsumerState<GoalHomePage> {
     final today = DateTime(now.year, now.month, now.day);
 
     // Filter goals that are active today
-    final todayGoals = _goals.where((goal) {
-      if (goal.goalStartDate == null) return false;
+    final todayGoals =
+        _goals.where((goal) {
+          if (goal.goalStartDate == null) return false;
 
-      final startDate = DateTime(
-        goal.goalStartDate!.year,
-        goal.goalStartDate!.month,
-        goal.goalStartDate!.day,
-      );
+          final startDate = DateTime(
+            goal.goalStartDate!.year,
+            goal.goalStartDate!.month,
+            goal.goalStartDate!.day,
+          );
 
-      final endDate = goal.goalEndDate != null
-          ? DateTime(
-        goal.goalEndDate!.year,
-        goal.goalEndDate!.month,
-        goal.goalEndDate!.day,
-      )
-          : today; // If no end date, consider it as today
+          final endDate =
+              goal.goalEndDate != null
+                  ? DateTime(
+                    goal.goalEndDate!.year,
+                    goal.goalEndDate!.month,
+                    goal.goalEndDate!.day,
+                  )
+                  : today; // If no end date, consider it as today
 
-      // Check if today falls within the goal period
-      return (today.isAfter(startDate) || today.isAtSameMomentAs(startDate)) &&
-          (today.isBefore(endDate) || today.isAtSameMomentAs(endDate));
-    }).toList();
+          // Check if today falls within the goal period
+          return (today.isAfter(startDate) ||
+                  today.isAtSameMomentAs(startDate)) &&
+              (today.isBefore(endDate) || today.isAtSameMomentAs(endDate));
+        }).toList();
 
-    final completedTodayGoals = todayGoals
-        .where((goal) => goal.goalStatus?.toLowerCase() == "completed")
-        .length;
+    final completedTodayGoals =
+        todayGoals
+            .where((goal) => goal.goalStatus?.toLowerCase() == "completed")
+            .length;
 
     final totalTodayGoals = todayGoals.length;
     final tasksLeft = totalTodayGoals - completedTodayGoals;
 
     // Calculate percentage better than others (you can modify this logic based on your backend data)
     // For now, using a simple calculation based on completion rate
-    final completionRate = totalTodayGoals > 0 ? (completedTodayGoals / totalTodayGoals) * 100 : 0;
-    final percentageBetter = (completionRate * 0.8).round(); // Simple calculation, adjust as needed
+    final completionRate =
+        totalTodayGoals > 0 ? (completedTodayGoals / totalTodayGoals) * 100 : 0;
+    final percentageBetter =
+        (completionRate * 0.8).round(); // Simple calculation, adjust as needed
 
     return {
       'percentageBetter': percentageBetter,
@@ -649,51 +601,76 @@ class GoalListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => GoalDetailPage(goalId: goal.goalId!,))), child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        color: AppColors.meadow.withOpacity(0.1),
-      ),
-      margin: EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              goal.goalTitle!,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+    return GestureDetector(
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GoalDetailPage(goalId: goal.goalId!),
             ),
           ),
-          GestureDetector(
-            onTap: onToggle,
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: AppColors.meadow,
-                  width: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          // Light papaya background
+          color: Color(0xFFFFB876).withOpacity(0.12),
+          // Subtle papaya border
+          border: Border.all(
+            color: Color(0xFFFFB876).withOpacity(0.25),
+            width: 0.5,
+          ),
+        ),
+        margin: EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                goal.goalTitle!,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  // Darker shade for better readability
+                  color: Color(0xFF3D3D3D),
                 ),
-                color: goal.goalStatus == 'completed'
-                    ? AppColors.meadow
-                    : Colors.transparent,
               ),
-              child: goal.goalStatus == 'completed'
-                  ? Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.more_vert, color: Colors.grey),
-            onPressed: onOptions,
-          ),
-        ],
+            GestureDetector(
+              onTap: onToggle,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    // Medium papaya for border
+                    color: Color(0xFFFF9D52),
+                    width: 2,
+                  ),
+                  color:
+                      goal.goalStatus == 'completed'
+                          ? Color(
+                            0xFFFF9D52,
+                          ) // Filled with papaya when completed
+                          : Colors.transparent,
+                ),
+                child:
+                    goal.goalStatus == 'completed'
+                        ? Icon(Icons.check, size: 16, color: Colors.white)
+                        : null,
+              ),
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.more_vert,
+                // Muted papaya for the options icon
+                color: Color(0xFFD4824A),
+              ),
+              onPressed: onOptions,
+            ),
+          ],
+        ),
       ),
-    ),);
+    );
   }
 }
