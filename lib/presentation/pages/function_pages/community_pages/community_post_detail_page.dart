@@ -173,32 +173,64 @@ class _CommunityPostDetailPageState
   }
 
   Future<void> refreshComment() async {
-    // setState(() {
-    //   isLoading = true;
-    // });
     try {
       final result = await _communityUsecase.getCommunityPostDetail(
         widget.postId,
       );
       if (result.isSuccess) {
-        setState(() {
-          postDetail = result.data!;
-        });
-        _animationController.forward();
+        if (mounted) {  // Thêm kiểm tra này
+          setState(() {
+            postDetail = result.data!;
+          });
+          _animationController.forward();
+        }
       } else {
         Notify.showFlushbar(
-          result.error ?? 'Failed to load post details',
+          result.error ?? 'Failed to refresh comment',
           isError: true,
         );
       }
     } catch (e) {
-      Notify.showFlushbar('Error while getting post detail', isError: true);
+      print('error ne: $e.toString()');
+      Notify.showFlushbar('Error while refresh comment', isError: true);
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {  // Thêm kiểm tra này
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
+
+//Ban refreshcomment nay bi loi: flutter ( 3981): error ne: setState() called after dispose():
+  // Future<void> refreshComment() async {
+  //   // setState(() {
+  //   //   isLoading = true;
+  //   // });
+  //   try {
+  //     final result = await _communityUsecase.getCommunityPostDetail(
+  //       widget.postId,
+  //     );
+  //     if (result.isSuccess) {
+  //       setState(() {
+  //         postDetail = result.data!;
+  //       });
+  //       _animationController.forward();
+  //     } else {
+  //       Notify.showFlushbar(
+  //         result.error ?? 'Failed to refresh comment',
+  //         isError: true,
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print('error ne: $e.toString()');
+  //     Notify.showFlushbar('Error while refresh comment', isError: true);
+  //   } finally {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
 
   // Future<void> _likePost() async {
   //   try {
