@@ -25,7 +25,8 @@ class AudioModel {
     return AudioModel(
       audioId: json['audioId'] as String?,
       audioTitle: json['audioTitle'] as String?,
-      audioUrl: json['audioUrl'] as String?,
+      // audioUrl: json['audioUrl'] as String?,
+      audioUrl: json['audioUrl'] as String? ?? json['audioURL'] as String?,
       audioThumbnail: json['audioThumbnail'] as String?,
       audioCreatedAt: json['audioCreatedAt'] != null
           ? DateTime.tryParse(json['audioCreatedAt'])

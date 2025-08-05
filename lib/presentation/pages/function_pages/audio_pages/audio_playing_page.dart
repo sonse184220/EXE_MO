@@ -183,8 +183,8 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
       });
 
       try {
-        print('url ne: ${currentAudio?.audioUrl}');
         await _audioPlayer.stop();
+        await _audioPlayer.release();
 
         // ⏱️ Set custom timeout here
         final response = await http
@@ -193,7 +193,9 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
 
         if (response.statusCode == 200) {
           await _audioPlayer.setSourceBytes(response.bodyBytes);
+          await _audioPlayer.setPlayerMode(PlayerMode.mediaPlayer);
           await _audioPlayer.resume();
+          // await _audioPlayer.play();
         } else {
           throw Exception('Failed to load audio: ${response.statusCode}');
         }
@@ -316,6 +318,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     if (isLoading || isInitialLoading) return;
 
     if (audioList.isNotEmpty && currentAudioIndex > 0) {
+      _audioPlayer.stop();
       setState(() {
         currentAudioIndex--;
         currentAudio = audioList[currentAudioIndex];
@@ -324,15 +327,28 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
     }
   }
 
-  void _nextTrack() {
+  void _nextTrack() async {
     if (isLoading || isInitialLoading) return;
 
     if (audioList.isNotEmpty && currentAudioIndex < audioList.length - 1) {
+      _audioPlayer.stop();
       setState(() {
         currentAudioIndex++;
         currentAudio = audioList[currentAudioIndex];
+        // final nextAudio = audioList[currentAudioIndex];
+        // currentAudio = AudioModel(
+        //   audioId: nextAudio.audioId,
+        //   audioTitle: nextAudio.audioTitle,
+        //   audioUrl: nextAudio.audioUrl ?? nextAudio.toJson()['audioURL'], // Handle both cases
+        //   audioThumbnail: nextAudio.audioThumbnail,
+        //   audioCreatedAt: nextAudio.audioCreatedAt,
+        //   audioIsPremium: nextAudio.audioIsPremium,
+        //   audioStatus: nextAudio.audioStatus,
+        //   subAudioCategoryId: nextAudio.subAudioCategoryId,
+        //   subAudioCategoryName: nextAudio.subAudioCategoryName,
+        // );
       });
-      _loadAndPlayAudio();
+      await _loadAndPlayAudio();
     }
   }
 
@@ -431,7 +447,7 @@ class _AudioPlayingPageState extends ConsumerState<AudioPlayingPage>
                         ),
                       ),
                       subtitle: Text(
-                        audio.subAudioCategoryName ?? 'Unknown category',
+                        audio.audioStatus ?? 'Unknown status',
                         style: TextStyle(color: Colors.white.withOpacity(0.7)),
                       ),
                       trailing:

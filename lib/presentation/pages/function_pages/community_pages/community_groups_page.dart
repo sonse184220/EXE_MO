@@ -35,7 +35,10 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
 
   final GlobalKey<AnimatedListState> _allCommunityListKey =
       GlobalKey<AnimatedListState>();
+  final GlobalKey<AnimatedListState> _myCommunityListKey =
+      GlobalKey<AnimatedListState>();
   List<CommunityGroupModel> _animatedAllCommunity = [];
+  List<CommunityGroupModel> _animatedMyCommunity = [];
 
   bool isLoading = true;
   bool hasError = false;
@@ -121,6 +124,27 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
     }
   }
 
+  void _setAnimatedMyCommunity(List<CommunityGroupModel> list) {
+    // Remove all existing items from AnimatedList
+    for (int i = _animatedMyCommunity.length - 1; i >= 0; i--) {
+      _myCommunityListKey.currentState?.removeItem(
+        i,
+            (context, animation) =>
+            _buildRemovedItem(_animatedMyCommunity[i], animation),
+        duration: const Duration(milliseconds: 300),
+      );
+    }
+    _animatedMyCommunity.clear();
+
+    for (int i = 0; i < list.length; i++) {
+      _animatedMyCommunity.insert(i, list[i]);
+      _myCommunityListKey.currentState?.insertItem(
+        i,
+        duration: const Duration(milliseconds: 300),
+      );
+    }
+  }
+
   Future<void> _fetchCommunityGroups() async {
     setState(() {
       isLoading = true;
@@ -182,6 +206,7 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
             .toList();
 
     _updateAnimatedAllCommunityList(filteredAllCommunity);
+    _updateAnimatedMyCommunityList(filteredMyCommunity);
   }
 
   void _onSearchChanged(String query) {
@@ -189,6 +214,49 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
       searchQuery = query;
       _filterCommunities();
     });
+  }
+
+  void _updateAnimatedMyCommunityList(List<CommunityGroupModel> newList) {
+    final oldList = List<CommunityGroupModel>.from(_animatedMyCommunity);
+
+    // Remove items no longer present
+    for (int i = oldList.length - 1; i >= 0; i--) {
+      final item = oldList[i];
+      if (!newList.contains(item)) {
+        _animatedMyCommunity.removeAt(i);
+        _myCommunityListKey.currentState?.removeItem(
+          i,
+          (context, animation) => _buildRemovedItem(item, animation),
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+    }
+
+    // Insert new items or reorder
+    for (int i = 0; i < newList.length; i++) {
+      final item = newList[i];
+
+      if (i < _animatedMyCommunity.length &&
+          _animatedMyCommunity[i] == item) {
+        continue; // already in correct place
+      }
+
+      if (_animatedMyCommunity.contains(item)) {
+        final oldIndex = _animatedMyCommunity.indexOf(item);
+        _animatedMyCommunity.removeAt(oldIndex);
+        _myCommunityListKey.currentState?.removeItem(
+          oldIndex,
+          (context, animation) => _buildRemovedItem(item, animation),
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+
+      _animatedMyCommunity.insert(i, item);
+      _myCommunityListKey.currentState?.insertItem(
+        i,
+        duration: const Duration(milliseconds: 300),
+      );
+    }
   }
 
   void _updateAnimatedAllCommunityList(List<CommunityGroupModel> newList) {
@@ -201,7 +269,7 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
         _animatedAllCommunity.removeAt(i);
         _allCommunityListKey.currentState?.removeItem(
           i,
-          (context, animation) => _buildRemovedItem(item, animation),
+              (context, animation) => _buildRemovedItem(item, animation),
           duration: const Duration(milliseconds: 300),
         );
       }
@@ -221,7 +289,7 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
         _animatedAllCommunity.removeAt(oldIndex);
         _allCommunityListKey.currentState?.removeItem(
           oldIndex,
-          (context, animation) => _buildRemovedItem(item, animation),
+              (context, animation) => _buildRemovedItem(item, animation),
           duration: const Duration(milliseconds: 300),
         );
       }
@@ -1309,7 +1377,8 @@ class _CommunityGroupsPageState extends ConsumerState<CommunityGroupsPage>
         Expanded(
           child: AnimatedList(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            key: _allCommunityListKey,
+            // key: _allCommunityListKey,
+            key: isMyGroups ? _myCommunityListKey : _allCommunityListKey,
             initialItemCount: communities.length,
             itemBuilder: (context, index, animation) {
               return SlideTransition(
